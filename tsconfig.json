@@ -1,14 +1,16 @@
 {
-	"version": "1.8.10",
+	"version": "2.0.0",
 	"compilerOptions": {
 		"declaration": false,
 		"module": "umd",
+		"moduleResolution": "classic",
 		"noImplicitAny": true,
+		"noImplicitThis": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
-		"target": "es5",
-		"moduleResolution": "classic"
+		"strictNullChecks": true,
+		"target": "es5"
 	},
 	"filesGlob": [
 		"./typings/index.d.ts",
