@@ -24,7 +24,9 @@
   },
   "typings": "./dist/umd/dojo-dataviz.d.ts",
   "peerDependencies": {
-    "@reactivex/rxjs": "5.0.0-beta.6"
+    "@reactivex/rxjs": "5.0.0-beta.6",
+    "dojo-has": "^2.0.0-alpha.1",
+    "dojo-shim": "^2.0.0-alpha.1"
   },
   "devDependencies": {
     "codecov.io": "0.1.6",
