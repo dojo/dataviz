@@ -23,6 +23,9 @@
     "test": "grunt test"
   },
   "typings": "./dist/umd/dojo-dataviz.d.ts",
+  "peerDependencies": {
+    "@reactivex/rxjs": "5.0.0-beta.6"
+  },
   "devDependencies": {
     "codecov.io": "0.1.6",
     "dojo-loader": ">=2.0.0-beta",
