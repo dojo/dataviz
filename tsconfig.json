@@ -17,6 +17,8 @@
 	],
 	"files": [
 		"./typings/index.d.ts",
+		"./src/computation/sort.ts",
+		"./src/computation/sum-and-weigh.ts",
 		"./src/main.ts",
 		"./tests/functional/all.ts",
 		"./tests/intern-local.ts",
