@@ -1,6 +1,9 @@
 import { Observable, Subscriber } from 'rxjs/Rx';
+
+import accumulate from './computation/accumulate';
+import relativeValues from './computation/relative-values';
 import sort from './computation/sort';
-import sumAndWeigh from './computation/sum-and-weigh';
+import sum from './computation/sum';
 
 export {
 	/* provide the public API here */
@@ -35,12 +38,9 @@ const source = new Observable<PlayCount>((subscriber: Subscriber<PlayCount>) => 
 	}, 1000);
 });
 
-const combined = source.scan(
-	(inputs, input) => inputs.concat(input),
-	[] as PlayCount[]
-);
-
+const getValue = (input: PlayCount) => input.count;
+const accumulated = accumulate(source).share();
 sort(
-	sumAndWeigh(combined, (input) => input.count),
+	relativeValues(accumulated, sum(accumulated, getValue), getValue),
 	([{ artist }]) => artist.replace(/^The\s+/, '')
 ).subscribe(results => console.error(results));

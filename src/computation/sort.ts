@@ -1,5 +1,6 @@
-import { Observable } from 'rxjs/Rx';
+import { forOf, Iterable } from 'dojo-shim/iterator';
 import WeakMap from 'dojo-shim/WeakMap';
+import { Observable } from 'rxjs/Rx';
 
 function defaultCompare (a: any, b: any): number {
 	const strA = String(a);
@@ -12,21 +13,21 @@ function identity<T> (value: T): T {
 }
 
 export default function sort<T> (
-	observable: Observable<T[]>,
+	observable: Observable<Iterable<T> | ArrayLike<T>>,
 	comparableSelector: (input: T) => any = identity,
 	compareFunction: (a: any, b: any) => number = defaultCompare
 ): Observable<T[]> {
 	const comparables = new WeakMap<T, any>();
 
-	return observable.map(arr => {
-		const result = arr.slice();
+	return observable.map(inputs => {
+		const result: T[] = [];
+		forOf(inputs, (input) => {
+			if (!comparables.has(input)) {
+				comparables.set(input, comparableSelector(input));
+			}
+			result.push(input);
+		});
 		result.sort((inputA, inputB) => {
-			if (!comparables.has(inputA)) {
-				comparables.set(inputA, comparableSelector(inputA));
-			}
-			if (!comparables.has(inputB)) {
-				comparables.set(inputB, comparableSelector(inputB));
-			}
 			return compareFunction(comparables.get(inputA), comparables.get(inputB));
 		});
 		return result;
