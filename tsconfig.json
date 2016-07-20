@@ -12,11 +12,14 @@
 	},
 	"filesGlob": [
 		"./typings/index.d.ts",
+		"./examples/**/*.ts",
 		"./src/**/*.ts",
 		"./tests/**/*.ts"
 	],
 	"files": [
 		"./typings/index.d.ts",
+		"./examples/play-counts.ts",
+		"./examples/stdout.ts",
 		"./src/data/accumulate.ts",
 		"./src/data/relative-values.ts",
 		"./src/data/sort.ts",
