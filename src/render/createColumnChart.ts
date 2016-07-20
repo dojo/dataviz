@@ -1,55 +1,31 @@
-import createEvented from 'dojo-compose/mixins/createEvented';
-import createWidget from 'dojo-widgets/createWidget';
-import { h, VNode } from 'maquette/maquette';
-import { Observable, Subscriber } from 'rxjs/Rx';
+import { ComposeFactory } from 'dojo-compose/compose';
+import createWidget, { Widget, WidgetOptions, WidgetState } from 'dojo-widgets/createWidget';
 
-import columnar from 'src/structure/columnar';
+import createSvgRootMixin, { SvgRoot, SvgRootOptions, SvgRootState } from './mixins/createSvgRootMixin';
+import createColumnStructureMixin, {
+	ColumnStructure,
+	ColumnStructureOptions,
+	ColumnStructureState
+} from './mixins/createColumnStructureMixin';
 
-const createColumnChart = createWidget
-	.extend({
-		tagName: 'svg',
+export type ColumnChartState<T> =
+	WidgetState & SvgRootState & ColumnStructureState<T>;
 
-		getChildrenNodes(): VNode[] {
-			return this.columns.map(({ input, relativeValue }: any, index: number) => {
-				const height = relativeValue * 100;
-				const y = 100 - height;
-				return h('g', { key: input }, [
-					h('rect', {
-						width: '20',
-						height: String(height),
-						x: String(20 * index),
-						y: String(y)
-					})
-				]);
-			});
-		}
-	})
-	.mixin({
-		mixin: createEvented,
-		initialize(instance: any) {
-			const source = new Observable<any>((subscriber: Subscriber<any>) => {
-				// FIXME: Type evt.state
-				instance.own(instance.on('statechange', (evt: any) => {
-					subscriber.next(evt.state.items || []);
-				}));
+export type ColumnChartOptions<T, S extends ColumnChartState<T>> =
+	WidgetOptions<S> & SvgRootOptions<S> & ColumnStructureOptions<T, S>;
 
-				// subscriber.next(instance.state.items || []);
-			});
+export type ColumnChart<T, S extends ColumnChartState<T>> =
+	Widget<S> & SvgRoot<S> & ColumnStructure<T, S>;
 
-			// FIXME: Make configurable
-			const valueSelector = (item: any) => item.count;
-			const subscription = columnar(source, valueSelector)
-				.subscribe((columns) => {
-					instance.columns = columns;
-					instance.invalidate();
-				});
+export interface ColumnChartFactory<T> extends ComposeFactory<
+	ColumnChart<T, ColumnChartState<T>>,
+	ColumnChartOptions<T, ColumnChartState<T>>
+> {
+	<T, S extends ColumnChartState<T>>(options?: ColumnChartOptions<T, S>): ColumnChart<T, S>;
+}
 
-			instance.own({
-				destroy() {
-					subscription.unsubscribe();
-				}
-			});
-		}
-	});
+const createColumnChart: ColumnChartFactory<any> = createWidget
+	.mixin(createSvgRootMixin)
+	.mixin(createColumnStructureMixin);
 
 export default createColumnChart;
