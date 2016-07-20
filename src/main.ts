@@ -1,9 +1,9 @@
 import { Observable, Subscriber } from 'rxjs/Rx';
 
-import accumulate from './computation/accumulate';
-import relativeValues from './computation/relative-values';
-import sort from './computation/sort';
-import sum from './computation/sum';
+import accumulate from './data/accumulate';
+import relativeValues from './data/relative-values';
+import sort from './data/sort';
+import sum from './data/sum';
 
 export {
 	/* provide the public API here */
