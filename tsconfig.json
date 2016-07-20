@@ -24,6 +24,7 @@
 		"./tests/intern.ts",
 		"./tests/support/Reporter.ts",
 		"./tests/support/util.ts",
-		"./tests/unit/all.ts"
+		"./tests/unit/all.ts",
+		"./tests/unit/main.ts"
 	]
 }
