@@ -1,9 +1,8 @@
 import { Observable, Subscriber } from 'rxjs/Rx';
 
 import accumulate from './data/accumulate';
-import relativeValues from './data/relative-values';
 import sort from './data/sort';
-import sum from './data/sum';
+import columnar from './structure/columnar';
 
 export {
 	/* provide the public API here */
@@ -40,9 +39,5 @@ const source = new Observable<PlayCount>((subscriber: Subscriber<PlayCount>) => 
 
 const accumulated = accumulate(source);
 const sorted = sort(accumulated, ({ artist }) => artist.replace(/^The\s+/, ''));
-const shared = sorted.share();
-
-const getValue = (input: PlayCount) => input.count;
-const summation = sum(shared, getValue);
-relativeValues(shared, getValue, summation)
+columnar(sorted, (input) => input.count)
 	.subscribe(results => console.error(results));
