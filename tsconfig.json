@@ -18,6 +18,8 @@
 	],
 	"files": [
 		"./typings/index.d.ts",
+		"./examples/app.ts",
+		"./examples/index.ts",
 		"./examples/play-counts.ts",
 		"./examples/stdout.ts",
 		"./src/data/accumulate.ts",
@@ -25,6 +27,7 @@
 		"./src/data/sort.ts",
 		"./src/data/sum.ts",
 		"./src/main.ts",
+		"./src/render/createColumnChart.ts",
 		"./src/structure/columnar.ts",
 		"./tests/functional/all.ts",
 		"./tests/intern-local.ts",
