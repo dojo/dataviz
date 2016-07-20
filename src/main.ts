@@ -38,9 +38,11 @@ const source = new Observable<PlayCount>((subscriber: Subscriber<PlayCount>) => 
 	}, 1000);
 });
 
+const accumulated = accumulate(source);
+const sorted = sort(accumulated, ({ artist }) => artist.replace(/^The\s+/, ''));
+const shared = sorted.share();
+
 const getValue = (input: PlayCount) => input.count;
-const accumulated = accumulate(source).share();
-sort(
-	relativeValues(accumulated, sum(accumulated, getValue), getValue),
-	([{ artist }]) => artist.replace(/^The\s+/, '')
-).subscribe(results => console.error(results));
+const summation = sum(shared, getValue);
+relativeValues(shared, getValue, summation)
+	.subscribe(results => console.error(results));

@@ -3,8 +3,8 @@ import { Observable } from 'rxjs/Rx';
 
 export default function relativeValues<T> (
 	observable: Observable<Iterable<T> | ArrayLike<T>>,
-	sums: Observable<number>,
-	valueSelector: (input: T) => number
+	valueSelector: (input: T) => number,
+	sums: Observable<number>
 ): Observable<[T, number][]> {
 	return observable
 		.withLatestFrom(sums)
