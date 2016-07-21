@@ -1,6 +1,8 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
+import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette/maquette';
+import { Observable } from 'rxjs/Rx';
 
 import columnar, { Column } from '../../structure/columnar';
 import createDataObserverMixin, {
@@ -67,17 +69,31 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 			};
 		}
 
-		const subscription = columnar(instance.data, valueSelector)
-			.subscribe((structure) => {
-				structures.set(instance, structure);
-				(<any> instance).invalidate();
-			});
+		structures.set(instance, []);
 
-		instance.own({
-			destroy() {
-				subscription.unsubscribe();
+		let handle: Handle = null;
+		const subscribe = (data: Observable<T[]>) => {
+			if (handle) {
+				handle.destroy();
 			}
-		});
+
+			const subscription = columnar(data, valueSelector)
+				.subscribe((structure) => {
+					structures.set(instance, structure);
+					(<any> instance).invalidate();
+				});
+
+			handle = instance.own({
+				destroy() {
+					subscription.unsubscribe();
+				}
+			});
+		};
+
+		if (instance.data) {
+			subscribe(instance.data);
+		}
+		instance.own(instance.on('datachange', ({ data }) => subscribe(data)));
 	}
 });
 

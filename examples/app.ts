@@ -10,13 +10,17 @@ const store = createMemoryStore({
 		{ id: 'chart' }
 	]
 });
-getPlayCounts().subscribe((data) => {
-	store.patch({ data }, { id: 'chart' });
-});
+
+// Example of patching the store every time the data changes.
+// getPlayCounts().subscribe((data) => {
+// 	store.patch({ data }, { id: 'chart' });
+// });
 
 const chart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	id: 'chart',
 	stateFrom: store,
+	// Example of passing an observable to the chart.
+	data: getPlayCounts(),
 	state: {
 		height: 100,
 		width: 200
