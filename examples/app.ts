@@ -32,5 +32,8 @@ const chart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	}
 });
 
+// Make the chart available to the console.
+(<any> window).chart = chart;
+
 projector.append(chart);
 projector.attach();
