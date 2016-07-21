@@ -1,5 +1,6 @@
 import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { assign } from 'dojo-core/lang';
+import WeakMap from 'dojo-shim/WeakMap';
 import createWidget from 'dojo-widgets/createWidget';
 import { VNodeProperties } from 'maquette/maquette';
 
@@ -15,17 +16,35 @@ export interface SvgRootState extends State {
 	width?: number;
 }
 
-export type SvgRootOptions<S extends SvgRootState> = StatefulOptions<S>;
+export interface SvgRootOptions<S extends SvgRootState> extends StatefulOptions<S> {
+	/**
+	 * Controls the height of the <svg> element. Defaults to 150.
+	 */
+	height?: number;
+
+	/**
+	 * Controls the width of the <svg> element. Defaults to 300.
+	 */
+	width?: number;
+}
 
 export interface SvgRootMixin {
+	/**
+	 * Controls the height of the <svg> element.
+	 */
+	height?: number;
+
 	/**
 	 * The tagName is *always* 'svg'.
 	 */
 	readonly tagName: string;
 
-	getNodeAttributes(overrides?: VNodeProperties): VNodeProperties;
+	/**
+	 * Controls the width of the <svg> element.
+	 */
+	width?: number;
 
-	// TODO: Add getters and setters for height and width, shadowing state, like styles in createCachedRenderMixin.
+	getNodeAttributes(overrides?: VNodeProperties): VNodeProperties;
 }
 
 /**
@@ -33,25 +52,70 @@ export interface SvgRootMixin {
  */
 export type SvgRoot<S extends SvgRootState> = Stateful<S> & SvgRootMixin;
 
+const shadowHeights = new WeakMap<SvgRoot<SvgRootState>, number>();
+const shadowWidths = new WeakMap<SvgRoot<SvgRootState>, number>();
+
 const createSvgRootMixin = createStateful
-	.extend({
-		get tagName() {
-			return 'svg';
+	.mixin({
+		mixin: <SvgRootMixin> {
+			get height() {
+				const root: SvgRoot<SvgRootState> = this;
+				const { height = shadowHeights.get(root) } = root.state || {};
+				return height;
+			},
+
+			set height(height) {
+				const root: SvgRoot<SvgRootState> = this;
+				if (root.state) {
+					root.setState({ height });
+				}
+				else {
+					shadowHeights.set(root, height);
+					// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
+					(<any> root).invalidate();
+				}
+			},
+
+			get tagName() {
+				return 'svg';
+			},
+
+			set tagName(noop) {},
+
+			get width() {
+				const root: SvgRoot<SvgRootState> = this;
+				const { width = shadowWidths.get(root) } = root.state || {};
+				return width;
+			},
+
+			set width(width) {
+				const root: SvgRoot<SvgRootState> = this;
+				if (root.state) {
+					root.setState({ width });
+				}
+				else {
+					shadowWidths.set(root, width);
+					// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
+					(<any> root).invalidate();
+				}
+			},
+
+			// Assuming this is mixed in to dojo-widgets/createWidget, replace the getNodeAttributes() implementation
+			// from its prototype in order to render the <svg> root with the height and width attributes.
+			getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
+				const root: SvgRoot<SvgRootState> = this;
+				// TODO: Move defaults into height/weight getters on root.
+				const { height, width } = root;
+				const props = assign({
+					height: String(height),
+					width: String(width)
+				}, overrides);
+				return createWidget.prototype.getNodeAttributes.call(root, props);
+			}
 		},
-
-		set tagName(noop) {},
-
-		// Assuming this is mixed in to dojo-widgets/createWidget, replace the getNodeAttributes() implementation from
-		// its prototype in order to render the <svg> root with the height and width attributes.
-		getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
-			const root: SvgRoot<SvgRootState> = this;
-			// TODO: Move defaults into height/weight getters on root.
-			const { height = 150, width = 300 } = root.state;
-			const props = assign({
-				height: String(height),
-				width: String(width)
-			}, overrides);
-			return createWidget.prototype.getNodeAttributes.call(root, props);
+		initialize(instance: SvgRoot<SvgRootState>, { height = 150, width = 300 }: SvgRootOptions<SvgRootState> = {}) {
+			shadowHeights.set(instance, height);
+			shadowWidths.set(instance, width);
 		}
 	});
 

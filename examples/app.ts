@@ -22,9 +22,11 @@ const chart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	// Example of passing an observable to the chart.
 	data: getPlayCounts(),
 	state: {
-		height: 100,
-		width: 200
+		// Example of passing height via the state
+		height: 100
 	},
+	// Example of passing width
+	width: 200,
 	valueSelector(input) {
 		return input.count;
 	}
