@@ -29,7 +29,7 @@
 		"./src/main.ts",
 		"./src/render/createColumnChart.ts",
 		"./src/render/mixins/createColumnStructureMixin.ts",
-		"./src/render/mixins/createDataObserverMixin.ts",
+		"./src/render/mixins/createDataProviderMixin.ts",
 		"./src/render/mixins/createSvgRootMixin.ts",
 		"./src/structure/columnar.ts",
 		"./tests/functional/all.ts",

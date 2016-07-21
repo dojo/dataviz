@@ -5,15 +5,15 @@ import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
 import columnar, { Column } from '../../structure/columnar';
-import createDataObserverMixin, {
-	DataObserver,
-	DataObserverOptions,
-	DataObserverState
-} from './createDataObserverMixin';
+import createDataProviderMixin, {
+	DataProvider,
+	DataProviderOptions,
+	DataProviderState
+} from './createDataProviderMixin';
 
-export type ColumnStructureState<T> = DataObserverState<T>;
+export type ColumnStructureState<T> = DataProviderState<T>;
 
-export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> extends DataObserverOptions<T, S> {
+export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> extends DataProviderOptions<T, S> {
 	valueSelector?: (input: T) => number;
 }
 
@@ -24,7 +24,7 @@ export interface ColumnStructureMixin<T> {
 }
 
 export type ColumnStructure<T, S extends ColumnStructureState<T>> =
-	DataObserver<T, S> & ColumnStructureMixin<T>;
+	DataProvider<T, S> & ColumnStructureMixin<T>;
 
 export interface ColumnStructureFactory<T> extends ComposeFactory<
 	ColumnStructure<T, ColumnStructureState<T>>,
@@ -55,7 +55,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		});
 	}
 }).mixin({
-	mixin: createDataObserverMixin,
+	mixin: createDataProviderMixin,
 	initialize<T>(
 		instance: ColumnStructure<T, ColumnStructureState<T>>,
 		{ valueSelector }: ColumnStructureOptions<T, ColumnStructureState<T>> = {}

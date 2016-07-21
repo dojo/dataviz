@@ -7,14 +7,14 @@ import { isArrayLike, isIterable, Iterable } from 'dojo-shim/iterator';
 import WeakMap from 'dojo-shim/WeakMap';
 import { Observable, Subscriber } from 'rxjs/Rx';
 
-export interface DataObserverState<T> extends State {
+export interface DataProviderState<T> extends State {
 	/**
 	 * Data for the observable. Can only be a POJO, so just an array in this case.
 	 */
 	data?: T[];
 }
 
-export interface DataObserverOptions<T, S extends DataObserverState<T>> extends StatefulOptions<S> {
+export interface DataProviderOptions<T, S extends DataProviderState<T>> extends StatefulOptions<S> {
 	/**
 	 * Data for the observable. If an Iterable or ArrayLike the observable is completed after emitting the first value.
 	 * Otherwise the observable *is* the data.
@@ -22,7 +22,7 @@ export interface DataObserverOptions<T, S extends DataObserverState<T>> extends 
 	data?: Iterable<T> | ArrayLike<T> | Observable<T[]>;
 }
 
-export interface DataObserverMixin<T> {
+export interface DataProviderMixin<T> {
 	/**
 	 * Provides the current observable, if any.
 	 */
@@ -39,7 +39,7 @@ export interface DataChangeEvent<T> extends TargettedEventObject {
 	data: Observable<T[]>;
 }
 
-export interface DataObserverOverrides<T> {
+export interface DataProviderOverrides<T> {
 	/**
 	 * Emitted when the observable changes.
 	 */
@@ -47,19 +47,22 @@ export interface DataObserverOverrides<T> {
 	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
-export type DataObserver<T, S extends DataObserverState<T>> =
-	Stateful<S> & DataObserverMixin<T> & DataObserverOverrides<T>;
+/**
+ * Provides an observable for the data, based on state or initializer options.
+ */
+export type DataProvider<T, S extends DataProviderState<T>> =
+	Stateful<S> & DataProviderMixin<T> & DataProviderOverrides<T>;
 
-export interface DataObserverFactory<T> extends ComposeFactory<
-	DataObserver<T, DataObserverState<T>>,
-	DataObserverOptions<T, DataObserverState<T>>
+export interface DataProviderFactory<T> extends ComposeFactory<
+	DataProvider<T, DataProviderState<T>>,
+	DataProviderOptions<T, DataProviderState<T>>
 > {
-	<T, S extends DataObserverState<T>>(options?: DataObserverOptions<T, S>): DataObserver<T, S>;
+	<T, S extends DataProviderState<T>>(options?: DataProviderOptions<T, S>): DataProvider<T, S>;
 }
 
-const observables = new WeakMap<DataObserver<any, DataObserverState<any>>, Observable<any[]>>();
+const observables = new WeakMap<DataProvider<any, DataProviderState<any>>, Observable<any[]>>();
 
-const createDataObserverMixin: DataObserverFactory<any> = createStateful
+const createDataProviderMixin: DataProviderFactory<any> = createStateful
 	.extend({
 		get data() {
 			return observables.get(this);
@@ -67,7 +70,7 @@ const createDataObserverMixin: DataObserverFactory<any> = createStateful
 	})
 	.mixin({
 		mixin: createEvented,
-		initialize<T>(instance: DataObserver<T, DataObserverState<T>>, { data }: DataObserverOptions<T, DataObserverState<T>> = {}) {
+		initialize<T>(instance: DataProvider<T, DataProviderState<T>>, { data }: DataProviderOptions<T, DataProviderState<T>> = {}) {
 			if (data) {
 				// Create an observable if the data option was provided.
 				let observable: Observable<T[]> = isArrayLike(data) || isIterable(data) ? Observable.from([from(data)]) : data;
@@ -126,4 +129,4 @@ const createDataObserverMixin: DataObserverFactory<any> = createStateful
 		}
 	});
 
-export default createDataObserverMixin;
+export default createDataProviderMixin;
