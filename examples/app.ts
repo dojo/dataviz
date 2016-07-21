@@ -7,7 +7,11 @@ import getPlayCounts, { PlayCount } from './play-counts';
 
 const store = createMemoryStore({
 	data: [
-		{ id: 'chart' }
+		{
+			id: 'chart',
+			// Example of configuring columnHeight
+			columnHeight: 100
+		}
 	]
 });
 
@@ -31,6 +35,9 @@ const chart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 		return input.count;
 	}
 });
+
+// Example of setting columnWidth
+chart.columnWidth = 20;
 
 // Make the chart available to the console.
 (<any> window).chart = chart;

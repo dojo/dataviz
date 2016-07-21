@@ -11,9 +11,29 @@ import createDataProviderMixin, {
 	DataProviderState
 } from './createDataProviderMixin';
 
-export type ColumnStructureState<T> = DataProviderState<T>;
+export interface ColumnStructureState<T> extends DataProviderState<T> {
+	/**
+	 * Controls the maximum height of each column.
+	 */
+	columnHeight?: number;
+
+	/**
+	 * Controls the width of each column.
+	 */
+	columnWidth?: number;
+}
 
 export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> extends DataProviderOptions<T, S> {
+	/**
+	 * Controls the maximum height of each column.
+	 */
+	columnHeight?: number;
+
+	/**
+	 * Controls the width of each column.
+	 */
+	columnWidth?: number;
+
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
 	 *
@@ -24,6 +44,16 @@ export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> ex
 
 export interface ColumnStructureMixin<T> {
 	getChildrenNodes(): VNode[];
+
+	/**
+	 * Controls the maximum height of each column.
+	 */
+	columnHeight: number;
+
+	/**
+	 * Controls the width of each column.
+	 */
+	columnWidth: number;
 
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
@@ -46,24 +76,63 @@ export interface ColumnStructureFactory<T> extends ComposeFactory<
 	<T, S extends ColumnStructureState<T>>(options?: ColumnStructureOptions<T, S>): ColumnStructure<T, S>;
 }
 
-const structures = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, Column<any>[]>();
+const columnData = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, Column<any>[]>();
+const shadowColumnHeights = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
+const shadowColumnWidths = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
 
 const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
+	get columnHeight() {
+		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
+		const { columnHeight = shadowColumnHeights.get(structure) } = structure.state || {};
+		return columnHeight;
+	},
+
+	set columnHeight(columnHeight) {
+		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
+		if (structure.state) {
+			structure.setState({ columnHeight });
+		}
+		else {
+			shadowColumnHeights.set(structure, columnHeight);
+		}
+		// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
+		(<any> structure).invalidate();
+	},
+
+	get columnWidth() {
+		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
+		const { columnWidth = shadowColumnWidths.get(structure) } = structure.state || {};
+		return columnWidth;
+	},
+
+	set columnWidth(columnWidth) {
+		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
+		if (structure.state) {
+			structure.setState({ columnWidth });
+		}
+		else {
+			shadowColumnWidths.set(structure, columnWidth);
+		}
+		// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
+		(<any> structure).invalidate();
+	},
+
 	// Assuming this is mixed in to dojo-widgets/createWidget, replace the getChildrenNodes() implementation from
 	// its prototype in order to render the columns.
-	getChildrenNodes(): VNode[] {
-		const structure = structures.get(this);
-		return structure.map((value, index) => {
-			// TODO: Make width configurable
-			// TODO: Read height from state
+	getChildrenNodes() {
+		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
+		const data = columnData.get(structure);
+		const { columnHeight, columnWidth } = structure;
+		return data.map((value, index) => {
 			const { input, relativeValue } = value;
-			const height = relativeValue * 100;
-			const y = 100 - height;
+			const height = relativeValue * columnHeight;
+			const x = columnWidth * index;
+			const y = columnHeight - height;
 			return h('g', { key: input }, [
 				h('rect', {
-					width: '20',
+					width: String(columnWidth),
 					height: String(height),
-					x: String(20 * index),
+					x: String(x),
 					y: String(y)
 				})
 			]);
@@ -73,8 +142,11 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 	mixin: createDataProviderMixin,
 	initialize<T>(
 		instance: ColumnStructure<T, ColumnStructureState<T>>,
-		{ valueSelector }: ColumnStructureOptions<T, ColumnStructureState<T>> = {}
+		{ columnHeight = 0, columnWidth = 0, valueSelector }: ColumnStructureOptions<T, ColumnStructureState<T>> = {}
 	) {
+		shadowColumnHeights.set(instance, columnHeight);
+		shadowColumnWidths.set(instance, columnWidth);
+
 		if (!valueSelector) {
 			// Allow a valueSelector implementation to be mixed in.
 			valueSelector = (input: T) => {
@@ -88,7 +160,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		}
 
 		// Initialize with an empty structure since the DataProvider only provides data if any is available.
-		structures.set(instance, []);
+		columnData.set(instance, []);
 
 		let handle: Handle = null;
 		const subscribe = (data: Observable<T[]>) => {
@@ -98,7 +170,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 
 			const subscription = columnar(data, valueSelector)
 				.subscribe((structure) => {
-					structures.set(instance, structure);
+					columnData.set(instance, structure);
 					// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
 					(<any> instance).invalidate();
 				});
