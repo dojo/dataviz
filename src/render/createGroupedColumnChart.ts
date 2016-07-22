@@ -1,4 +1,5 @@
 import { ComposeFactory } from 'dojo-compose/compose';
+import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { from } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
@@ -72,8 +73,12 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 					});
 				}
 			}
-		},
-
+		}
+	})
+	.mixin({
+		// Add createDestroyable to ensure instance.own() is available at runtime.
+		// See <https://github.com/dojo/compose/issues/42>.
+		mixin: createDestroyable,
 		initialize<T>(
 			instance: GroupedColumnChart<T, GroupedColumnChartState<T>>,
 			{ groupSelector }: GroupedColumnChartOptions<T, GroupedColumnChartState<T>> = {}
@@ -83,6 +88,11 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 			}
 
 			groupSelectors.set(instance, groupSelector);
+			instance.own({
+				destroy() {
+					groupSelectors.delete(instance);
+				}
+			});
 		}
 	});
 

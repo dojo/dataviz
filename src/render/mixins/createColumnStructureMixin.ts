@@ -231,6 +231,14 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		}
 		// Update the data if it changes.
 		instance.own(instance.on('datachange', ({ data }) => subscribe(data)));
+
+		instance.own({
+			destroy() {
+				columnData.delete(instance);
+				shadowColumnHeights.delete(instance);
+				shadowColumnWidths.delete(instance);
+			}
+		});
 	}
 });
 

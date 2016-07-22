@@ -126,6 +126,12 @@ const createDataProviderMixin: DataProviderFactory<any> = createStateful
 					latestValue = data;
 				}
 			}));
+
+			instance.own({
+				destroy() {
+					observables.delete(instance);
+				}
+			});
 		}
 	});
 
