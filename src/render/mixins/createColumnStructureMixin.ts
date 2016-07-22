@@ -1,6 +1,6 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { Handle } from 'dojo-core/interfaces';
-import WeakMap from 'dojo-shim/WeakMap';
+import Symbol from 'dojo-shim/Symbol';
 import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
@@ -50,8 +50,6 @@ export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> ex
 }
 
 export interface ColumnStructureMixin<T> {
-	getChildrenNodes(): VNode[];
-
 	/**
 	 * Controls the maximum height of each column.
 	 */
@@ -75,6 +73,13 @@ export interface ColumnStructureMixin<T> {
 	 * May be omitted if a `valueSelector()` option has been provided.
 	 */
 	valueSelector?: ValueSelector<T>;
+
+	getChildrenNodes(): VNode[];
+
+	/**
+	 * Create nodes for each column.
+	 */
+	prepareColumnNodes(): VNode[];
 }
 
 /**
@@ -89,6 +94,8 @@ export interface ColumnStructureFactory<T> extends ComposeFactory<
 > {
 	<T, S extends ColumnStructureState<T>>(options?: ColumnStructureOptions<T, S>): ColumnStructure<T, S>;
 }
+
+export const COLUMN_OBJECT = Symbol('Column object for which the VNode was created');
 
 const columnData = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, Column<any>[]>();
 const shadowColumnHeights = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
@@ -135,6 +142,11 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 	// its prototype in order to render the columns.
 	getChildrenNodes() {
 		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
+		return structure.prepareColumnNodes();
+	},
+
+	prepareColumnNodes() {
+		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
 		const data = columnData.get(structure);
 		const { columnHeight, columnWidth } = structure;
 		return data.map((value, index) => {
@@ -142,7 +154,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 			const height = relativeValue * columnHeight;
 			const x = columnWidth * index;
 			const y = columnHeight - height;
-			return h('g', { key: input }, [
+			return h('g', { key: input, [COLUMN_OBJECT]: value }, [
 				h('rect', {
 					width: String(columnWidth),
 					height: String(height),

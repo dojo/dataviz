@@ -3,10 +3,13 @@ import createWidget, { Widget, WidgetOptions, WidgetState } from 'dojo-widgets/c
 
 import createSvgRootMixin, { SvgRoot, SvgRootOptions, SvgRootState } from './mixins/createSvgRootMixin';
 import createColumnStructureMixin, {
+	COLUMN_OBJECT,
 	ColumnStructure,
 	ColumnStructureOptions,
 	ColumnStructureState
 } from './mixins/createColumnStructureMixin';
+
+export { COLUMN_OBJECT };
 
 export type ColumnChartState<T> =
 	WidgetState & SvgRootState & ColumnStructureState<T>;
