@@ -3,11 +3,14 @@ import projector from 'dojo-widgets/projector';
 
 import max from 'src/data/max';
 import sum from 'src/data/sum';
+import sort from 'src/data/sort';
 import createColumnChart, { ColumnChartFactory } from 'src/render/createColumnChart';
+import createGroupedColumnChart, { GroupedColumnChartFactory } from 'src/render/createGroupedColumnChart';
 
 import getPlayCounts, { PlayCount } from './play-counts';
 
 const playCounts = getPlayCounts().share();
+const byProvince = sort(playCounts, ({ province }) => province);
 
 const store = createMemoryStore({
 	data: [
@@ -56,9 +59,27 @@ const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	width: 200
 });
 
+const groupedByProvinceChart = (<GroupedColumnChartFactory<PlayCount>> createGroupedColumnChart)({
+	columnHeight: 100,
+	columnWidth: 10,
+	// Example of passing an observable to the chart.
+	data: byProvince,
+	divisorOperator: max,
+	groupSelector(input) {
+		return input.province;
+	},
+	height: 100,
+	valueSelector(input: PlayCount) {
+		// Why isn't the input type inferred here? It is in percentageChart, seemingly due to the stateFrom option.
+		return input.count;
+	},
+	width: 200
+});
+
 // Make the charts available to the console.
 (<any> window).absoluteChart = absoluteChart;
+(<any> window).groupedByProvinceChart = groupedByProvinceChart;
 (<any> window).percentageChart = percentageChart;
 
-projector.append([percentageChart, absoluteChart]);
+projector.append([percentageChart, absoluteChart, groupedByProvinceChart]);
 projector.attach();
