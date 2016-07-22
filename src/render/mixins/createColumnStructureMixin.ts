@@ -154,14 +154,14 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 			const height = relativeValue * columnHeight;
 			const x = columnWidth * index;
 			const y = columnHeight - height;
-			return h('g', { key: input, [COLUMN_OBJECT]: value }, [
-				h('rect', {
-					width: String(columnWidth),
-					height: String(height),
-					x: String(x),
-					y: String(y)
-				})
-			]);
+			return h('rect', {
+				key: input,
+				[COLUMN_OBJECT]: value,
+				width: String(columnWidth),
+				height: String(height),
+				x: String(x),
+				y: String(y)
+			});
 		});
 	}
 }).mixin({
