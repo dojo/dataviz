@@ -18,6 +18,11 @@ export interface ColumnStructureState<T> extends DataProviderState<T> {
 	columnHeight?: number;
 
 	/**
+	 * Controls the space between each column.
+	 */
+	columnSpacing?: number;
+
+	/**
 	 * Controls the width of each column.
 	 */
 	columnWidth?: number;
@@ -28,6 +33,11 @@ export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> ex
 	 * Controls the maximum height of each column.
 	 */
 	columnHeight?: number;
+
+	/**
+	 * Controls the space between each column.
+	 */
+	columnSpacing?: number;
 
 	/**
 	 * Controls the width of each column.
@@ -54,6 +64,11 @@ export interface ColumnStructureMixin<T> {
 	 * Controls the maximum height of each column.
 	 */
 	columnHeight: number;
+
+	/**
+	 * Controls the space between each column.
+	 */
+	columnSpacing?: number;
 
 	/**
 	 * Controls the width of each column.
@@ -99,6 +114,7 @@ export const COLUMN_OBJECT = Symbol('Column object for which the VNode was creat
 
 const columnData = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, Column<any>[]>();
 const shadowColumnHeights = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
+const shadowColumnSpacings = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
 const shadowColumnWidths = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
 
 const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
@@ -115,6 +131,24 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		}
 		else {
 			shadowColumnHeights.set(structure, columnHeight);
+		}
+		// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
+		(<any> structure).invalidate();
+	},
+
+	get columnSpacing() {
+		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
+		const { columnSpacing = shadowColumnSpacings.get(structure) } = structure.state || {};
+		return columnSpacing;
+	},
+
+	set columnSpacing(columnSpacing) {
+		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
+		if (structure.state) {
+			structure.setState({ columnSpacing });
+		}
+		else {
+			shadowColumnSpacings.set(structure, columnSpacing);
 		}
 		// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
 		(<any> structure).invalidate();
@@ -148,11 +182,11 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 	prepareColumnNodes() {
 		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
 		const data = columnData.get(structure);
-		const { columnHeight, columnWidth } = structure;
+		const { columnHeight, columnSpacing, columnWidth } = structure;
 		return data.map((value, index) => {
 			const { input, relativeValue } = value;
 			const height = relativeValue * columnHeight;
-			const x = columnWidth * index;
+			const x = (columnWidth + columnSpacing) * index;
 			const y = columnHeight - height;
 			return h('rect', {
 				key: input,
@@ -170,12 +204,14 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		instance: ColumnStructure<T, ColumnStructureState<T>>,
 		{
 			columnHeight = 0,
+			columnSpacing = 0,
 			columnWidth = 0,
 			divisorOperator,
 			valueSelector
 		}: ColumnStructureOptions<T, ColumnStructureState<T>> = {}
 	) {
 		shadowColumnHeights.set(instance, columnHeight);
+		shadowColumnSpacings.set(instance, columnSpacing);
 		shadowColumnWidths.set(instance, columnWidth);
 
 		if (!divisorOperator) {

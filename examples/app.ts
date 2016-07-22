@@ -29,6 +29,7 @@ playCounts.subscribe((data) => {
 
 const percentageChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	id: 'percentageChart',
+	columnSpacing: 1,
 	divisorOperator: sum,
 	state: {
 		// Example of passing height via the state
@@ -47,6 +48,7 @@ percentageChart.columnWidth = 20;
 
 const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	columnHeight: 100,
+	columnSpacing: 1,
 	columnWidth: 20,
 	// Example of passing an observable to the chart.
 	data: playCounts,
@@ -61,6 +63,7 @@ const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 
 const groupedByProvinceChart = (<GroupedColumnChartFactory<PlayCount>> createGroupedColumnChart)({
 	columnHeight: 100,
+	columnSpacing: 1,
 	columnWidth: 10,
 	// Example of passing an observable to the chart.
 	data: byProvince,
