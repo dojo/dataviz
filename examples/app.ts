@@ -1,6 +1,7 @@
 import createMemoryStore from 'dojo-widgets/util/createMemoryStore';
 import projector from 'dojo-widgets/projector';
 
+import sum from 'src/data/sum';
 import createColumnChart, { ColumnChartFactory } from 'src/render/createColumnChart';
 
 import getPlayCounts, { PlayCount } from './play-counts';
@@ -33,7 +34,8 @@ const chart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	width: 200,
 	valueSelector(input) {
 		return input.count;
-	}
+	},
+	divisorOperator: sum
 });
 
 // Example of setting columnWidth

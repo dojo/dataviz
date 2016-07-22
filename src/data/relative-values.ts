@@ -4,15 +4,15 @@ import { Observable } from 'rxjs/Rx';
 export default function relativeValues<T> (
 	observable: Observable<Iterable<T> | ArrayLike<T>>,
 	valueSelector: (input: T) => number,
-	sums: Observable<number>
+	divisors: Observable<number>
 ): Observable<[T, number][]> {
 	return observable
-		.withLatestFrom(sums)
-		.map(([inputs, sum]) => {
+		.withLatestFrom(divisors)
+		.map(([inputs, divisor]) => {
 			const result: [T, number][] = [];
 			forOf(inputs, (input) => {
 				// FIXME: Handle Infinity and -Infinity?
-				result.push([input, (valueSelector(input) || 0) / sum]);
+				result.push([input, (valueSelector(input) || 0) / divisor]);
 			});
 			return result;
 		});

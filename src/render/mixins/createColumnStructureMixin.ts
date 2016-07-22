@@ -4,7 +4,7 @@ import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
-import columnar, { Column } from '../../structure/columnar';
+import columnar, { Column, DivisorOperator, InputObservable, ValueSelector } from '../../structure/columnar';
 import createDataProviderMixin, {
 	DataProvider,
 	DataProviderOptions,
@@ -35,11 +35,18 @@ export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> ex
 	columnWidth?: number;
 
 	/**
+	 * Operates on the data observable to compute the divisor, which is used to determine the height of the columns.
+	 *
+	 * May be omitted if a `divisorOperator()` implementation has been mixed in.
+	 */
+	divisorOperator?: DivisorOperator<T>;
+
+	/**
 	 * Select the value from the input. Columns height is determined by this value.
 	 *
 	 * May be omitted if a `valueSelector()` implementation has been mixed in.
 	 */
-	valueSelector?: (input: T) => number;
+	valueSelector?: ValueSelector<T>;
 }
 
 export interface ColumnStructureMixin<T> {
@@ -56,11 +63,18 @@ export interface ColumnStructureMixin<T> {
 	columnWidth: number;
 
 	/**
+	 * Operates on the data observable to compute the divisor, which is used to determine the height of the columns.
+	 *
+	 * May be omitted if a `divisorOperator()` option has been provided.
+	 */
+	divisorOperator?: DivisorOperator<T>;
+
+	/**
 	 * Select the value from the input. Columns height is determined by this value.
 	 *
 	 * May be omitted if a `valueSelector()` option has been provided.
 	 */
-	valueSelector?: (input: T) => number;
+	valueSelector?: ValueSelector<T>;
 }
 
 /**
@@ -142,10 +156,27 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 	mixin: createDataProviderMixin,
 	initialize<T>(
 		instance: ColumnStructure<T, ColumnStructureState<T>>,
-		{ columnHeight = 0, columnWidth = 0, valueSelector }: ColumnStructureOptions<T, ColumnStructureState<T>> = {}
+		{
+			columnHeight = 0,
+			columnWidth = 0,
+			divisorOperator,
+			valueSelector
+		}: ColumnStructureOptions<T, ColumnStructureState<T>> = {}
 	) {
 		shadowColumnHeights.set(instance, columnHeight);
 		shadowColumnWidths.set(instance, columnWidth);
+
+		if (!divisorOperator) {
+			// Allow a divisorOperator implementation to be mixed in.
+			divisorOperator = (observable: InputObservable<T>, valueSelector: ValueSelector<T>) => {
+				if (instance.divisorOperator) {
+					return instance.divisorOperator(observable, valueSelector);
+				}
+
+				// Default to 1, don't throw at runtime.
+				return Observable.of(1);
+			};
+		}
 
 		if (!valueSelector) {
 			// Allow a valueSelector implementation to be mixed in.
@@ -168,7 +199,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 				handle.destroy();
 			}
 
-			const subscription = columnar(data, valueSelector)
+			const subscription = columnar(data, valueSelector, divisorOperator)
 				.subscribe((structure) => {
 					columnData.set(instance, structure);
 					// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
