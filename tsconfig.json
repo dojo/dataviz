@@ -23,6 +23,7 @@
 		"./examples/play-counts.ts",
 		"./examples/stdout.ts",
 		"./src/data/accumulate.ts",
+		"./src/data/max.ts",
 		"./src/data/relative-values.ts",
 		"./src/data/sort.ts",
 		"./src/data/sum.ts",

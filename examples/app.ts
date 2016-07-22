@@ -1,15 +1,18 @@
 import createMemoryStore from 'dojo-widgets/util/createMemoryStore';
 import projector from 'dojo-widgets/projector';
 
+import max from 'src/data/max';
 import sum from 'src/data/sum';
 import createColumnChart, { ColumnChartFactory } from 'src/render/createColumnChart';
 
 import getPlayCounts, { PlayCount } from './play-counts';
 
+const playCounts = getPlayCounts().share();
+
 const store = createMemoryStore({
 	data: [
 		{
-			id: 'chart',
+			id: 'percentageChart',
 			// Example of configuring columnHeight
 			columnHeight: 100
 		}
@@ -17,14 +20,12 @@ const store = createMemoryStore({
 });
 
 // Example of patching the store every time the data changes.
-// getPlayCounts().subscribe((data) => {
-// 	store.patch({ data }, { id: 'chart' });
-// });
+playCounts.subscribe((data) => {
+	store.patch({ data }, { id: 'percentageChart' });
+});
 
-const chart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
-	id: 'chart',
-	// Example of passing an observable to the chart.
-	data: getPlayCounts(),
+const percentageChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
+	id: 'percentageChart',
 	divisorOperator: sum,
 	state: {
 		// Example of passing height via the state
@@ -39,10 +40,24 @@ const chart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 });
 
 // Example of setting columnWidth
-chart.columnWidth = 20;
+percentageChart.columnWidth = 20;
 
-// Make the chart available to the console.
-(<any> window).chart = chart;
+const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
+	columnHeight: 100,
+	columnWidth: 20,
+	// Example of passing an observable to the chart.
+	data: playCounts,
+	divisorOperator: max,
+	height: 100,
+	valueSelector(input) {
+		return input.count;
+	},
+	width: 200
+});
 
-projector.append(chart);
+// Make the charts available to the console.
+(<any> window).absoluteChart = absoluteChart;
+(<any> window).percentageChart = percentageChart;
+
+projector.append([percentageChart, absoluteChart]);
 projector.attach();
