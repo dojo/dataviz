@@ -32,7 +32,7 @@ const percentageChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 		height: 100
 	},
 	stateFrom: store,
-	valueSelector(input) {
+	valueSelector(input) { // Note how the input type is inferred to be PlayCount.
 		return input.count;
 	},
 	// Example of passing width
@@ -49,7 +49,8 @@ const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	data: playCounts,
 	divisorOperator: max,
 	height: 100,
-	valueSelector(input) {
+	valueSelector(input: PlayCount) {
+		// Why isn't the input type inferred here? It is in percentageChart, seemingly due to the stateFrom option.
 		return input.count;
 	},
 	width: 200
