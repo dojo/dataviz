@@ -71,6 +71,7 @@ const groupedByProvinceChart = (<GroupedColumnChartFactory<PlayCount>> createGro
 	groupSelector(input) {
 		return input.province;
 	},
+	groupSpacing: 10,
 	height: 100,
 	valueSelector(input: PlayCount) {
 		// Why isn't the input type inferred here? It is in percentageChart, seemingly due to the stateFrom option.

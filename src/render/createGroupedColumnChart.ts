@@ -3,7 +3,7 @@ import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { from } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
-import { h, VNode } from 'maquette/maquette';
+import { h, VNode, VNodeProperties } from 'maquette/maquette';
 
 import createColumnChart, {
 	COLUMN_OBJECT,
@@ -12,7 +12,12 @@ import createColumnChart, {
 	ColumnChartState
 } from './createColumnChart';
 
-export type GroupedColumnChartState<T> = ColumnChartState<T>;
+export type GroupedColumnChartState<T> = ColumnChartState<T> & {
+	/**
+	 * Controls the space between each group.
+	 */
+	groupSpacing?: number;
+}
 
 export type GroupSelector<T> = (input: T) => any;
 
@@ -23,6 +28,11 @@ export type GroupedColumnChartOptions<T, S extends GroupedColumnChartState<T>> =
 	 * May be omitted if a `groupSelector()` implementation has been mixed in.
 	 */
 	groupSelector?: GroupSelector<T>;
+
+	/**
+	 * Controls the space between each group.
+	 */
+	groupSpacing?: number;
 }
 
 export interface GroupedColumnChartMixin<T> {
@@ -32,6 +42,11 @@ export interface GroupedColumnChartMixin<T> {
 	 * May be omitted if a `groupSelector()` option has been provided.
 	 */
 	groupSelector?: GroupSelector<T>;
+
+	/**
+	 * Controls the space between each group.
+	 */
+	groupSpacing?: number;
 }
 
 export type GroupedColumnChart<T, S extends GroupedColumnChartState<T>> = ColumnChart<T, S> & GroupedColumnChartMixin<T>;
@@ -44,9 +59,28 @@ export interface GroupedColumnChartFactory<T> extends ComposeFactory<
 }
 
 const groupSelectors = new WeakMap<GroupedColumnChart<any, GroupedColumnChartState<any>>, GroupSelector<any>>();
+const shadowGroupSpacings = new WeakMap<GroupedColumnChart<any, GroupedColumnChartState<any>>, number>();
 
 const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnChart
 	.mixin({
+		mixin: {
+			get groupSpacing() {
+				const chart: GroupedColumnChart<any, GroupedColumnChartState<any>> = this;
+				const { groupSpacing = shadowGroupSpacings.get(chart) } = chart.state || {};
+				return groupSpacing;
+			},
+
+			set groupSpacing(groupSpacing) {
+				const chart: GroupedColumnChart<any, GroupedColumnChartState<any>> = this;
+				if (chart.state) {
+					chart.setState({ groupSpacing });
+				}
+				else {
+					shadowGroupSpacings.set(chart, groupSpacing);
+				}
+				chart.invalidate();
+			}
+		},
 		aspectAdvice: {
 			after: {
 				prepareColumnNodes(nodes: VNode[]): VNode[] {
@@ -66,10 +100,20 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 						groups.get(group).push(node);
 					}
 
+					const { groupSpacing } = chart;
+					let offset = 0;
+
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
-					return from(<any> groups, (entry: any) => {
+					return from(<any> groups, (entry: any, index: number) => {
 						const [group, nodes] = <[any, VNode[]]> entry;
-						return h('g', { key: group }, nodes);
+						const props: VNodeProperties = { key: group };
+
+						if (index > 0) {
+							offset += groupSpacing;
+							props['transform'] = `translate(${offset})`;
+						}
+
+						return h('g', props, nodes);
 					});
 				}
 			}
@@ -81,16 +125,21 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 		mixin: createDestroyable,
 		initialize<T>(
 			instance: GroupedColumnChart<T, GroupedColumnChartState<T>>,
-			{ groupSelector }: GroupedColumnChartOptions<T, GroupedColumnChartState<T>> = {}
+			{
+				groupSelector,
+				groupSpacing = 0
+			}: GroupedColumnChartOptions<T, GroupedColumnChartState<T>> = {}
 		) {
 			if (!groupSelector) {
 				groupSelector = (input: T) => instance.groupSelector(input);
 			}
 
 			groupSelectors.set(instance, groupSelector);
+			shadowGroupSpacings.set(instance, groupSpacing);
 			instance.own({
 				destroy() {
 					groupSelectors.delete(instance);
+					shadowGroupSpacings.delete(instance);
 				}
 			});
 		}
