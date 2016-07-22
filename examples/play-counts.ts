@@ -14,7 +14,6 @@ export default function getObservable (): Observable<PlayCount[]> {
 			{ artist: 'Hawksley Workman', count: 31910 },
 			{ artist: 'Buck 65', count: 21192 },
 			{ artist: 'The Weakerthans', count: 13495 },
-			{ artist: 'Bear McCreary', count: 10864 },
 			{ artist: 'Metric', count: 10067 },
 			{ artist: 'The New Pornographers', count: 6201 },
 			{ artist: 'Bike For Three!', count: 6022 },
