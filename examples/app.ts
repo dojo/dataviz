@@ -23,19 +23,19 @@ const store = createMemoryStore({
 
 const chart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	id: 'chart',
-	stateFrom: store,
 	// Example of passing an observable to the chart.
 	data: getPlayCounts(),
+	divisorOperator: sum,
 	state: {
 		// Example of passing height via the state
 		height: 100
 	},
-	// Example of passing width
-	width: 200,
+	stateFrom: store,
 	valueSelector(input) {
 		return input.count;
 	},
-	divisorOperator: sum
+	// Example of passing width
+	width: 200
 });
 
 // Example of setting columnWidth
