@@ -37,7 +37,7 @@ export interface SvgRootMixin {
 	/**
 	 * The tagName is *always* 'svg'.
 	 */
-	readonly tagName: string;
+	tagName: string;
 
 	/**
 	 * Controls the width of the <svg> element.

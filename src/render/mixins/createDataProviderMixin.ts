@@ -26,7 +26,7 @@ export interface DataProviderMixin<T> {
 	/**
 	 * Provides the current observable, if any.
 	 */
-	readonly data?: Observable<T[]>;
+	data?: Observable<T[]>;
 }
 
 /**
