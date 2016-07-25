@@ -1,14 +1,15 @@
 import { ComposeFactory } from 'dojo-compose/compose';
+import { VNode } from 'maquette/maquette';
 
 import createChart, { Chart, ChartOptions, ChartState } from './createChart';
 import createColumnStructureMixin, {
-	COLUMN_OBJECT,
+	ColumnVisualization,
 	ColumnStructure,
 	ColumnStructureOptions,
 	ColumnStructureState
 } from './mixins/createColumnStructureMixin';
 
-export { COLUMN_OBJECT };
+export { ColumnVisualization }
 
 export type ColumnChartState<T> = ChartState<T> & ColumnStructureState<T>;
 

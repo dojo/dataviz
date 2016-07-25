@@ -6,11 +6,17 @@ import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode, VNodeProperties } from 'maquette/maquette';
 
 import createColumnChart, {
-	COLUMN_OBJECT,
 	ColumnChart,
 	ColumnChartOptions,
-	ColumnChartState
+	ColumnChartState,
+	ColumnVisualization
 } from './createColumnChart';
+
+export interface GroupedColumnVisualization<T> {
+	columnVisualizations: ColumnVisualization<T>[];
+	group: T;
+	translateX?: number;
+}
 
 export type GroupedColumnChartState<T> = ColumnChartState<T> & {
 	/**
@@ -83,13 +89,13 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 		},
 		aspectAdvice: {
 			after: {
-				prepareColumnNodes(nodes: VNode[]): VNode[] {
+				visualizeData(columnVisualizations: ColumnVisualization<any>[]): GroupedColumnVisualization<any>[] {
 					const chart: GroupedColumnChart<any, GroupedColumnChartState<any>> = this;
 					const groupSelector = groupSelectors.get(chart);
-					const groups = new Map<any, VNode[]>();
+					const groups = new Map<any, ColumnVisualization<any>[]>();
 
-					for (const node of nodes) {
-						const { input } = node.properties[COLUMN_OBJECT];
+					for (const viz of columnVisualizations) {
+						const { input } = viz.column;
 
 						// Note that the ordering of the groups is determined by the original sort order, as is the
 						// ordering of nodes within the group.
@@ -97,7 +103,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 						if (!groups.has(group)) {
 							groups.set(group, []);
 						}
-						groups.get(group).push(node);
+						groups.get(group).push(viz);
 					}
 
 					const { groupSpacing } = chart;
@@ -105,16 +111,36 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
 					return from(<any> groups, (entry: any, index: number) => {
-						const [group, nodes] = <[any, VNode[]]> entry;
-						const props: VNodeProperties = { key: group };
+						const [group, columnVisualizations] = <[any, ColumnVisualization<any>[]]> entry;
 
+						let translateX: number;
 						if (index > 0) {
 							offset += groupSpacing;
-							props['transform'] = `translate(${offset})`;
+							translateX = offset;
 						}
 
-						return h('g', props, nodes);
+						return {
+							columnVisualizations,
+							group,
+							translateX
+						};
 					});
+				}
+			},
+
+			around: {
+				createVisualizationNodes(createColumnVisualizationNodes: (positions: ColumnVisualization<any>[]) => VNode[]) {
+					return (groupPositions: GroupedColumnVisualization<any>[]) => {
+						return groupPositions.map(({ group, columnVisualizations, translateX }) => {
+							const props: VNodeProperties = {
+								key: group
+							};
+							if (translateX) {
+								props['transform'] = `translate(${translateX})`;
+							}
+							return h('g', props, createColumnVisualizationNodes.call(this, columnVisualizations));
+						});
+					};
 				}
 			}
 		}

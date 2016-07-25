@@ -1,6 +1,5 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { Handle } from 'dojo-core/interfaces';
-import Symbol from 'dojo-shim/Symbol';
 import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
@@ -13,6 +12,14 @@ import createDataProviderMixin, {
 	DataProviderOptions,
 	DataProviderState
 } from './createDataProviderMixin';
+
+export interface ColumnVisualization<T> {
+	column: Column<T>;
+	height: string;
+	width: string;
+	x: string;
+	y: string;
+}
 
 export interface ColumnStructureState<T> extends DataProviderState<T> {
 	/**
@@ -93,9 +100,14 @@ export interface ColumnStructureMixin<T> extends Chartable {
 	valueSelector?: ValueSelector<T>;
 
 	/**
-	 * Create nodes for each column.
+	 * Create VNodes for each column given its visualization.
 	 */
-	prepareColumnNodes(): VNode[];
+	createVisualizationNodes(visualizations: ColumnVisualization<T>[]): VNode[];
+
+	/**
+	 * Determine the size and position of each column.
+	 */
+	visualizeData(): ColumnVisualization<T>[];
 }
 
 /**
@@ -110,8 +122,6 @@ export interface ColumnStructureFactory<T> extends ComposeFactory<
 > {
 	<T, S extends ColumnStructureState<T>>(options?: ColumnStructureOptions<T, S>): ColumnStructure<T, S>;
 }
-
-export const COLUMN_OBJECT = Symbol('Column object for which the VNode was created');
 
 const columnData = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, Column<any>[]>();
 const shadowColumnHeights = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
@@ -172,26 +182,36 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 
 	getChartNodes() {
 		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		return structure.prepareColumnNodes();
+		return structure.createVisualizationNodes(structure.visualizeData());
 	},
 
-	prepareColumnNodes() {
+	createVisualizationNodes(visualizations: ColumnVisualization<any>[]) {
+		return visualizations.map(({ column, height, width, x, y}) => {
+			return h('rect', {
+				key: column.input,
+				height,
+				width,
+				x,
+				y
+			});
+		});
+	},
+
+	visualizeData(): ColumnVisualization<any>[] {
 		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
 		const data = columnData.get(structure);
 		const { columnHeight, columnSpacing, columnWidth } = structure;
-		return data.map((value, index) => {
-			const { input, relativeValue } = value;
-			const height = relativeValue * columnHeight;
+		return data.map((column, index) => {
+			const height = column.relativeValue * columnHeight;
 			const x = (columnWidth + columnSpacing) * index;
 			const y = columnHeight - height;
-			return h('rect', {
-				key: input,
-				[COLUMN_OBJECT]: value,
-				width: String(columnWidth),
+			return {
+				column,
 				height: String(height),
+				width: String(columnWidth),
 				x: String(x),
 				y: String(y)
-			});
+			};
 		});
 	}
 }).mixin({
