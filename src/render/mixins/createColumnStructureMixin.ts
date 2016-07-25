@@ -5,7 +5,7 @@ import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
 import columnar, { Column, DivisorOperator, InputObservable, ValueSelector } from '../../structure/columnar';
-import { Invalidatable } from '../interfaces';
+import { Chartable, Invalidatable } from '../interfaces';
 import createDataProviderMixin, {
 	DataProvider,
 	DataProviderOptions,
@@ -60,7 +60,7 @@ export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> ex
 	valueSelector?: ValueSelector<T>;
 }
 
-export interface ColumnStructureMixin<T> {
+export interface ColumnStructureMixin<T> extends Chartable {
 	/**
 	 * Controls the maximum height of each column.
 	 */
@@ -89,8 +89,6 @@ export interface ColumnStructureMixin<T> {
 	 * May be omitted if a `valueSelector()` option has been provided.
 	 */
 	valueSelector?: ValueSelector<T>;
-
-	getChildrenNodes(): VNode[];
 
 	/**
 	 * Create nodes for each column.
@@ -170,9 +168,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		structure.invalidate();
 	},
 
-	// Assuming this is mixed in to dojo-widgets/createWidget, replace the getChildrenNodes() implementation from
-	// its prototype in order to render the columns.
-	getChildrenNodes() {
+	getChartNodes() {
 		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
 		return structure.prepareColumnNodes();
 	},

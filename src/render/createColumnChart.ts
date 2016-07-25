@@ -1,7 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createWidget, { Widget, WidgetOptions, WidgetState } from 'dojo-widgets/createWidget';
 
-import createSvgRootMixin, { SvgRoot, SvgRootOptions, SvgRootState } from './mixins/createSvgRootMixin';
+import createChart, { Chart, ChartOptions, ChartState } from './createChart';
 import createColumnStructureMixin, {
 	COLUMN_OBJECT,
 	ColumnStructure,
@@ -11,14 +10,11 @@ import createColumnStructureMixin, {
 
 export { COLUMN_OBJECT };
 
-export type ColumnChartState<T> =
-	WidgetState & SvgRootState & ColumnStructureState<T>;
+export type ColumnChartState<T> = ChartState<T> & ColumnStructureState<T>;
 
-export type ColumnChartOptions<T, S extends ColumnChartState<T>> =
-	WidgetOptions<S> & SvgRootOptions<S> & ColumnStructureOptions<T, S>;
+export type ColumnChartOptions<T, S extends ColumnChartState<T>> = ChartOptions<T, S> & ColumnStructureOptions<T, S>;
 
-export type ColumnChart<T, S extends ColumnChartState<T>> =
-	Widget<S> & SvgRoot<S> & ColumnStructure<T, S>;
+export type ColumnChart<T, S extends ColumnChartState<T>> = Chart<T, S> & ColumnStructure<T, S>;
 
 export interface ColumnChartFactory<T> extends ComposeFactory<
 	ColumnChart<T, ColumnChartState<T>>,
@@ -27,8 +23,7 @@ export interface ColumnChartFactory<T> extends ComposeFactory<
 	<T, S extends ColumnChartState<T>>(options?: ColumnChartOptions<T, S>): ColumnChart<T, S>;
 }
 
-const createColumnChart: ColumnChartFactory<any> = createWidget
-	.mixin(createSvgRootMixin)
+const createColumnChart: ColumnChartFactory<any> = createChart
 	.mixin(createColumnStructureMixin);
 
 export default createColumnChart;

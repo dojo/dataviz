@@ -1,7 +1,5 @@
 import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
-import { assign } from 'dojo-core/lang';
 import WeakMap from 'dojo-shim/WeakMap';
-import createWidget from 'dojo-widgets/createWidget';
 import { VNodeProperties } from 'maquette/maquette';
 
 import { Invalidatable } from '../interfaces';
@@ -46,7 +44,10 @@ export interface SvgRootMixin {
 	 */
 	width?: number;
 
-	getNodeAttributes(overrides?: VNodeProperties): VNodeProperties;
+	/**
+	 * Get attributes that should be used to create the root VNode.
+	 */
+	getRootAttributes(): VNodeProperties;
 }
 
 /**
@@ -100,17 +101,14 @@ const createSvgRootMixin = createStateful
 				}
 			},
 
-			// Assuming this is mixed in to dojo-widgets/createWidget, replace the getNodeAttributes() implementation
-			// from its prototype in order to render the <svg> root with the height and width attributes.
-			getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
+			getRootAttributes(): VNodeProperties {
 				const root: SvgRoot<SvgRootState> = this;
 				// TODO: Move defaults into height/weight getters on root.
 				const { height, width } = root;
-				const props = assign({
+				return {
 					height: String(height),
 					width: String(width)
-				}, overrides);
-				return createWidget.prototype.getNodeAttributes.call(root, props);
+				};
 			}
 		},
 		initialize(instance: SvgRoot<SvgRootState>, { height = 150, width = 300 }: SvgRootOptions<SvgRootState> = {}) {
