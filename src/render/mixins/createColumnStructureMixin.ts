@@ -5,6 +5,7 @@ import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
 import columnar, { Column, DivisorOperator, InputObservable, ValueSelector } from '../../structure/columnar';
+import { Invalidatable } from '../interfaces';
 import createDataProviderMixin, {
 	DataProvider,
 	DataProviderOptions,
@@ -101,7 +102,7 @@ export interface ColumnStructureMixin<T> {
  * Renders columns. To be mixed into dojo-widgets/createWidget.
  */
 export type ColumnStructure<T, S extends ColumnStructureState<T>> =
-	DataProvider<T, S> & ColumnStructureMixin<T>;
+	DataProvider<T, S> & Invalidatable & ColumnStructureMixin<T>;
 
 export interface ColumnStructureFactory<T> extends ComposeFactory<
 	ColumnStructure<T, ColumnStructureState<T>>,
@@ -132,8 +133,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		else {
 			shadowColumnHeights.set(structure, columnHeight);
 		}
-		// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
-		(<any> structure).invalidate();
+		structure.invalidate();
 	},
 
 	get columnSpacing() {
@@ -150,8 +150,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		else {
 			shadowColumnSpacings.set(structure, columnSpacing);
 		}
-		// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
-		(<any> structure).invalidate();
+		structure.invalidate();
 	},
 
 	get columnWidth() {
@@ -168,8 +167,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		else {
 			shadowColumnWidths.set(structure, columnWidth);
 		}
-		// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
-		(<any> structure).invalidate();
+		structure.invalidate();
 	},
 
 	// Assuming this is mixed in to dojo-widgets/createWidget, replace the getChildrenNodes() implementation from
@@ -250,8 +248,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 			const subscription = columnar(data, valueSelector, divisorOperator)
 				.subscribe((structure) => {
 					columnData.set(instance, structure);
-					// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
-					(<any> instance).invalidate();
+					instance.invalidate();
 				});
 
 			handle = instance.own({

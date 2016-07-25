@@ -4,6 +4,8 @@ import WeakMap from 'dojo-shim/WeakMap';
 import createWidget from 'dojo-widgets/createWidget';
 import { VNodeProperties } from 'maquette/maquette';
 
+import { Invalidatable } from '../interfaces';
+
 export interface SvgRootState extends State {
 	/**
 	 * Controls the height of the <svg> element.
@@ -50,7 +52,7 @@ export interface SvgRootMixin {
 /**
  * Renders a root <svg> VNode. To be mixed into dojo-widgets/createWidget.
  */
-export type SvgRoot<S extends SvgRootState> = Stateful<S> & SvgRootMixin;
+export type SvgRoot<S extends SvgRootState> = Stateful<S> & Invalidatable & SvgRootMixin;
 
 const shadowHeights = new WeakMap<SvgRoot<SvgRootState>, number>();
 const shadowWidths = new WeakMap<SvgRoot<SvgRootState>, number>();
@@ -71,8 +73,7 @@ const createSvgRootMixin = createStateful
 				}
 				else {
 					shadowHeights.set(root, height);
-					// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
-					(<any> root).invalidate();
+					root.invalidate();
 				}
 			},
 
@@ -95,8 +96,7 @@ const createSvgRootMixin = createStateful
 				}
 				else {
 					shadowWidths.set(root, width);
-					// Assume this is mixed in to dojo-widgets/createWidget, in which case invalidate() is available.
-					(<any> root).invalidate();
+					root.invalidate();
 				}
 			},
 
