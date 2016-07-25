@@ -1,10 +1,12 @@
-import { forOf, Iterable } from 'dojo-shim/iterator';
+import { forOf } from 'dojo-shim/iterator';
 import { Observable } from 'rxjs/Rx';
 
+import { Divisor, InputObservable, ValueSelector } from './interfaces';
+
 export default function relativeValues<T> (
-	observable: Observable<Iterable<T> | ArrayLike<T>>,
-	valueSelector: (input: T) => number,
-	divisors: Observable<number>
+	observable: InputObservable<T>,
+	valueSelector: ValueSelector<T>,
+	divisors: Divisor
 ): Observable<[T, number][]> {
 	return observable
 		.withLatestFrom(divisors)

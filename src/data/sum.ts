@@ -1,10 +1,8 @@
-import { forOf, Iterable } from 'dojo-shim/iterator';
-import { Observable } from 'rxjs/Rx';
+import { forOf } from 'dojo-shim/iterator';
 
-export default function sum<T> (
-	observable: Observable<Iterable<T> | ArrayLike<T>>,
-	valueSelector: (input: T) => number
-): Observable<number> {
+import { DivisorOperator, InputObservable, ValueSelector } from './interfaces';
+
+function sum<T> (observable: InputObservable<T>, valueSelector: ValueSelector<T>) {
 	return observable.map((inputs) => {
 		let sum = 0;
 		forOf(inputs, (input) => {
@@ -14,3 +12,4 @@ export default function sum<T> (
 		return sum;
 	});
 }
+export default sum as DivisorOperator<any>;

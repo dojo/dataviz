@@ -1,6 +1,6 @@
-import { Iterable } from 'dojo-shim/iterator';
 import { Observable } from 'rxjs/Rx';
 
+import { InputObservable, DivisorOperator, ValueSelector } from '../data/interfaces';
 import relativeValues from '../data/relative-values';
 
 export interface Column<T> {
@@ -8,11 +8,6 @@ export interface Column<T> {
 	relativeValue: number;
 	value: number;
 }
-
-export type InputObservable<T> = Observable<Iterable<T> | ArrayLike<T>>;
-export type ValueSelector<T> = (input: T) => number;
-export type DivisorOperator<T> =
-	(observable: InputObservable<T>, valueSelector: ValueSelector<T>) => Observable<number>;
 
 export default function columnar<T> (
 	observable: InputObservable<T>,

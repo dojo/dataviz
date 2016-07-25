@@ -1,10 +1,8 @@
-import { forOf, Iterable } from 'dojo-shim/iterator';
-import { Observable } from 'rxjs/Rx';
+import { forOf } from 'dojo-shim/iterator';
 
-export default function max<T> (
-	observable: Observable<Iterable<T> | ArrayLike<T>>,
-	valueSelector: (input: T) => number
-): Observable<number> {
+import { DivisorOperator, InputObservable, ValueSelector } from './interfaces';
+
+function max<T> (observable: InputObservable<T>, valueSelector: ValueSelector<T>) {
 	return observable.map((inputs) => {
 		let max = 0;
 		forOf(inputs, (input) => {
@@ -18,3 +16,5 @@ export default function max<T> (
 		return max;
 	});
 }
+
+export default max as DivisorOperator<any>;

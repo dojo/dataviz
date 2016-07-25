@@ -1,6 +1,8 @@
-import { forOf, Iterable } from 'dojo-shim/iterator';
+import { forOf } from 'dojo-shim/iterator';
 import WeakMap from 'dojo-shim/WeakMap';
 import { Observable } from 'rxjs/Rx';
+
+import { InputObservable } from './interfaces';
 
 function defaultCompare (a: any, b: any): number {
 	const strA = String(a);
@@ -13,7 +15,7 @@ function identity<T> (value: T): T {
 }
 
 export default function sort<T> (
-	observable: Observable<Iterable<T> | ArrayLike<T>>,
+	observable: InputObservable<T>,
 	comparableSelector: (input: T) => any = identity,
 	compareFunction: (a: any, b: any) => number = defaultCompare
 ): Observable<T[]> {

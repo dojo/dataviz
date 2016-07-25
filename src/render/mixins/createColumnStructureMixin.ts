@@ -4,7 +4,8 @@ import Symbol from 'dojo-shim/Symbol';
 import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
-import columnar, { Column, DivisorOperator, InputObservable, ValueSelector } from '../../structure/columnar';
+import { DivisorOperator, InputObservable, ValueSelector } from '../../data/interfaces';
+import columnar, { Column } from '../../structure/columnar';
 import { Chartable, Invalidatable } from '../interfaces';
 import createDataProviderMixin, {
 	DataProvider,
