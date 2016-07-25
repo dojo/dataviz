@@ -36,8 +36,8 @@ const createChart: ChartFactory<any> = createWidget
 		},
 		mixin: {
 			getChildrenNodes(): VNode[] {
-				const chart: Chart<any, ChartState<any>> = this;
-				return chart.getChartNodes();
+				// Subclasses must override.
+				return [];
 			}
 		}
 	});

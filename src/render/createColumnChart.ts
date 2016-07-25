@@ -25,6 +25,12 @@ export interface ColumnChartFactory<T> extends ComposeFactory<
 }
 
 const createColumnChart: ColumnChartFactory<any> = createChart
-	.mixin(createColumnStructureMixin);
+	.mixin(createColumnStructureMixin)
+	.extend({
+		getChildrenNodes(): VNode[] {
+			const chart: ColumnChart<any, ColumnChartState<any>> = this;
+			return chart.getChartNodes();
+		}
+	});
 
 export default createColumnChart;
