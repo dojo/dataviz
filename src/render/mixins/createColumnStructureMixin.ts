@@ -5,7 +5,8 @@ import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
 import { DivisorOperator, InputObservable, ValueSelector } from '../../data/interfaces';
-import columnar, { Column } from '../../structure/columnar';
+import columnar, { Column } from '../../data/columnar';
+
 import { Chartable, Invalidatable } from '../interfaces';
 import createDataProviderMixin, {
 	DataProvider,

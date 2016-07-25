@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs/Rx';
 
-import { InputObservable, DivisorOperator, ValueSelector } from '../data/interfaces';
-import relativeValues from '../data/relative-values';
+import { InputObservable, DivisorOperator, ValueSelector } from './interfaces';
+import relativeValues from './relative-values';
 
 export interface Column<T> {
 	input: T;

@@ -1,5 +1,5 @@
 import sum from 'src/data/sum';
-import columnar from 'src/structure/columnar';
+import columnar from 'src/data/columnar';
 
 import getPlayCounts from './play-counts';
 
