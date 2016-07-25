@@ -6,7 +6,7 @@ import { Observable } from 'rxjs/Rx';
 import { DivisorOperator, InputObservable, ValueSelector } from '../../data/interfaces';
 import columnar, { Column } from '../../data/columnar';
 
-import { Chartable, Invalidatable } from '../interfaces';
+import { Invalidatable } from '../interfaces';
 import createDataProviderMixin, {
 	DataProvider,
 	DataProviderOptions,
@@ -69,7 +69,7 @@ export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> ex
 	valueSelector?: ValueSelector<T>;
 }
 
-export interface ColumnStructureMixin<T> extends Chartable {
+export interface ColumnStructureMixin<T> {
 	/**
 	 * Controls the maximum height of each column.
 	 */
@@ -178,11 +178,6 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 			shadowColumnWidths.set(structure, columnWidth);
 		}
 		structure.invalidate();
-	},
-
-	getChartNodes() {
-		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		return structure.createVisualizationNodes(structure.visualizeData());
 	},
 
 	createVisualizationNodes(visualizations: ColumnVisualization<any>[]) {

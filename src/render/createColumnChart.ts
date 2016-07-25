@@ -29,7 +29,7 @@ const createColumnChart: ColumnChartFactory<any> = createChart
 	.extend({
 		getChildrenNodes(): VNode[] {
 			const chart: ColumnChart<any, ColumnChartState<any>> = this;
-			return chart.getChartNodes();
+			return chart.createVisualizationNodes(chart.visualizeData());
 		}
 	});
 

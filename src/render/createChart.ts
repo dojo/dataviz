@@ -3,7 +3,6 @@ import { assign } from 'dojo-core/lang';
 import createWidget, { Widget, WidgetOptions, WidgetState } from 'dojo-widgets/createWidget';
 import { VNode, VNodeProperties } from 'maquette/maquette';
 
-import { Chartable } from './interfaces';
 import createSvgRootMixin, { SvgRoot, SvgRootOptions, SvgRootState } from './mixins/createSvgRootMixin';
 
 export type ChartState<T> = WidgetState & SvgRootState;
@@ -14,7 +13,7 @@ export interface ChartMixin {
 	getChildrenNodes(): VNode[];
 }
 
-export type Chart<T, S extends ChartState<T>> = Widget<S> & SvgRoot<S> & Chartable & ChartMixin;
+export type Chart<T, S extends ChartState<T>> = Widget<S> & SvgRoot<S> & ChartMixin;
 
 export interface ChartFactory<T> extends ComposeFactory<
 	Chart<T, ChartState<T>>,
