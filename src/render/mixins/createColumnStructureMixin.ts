@@ -244,8 +244,8 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 			}
 
 			const subscription = columnar(data, valueSelector, divisorOperator)
-				.subscribe((structure) => {
-					columnData.set(instance, structure);
+				.subscribe((data) => {
+					columnData.set(instance, data);
 					instance.invalidate();
 				});
 
