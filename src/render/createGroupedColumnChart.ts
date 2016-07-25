@@ -87,6 +87,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 				chart.invalidate();
 			}
 		},
+
 		aspectAdvice: {
 			after: {
 				visualizeData(columnVisualizations: ColumnVisualization<any>[]): GroupedColumnVisualization<any>[] {
@@ -149,6 +150,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 		// Add createDestroyable to ensure instance.own() is available at runtime.
 		// See <https://github.com/dojo/compose/issues/42>.
 		mixin: createDestroyable,
+
 		initialize<T>(
 			instance: GroupedColumnChart<T, GroupedColumnChartState<T>>,
 			{

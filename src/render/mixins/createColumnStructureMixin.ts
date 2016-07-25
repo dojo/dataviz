@@ -216,6 +216,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 	}
 }).mixin({
 	mixin: createDataProviderMixin,
+
 	initialize<T>(
 		instance: ColumnStructure<T, ColumnStructureState<T>>,
 		{

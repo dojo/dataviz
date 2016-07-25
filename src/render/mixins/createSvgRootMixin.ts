@@ -111,6 +111,7 @@ const createSvgRootMixin = createStateful
 				};
 			}
 		},
+
 		initialize(instance: SvgRoot<SvgRootState>, { height = 150, width = 300 }: SvgRootOptions<SvgRootState> = {}) {
 			shadowHeights.set(instance, height);
 			shadowWidths.set(instance, width);

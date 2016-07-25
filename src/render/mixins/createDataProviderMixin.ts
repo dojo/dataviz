@@ -70,6 +70,7 @@ const createDataProviderMixin: DataProviderFactory<any> = createStateful
 	})
 	.mixin({
 		mixin: createEvented,
+
 		initialize<T>(instance: DataProvider<T, DataProviderState<T>>, { data }: DataProviderOptions<T, DataProviderState<T>> = {}) {
 			if (data) {
 				// Create an observable if the data option was provided.
