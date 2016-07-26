@@ -1,5 +1,6 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { Handle } from 'dojo-core/interfaces';
+import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette/maquette';
 import { Observable } from 'rxjs/Rx';
 
