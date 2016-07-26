@@ -11,11 +11,11 @@ import createColumnPlot, {
 
 export { ColumnPoint }
 
-export type ColumnChartState<T> = ChartState<T> & ColumnPlotState<T>;
+export type ColumnChartState<T> = ChartState & ColumnPlotState<T>;
 
-export type ColumnChartOptions<T, S extends ColumnChartState<T>> = ChartOptions<T, S> & ColumnPlotOptions<T, S>;
+export type ColumnChartOptions<T, S extends ColumnChartState<T>> = ChartOptions<S> & ColumnPlotOptions<T, S>;
 
-export type ColumnChart<T, S extends ColumnChartState<T>> = Chart<T, S> & ColumnPlot<T, S>;
+export type ColumnChart<T, S extends ColumnChartState<T>> = Chart<S> & ColumnPlot<T, S>;
 
 export interface ColumnChartFactory<T> extends ComposeFactory<
 	ColumnChart<T, ColumnChartState<T>>,

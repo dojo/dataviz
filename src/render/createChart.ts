@@ -5,30 +5,30 @@ import { VNode, VNodeProperties } from 'maquette/maquette';
 
 import createSvgRootMixin, { SvgRoot, SvgRootOptions, SvgRootState } from './mixins/createSvgRootMixin';
 
-export type ChartState<T> = WidgetState & SvgRootState;
+export type ChartState = WidgetState & SvgRootState;
 
-export type ChartOptions<T, S extends ChartState<T>> = WidgetOptions<S> & SvgRootOptions<S>;
+export type ChartOptions<S extends ChartState> = WidgetOptions<S> & SvgRootOptions<S>;
 
 export interface ChartMixin {
 	getChildrenNodes(): VNode[];
 }
 
-export type Chart<T, S extends ChartState<T>> = Widget<S> & SvgRoot<S> & ChartMixin;
+export type Chart<S extends ChartState> = Widget<S> & SvgRoot<S> & ChartMixin;
 
-export interface ChartFactory<T> extends ComposeFactory<
-	Chart<T, ChartState<T>>,
-	ChartOptions<T, ChartState<T>>
+export interface ChartFactory extends ComposeFactory<
+	Chart<ChartState>,
+	ChartOptions<ChartState>
 > {
-	<T, S extends ChartState<T>>(options?: ChartOptions<T, S>): Chart<T, S>;
+	<S extends ChartState>(options?: ChartOptions<S>): Chart<S>;
 }
 
-const createChart: ChartFactory<any> = createWidget
+const createChart: ChartFactory = createWidget
 	.mixin(createSvgRootMixin)
 	.mixin({
 		aspectAdvice: {
 			before: {
 				getNodeAttributes(overrides?: VNodeProperties): VNodeProperties[] {
-					const chart: Chart<any, ChartState<any>> = this;
+					const chart: Chart<ChartState> = this;
 					return [assign(chart.getRootAttributes(), overrides)];
 				}
 			}
