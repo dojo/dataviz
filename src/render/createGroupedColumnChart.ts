@@ -90,10 +90,10 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 
 		aspectAdvice: {
 			after: {
-				plot(columnPoints: ColumnPoint<any>[]): GroupedColumnPoint<any, any>[] {
-					const chart: GroupedColumnChart<any, GroupedColumnChartState<any>> = this;
+				plot<T>(columnPoints: ColumnPoint<T>[]): GroupedColumnPoint<any, T>[] {
+					const chart: GroupedColumnChart<T, GroupedColumnChartState<T>> = this;
 					const groupSelector = groupSelectors.get(chart);
-					const groups = new Map<any, ColumnPoint<any>[]>();
+					const groups = new Map<any, ColumnPoint<T>[]>();
 
 					for (const point of columnPoints) {
 						const { input } = point.column;
@@ -112,7 +112,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
 					return from(<any> groups, (entry: any, index: number) => {
-						const [group, columnPoints] = <[any, ColumnPoint<any>[]]> entry;
+						const [group, columnPoints] = <[any, ColumnPoint<T>[]]> entry;
 
 						let translateX: number;
 						if (index > 0) {
@@ -130,8 +130,8 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 			},
 
 			around: {
-				renderPlot(renderColumns: (points: ColumnPoint<any>[]) => VNode[]) {
-					return (groupPoints: GroupedColumnPoint<any, any>[]) => {
+				renderPlot<T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
+					return (groupPoints: GroupedColumnPoint<any, T>[]) => {
 						return groupPoints.map(({ group, columnPoints, translateX }) => {
 							const props: VNodeProperties = {
 								key: group

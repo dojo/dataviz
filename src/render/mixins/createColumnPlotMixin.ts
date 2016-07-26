@@ -182,8 +182,8 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		plot.invalidate();
 	},
 
-	plot(): ColumnPoint<any>[] {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+	plot<T>(): ColumnPoint<T>[] {
+		const plot: ColumnPlot<T, ColumnPlotState<T>> = this;
 		const series = columnSeries.get(plot);
 		const { columnHeight, columnSpacing, columnWidth } = plot;
 		return series.map((column, index) => {
@@ -200,7 +200,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		});
 	},
 
-	renderPlot(points: ColumnPoint<any>[]) {
+	renderPlot<T>(points: ColumnPoint<T>[]) {
 		return points.map(({ column, height, width, x, y}) => {
 			return h('rect', {
 				key: column.input,
