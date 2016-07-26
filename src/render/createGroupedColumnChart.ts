@@ -15,7 +15,7 @@ import { Point } from './interfaces';
 
 export interface GroupedColumnPoint<T, U> extends Point<T> {
 	columnPoints: ColumnPoint<U>[];
-	translateX?: number;
+	translateX: number;
 }
 
 export type GroupedColumnChartState<T> = ColumnChartState<T> & {
@@ -107,24 +107,26 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 						groups.get(group).push(point);
 					}
 
-					const { groupSpacing } = chart;
+					const { columnSpacing, groupSpacing } = chart;
 					let offset = 0;
 
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
 					return from<GroupedColumnPoint<any, T>>(<any> groups, (entry: any, index: number) => {
 						const [group, columnPoints] = <[any, ColumnPoint<T>[]]> entry;
 
-						let translateX: number;
-						if (index > 0) {
-							offset += groupSpacing;
-							translateX = offset;
-						}
+						// Spend half the spacing ahead of each group, and half after.
+						const translateX = offset + (index === 0 ? groupSpacing / 2 : groupSpacing);
 
 						const value = Math.max(...columnPoints.map(({ datum: { value } }) => value));
+						// The grouped point starts at the first column, taking offset into account
 						const x1 = columnPoints[0].x1 + offset;
-						const x2 = columnPoints[columnPoints.length - 1].x2 + offset;
+						// It ends after the last column, minus its spacing, including the new offset and half the
+						// group space.
+						const x2 = columnPoints[columnPoints.length - 1].x2 - columnSpacing + translateX + groupSpacing / 2;
 						const y1 = Math.min(...columnPoints.map(({ y1 }) => y1));
 						const y2 = Math.max(...columnPoints.map(({ y2 }) => y2));
+
+						offset = translateX;
 
 						return {
 							columnPoints,
@@ -149,7 +151,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 							const props: VNodeProperties = {
 								key: datum.input
 							};
-							if (translateX) {
+							if (translateX !== 0) {
 								props['transform'] = `translate(${translateX})`;
 							}
 							return h('g', props, renderColumns.call(this, columnPoints));
