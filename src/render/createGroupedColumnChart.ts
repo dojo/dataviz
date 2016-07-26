@@ -9,11 +9,11 @@ import createColumnChart, {
 	ColumnChart,
 	ColumnChartOptions,
 	ColumnChartState,
-	ColumnVisualization
+	ColumnPoint
 } from './createColumnChart';
 
-export interface GroupedColumnVisualization<T> {
-	columnVisualizations: ColumnVisualization<T>[];
+export interface GroupedColumnPoint<T> {
+	columnPoints: ColumnPoint<T>[];
 	group: T;
 	translateX?: number;
 }
@@ -90,13 +90,13 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 
 		aspectAdvice: {
 			after: {
-				visualizeData(columnVisualizations: ColumnVisualization<any>[]): GroupedColumnVisualization<any>[] {
+				plot(columnPoints: ColumnPoint<any>[]): GroupedColumnPoint<any>[] {
 					const chart: GroupedColumnChart<any, GroupedColumnChartState<any>> = this;
 					const groupSelector = groupSelectors.get(chart);
-					const groups = new Map<any, ColumnVisualization<any>[]>();
+					const groups = new Map<any, ColumnPoint<any>[]>();
 
-					for (const viz of columnVisualizations) {
-						const { input } = viz.column;
+					for (const point of columnPoints) {
+						const { input } = point.column;
 
 						// Note that the ordering of the groups is determined by the original sort order, as is the
 						// ordering of nodes within the group.
@@ -104,7 +104,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 						if (!groups.has(group)) {
 							groups.set(group, []);
 						}
-						groups.get(group).push(viz);
+						groups.get(group).push(point);
 					}
 
 					const { groupSpacing } = chart;
@@ -112,7 +112,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
 					return from(<any> groups, (entry: any, index: number) => {
-						const [group, columnVisualizations] = <[any, ColumnVisualization<any>[]]> entry;
+						const [group, columnPoints] = <[any, ColumnPoint<any>[]]> entry;
 
 						let translateX: number;
 						if (index > 0) {
@@ -121,7 +121,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 						}
 
 						return {
-							columnVisualizations,
+							columnPoints,
 							group,
 							translateX
 						};
@@ -130,16 +130,16 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 			},
 
 			around: {
-				createVisualizationNodes(createColumnVisualizationNodes: (positions: ColumnVisualization<any>[]) => VNode[]) {
-					return (groupPositions: GroupedColumnVisualization<any>[]) => {
-						return groupPositions.map(({ group, columnVisualizations, translateX }) => {
+				renderPlot(renderColumns: (points: ColumnPoint<any>[]) => VNode[]) {
+					return (groupPoints: GroupedColumnPoint<any>[]) => {
+						return groupPoints.map(({ group, columnPoints, translateX }) => {
 							const props: VNodeProperties = {
 								key: group
 							};
 							if (translateX) {
 								props['transform'] = `translate(${translateX})`;
 							}
-							return h('g', props, createColumnVisualizationNodes.call(this, columnVisualizations));
+							return h('g', props, renderColumns.call(this, columnPoints));
 						});
 					};
 				}

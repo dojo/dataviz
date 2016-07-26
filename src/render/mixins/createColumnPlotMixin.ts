@@ -13,7 +13,7 @@ import createInputSeries, {
 	InputSeriesState
 } from './createInputSeriesMixin';
 
-export interface ColumnVisualization<T> {
+export interface ColumnPoint<T> {
 	column: Column<T>;
 	height: string;
 	width: string;
@@ -21,7 +21,7 @@ export interface ColumnVisualization<T> {
 	y: string;
 }
 
-export interface ColumnStructureState<T> extends InputSeriesState<T> {
+export interface ColumnPlotState<T> extends InputSeriesState<T> {
 	/**
 	 * Controls the maximum height of each column.
 	 */
@@ -38,7 +38,7 @@ export interface ColumnStructureState<T> extends InputSeriesState<T> {
 	columnWidth?: number;
 }
 
-export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> extends InputSeriesOptions<T, S> {
+export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends InputSeriesOptions<T, S> {
 	/**
 	 * Controls the maximum height of each column.
 	 */
@@ -70,7 +70,7 @@ export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> ex
 	valueSelector?: ValueSelector<T>;
 }
 
-export interface ColumnStructureMixin<T> {
+export interface ColumnPlotMixin<T> {
 	/**
 	 * Controls the maximum height of each column.
 	 */
@@ -102,102 +102,90 @@ export interface ColumnStructureMixin<T> {
 	valueSelector?: ValueSelector<T>;
 
 	/**
-	 * Create VNodes for each column given its visualization.
+	 * Plot "points" for each column.
 	 */
-	createVisualizationNodes(visualizations: ColumnVisualization<T>[]): VNode[];
+	plot(): ColumnPoint<T>[];
 
 	/**
-	 * Determine the size and position of each column.
+	 * Create VNodes for each column given its points.
 	 */
-	visualizeData(): ColumnVisualization<T>[];
+	renderPlot(points: ColumnPoint<T>[]): VNode[];
 }
 
 /**
  * Renders columns. To be mixed into dojo-widgets/createWidget.
  */
-export type ColumnStructure<T, S extends ColumnStructureState<T>> =
-	InputSeries<T, S> & Invalidatable & ColumnStructureMixin<T>;
+export type ColumnPlot<T, S extends ColumnPlotState<T>> =
+	InputSeries<T, S> & Invalidatable & ColumnPlotMixin<T>;
 
-export interface ColumnStructureFactory<T> extends ComposeFactory<
-	ColumnStructure<T, ColumnStructureState<T>>,
-	ColumnStructureOptions<T, ColumnStructureState<T>>
+export interface ColumnPlotFactory<T> extends ComposeFactory<
+	ColumnPlot<T, ColumnPlotState<T>>,
+	ColumnPlotOptions<T, ColumnPlotState<T>>
 > {
-	<T, S extends ColumnStructureState<T>>(options?: ColumnStructureOptions<T, S>): ColumnStructure<T, S>;
+	<T, S extends ColumnPlotState<T>>(options?: ColumnPlotOptions<T, S>): ColumnPlot<T, S>;
 }
 
-const columnSeries = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, Column<any>[]>();
-const shadowColumnHeights = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
-const shadowColumnSpacings = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
-const shadowColumnWidths = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
+const columnSeries = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Column<any>[]>();
+const shadowColumnHeights = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
+const shadowColumnSpacings = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
+const shadowColumnWidths = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 
-const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
+const createColumnPlot: ColumnPlotFactory<any> = compose({
 	get columnHeight() {
-		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		const { columnHeight = shadowColumnHeights.get(structure) } = structure.state || {};
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		const { columnHeight = shadowColumnHeights.get(plot) } = plot.state || {};
 		return columnHeight;
 	},
 
 	set columnHeight(columnHeight) {
-		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		if (structure.state) {
-			structure.setState({ columnHeight });
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		if (plot.state) {
+			plot.setState({ columnHeight });
 		}
 		else {
-			shadowColumnHeights.set(structure, columnHeight);
+			shadowColumnHeights.set(plot, columnHeight);
 		}
-		structure.invalidate();
+		plot.invalidate();
 	},
 
 	get columnSpacing() {
-		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		const { columnSpacing = shadowColumnSpacings.get(structure) } = structure.state || {};
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		const { columnSpacing = shadowColumnSpacings.get(plot) } = plot.state || {};
 		return columnSpacing;
 	},
 
 	set columnSpacing(columnSpacing) {
-		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		if (structure.state) {
-			structure.setState({ columnSpacing });
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		if (plot.state) {
+			plot.setState({ columnSpacing });
 		}
 		else {
-			shadowColumnSpacings.set(structure, columnSpacing);
+			shadowColumnSpacings.set(plot, columnSpacing);
 		}
-		structure.invalidate();
+		plot.invalidate();
 	},
 
 	get columnWidth() {
-		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		const { columnWidth = shadowColumnWidths.get(structure) } = structure.state || {};
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		const { columnWidth = shadowColumnWidths.get(plot) } = plot.state || {};
 		return columnWidth;
 	},
 
 	set columnWidth(columnWidth) {
-		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		if (structure.state) {
-			structure.setState({ columnWidth });
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		if (plot.state) {
+			plot.setState({ columnWidth });
 		}
 		else {
-			shadowColumnWidths.set(structure, columnWidth);
+			shadowColumnWidths.set(plot, columnWidth);
 		}
-		structure.invalidate();
+		plot.invalidate();
 	},
 
-	createVisualizationNodes(visualizations: ColumnVisualization<any>[]) {
-		return visualizations.map(({ column, height, width, x, y}) => {
-			return h('rect', {
-				key: column.input,
-				height,
-				width,
-				x,
-				y
-			});
-		});
-	},
-
-	visualizeData(): ColumnVisualization<any>[] {
-		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		const series = columnSeries.get(structure);
-		const { columnHeight, columnSpacing, columnWidth } = structure;
+	plot(): ColumnPoint<any>[] {
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		const series = columnSeries.get(plot);
+		const { columnHeight, columnSpacing, columnWidth } = plot;
 		return series.map((column, index) => {
 			const height = column.relativeValue * columnHeight;
 			const x = (columnWidth + columnSpacing) * index;
@@ -210,19 +198,31 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 				y: String(y)
 			};
 		});
+	},
+
+	renderPlot(points: ColumnPoint<any>[]) {
+		return points.map(({ column, height, width, x, y}) => {
+			return h('rect', {
+				key: column.input,
+				height,
+				width,
+				x,
+				y
+			});
+		});
 	}
 }).mixin({
 	mixin: createInputSeries,
 
 	initialize<T>(
-		instance: ColumnStructure<T, ColumnStructureState<T>>,
+		instance: ColumnPlot<T, ColumnPlotState<T>>,
 		{
 			columnHeight = 0,
 			columnSpacing = 0,
 			columnWidth = 0,
 			divisorOperator,
 			valueSelector
-		}: ColumnStructureOptions<T, ColumnStructureState<T>> = {}
+		}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
 	) {
 		shadowColumnHeights.set(instance, columnHeight);
 		shadowColumnSpacings.set(instance, columnSpacing);
@@ -292,4 +292,4 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 	}
 });
 
-export default createColumnStructureMixin;
+export default createColumnPlot;
