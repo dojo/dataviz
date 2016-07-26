@@ -30,6 +30,9 @@ const createColumnChart: ColumnChartFactory<any> = createChart
 		getChildrenNodes(): VNode[] {
 			const chart: ColumnChart<any, ColumnChartState<any>> = this;
 			const plot = chart.plot();
+			if (plot.length === 0) {
+				return [];
+			}
 
 			const { xInset, yInset } = chart;
 			return [
