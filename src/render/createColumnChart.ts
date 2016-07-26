@@ -1,5 +1,5 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import { VNode } from 'maquette/maquette';
+import { h, VNode } from 'maquette/maquette';
 
 import createChart, { Chart, ChartOptions, ChartState } from './createChart';
 import createColumnPlot, {
@@ -29,7 +29,15 @@ const createColumnChart: ColumnChartFactory<any> = createChart
 	.extend({
 		getChildrenNodes(): VNode[] {
 			const chart: ColumnChart<any, ColumnChartState<any>> = this;
-			return chart.renderPlot(chart.plot());
+			const plot = chart.plot();
+
+			const { xInset, yInset } = chart;
+			return [
+				h('g', {
+					key: 'plot',
+					'transform': `translate(${xInset} ${yInset})`
+				}, chart.renderPlot(plot))
+			];
 		}
 	});
 
