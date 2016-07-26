@@ -6,19 +6,17 @@ import { Observable } from 'rxjs/Rx';
 import { DivisorOperator, InputObservable, ValueSelector } from '../../data/interfaces';
 import columnar, { Column } from '../../data/columnar';
 
-import { Invalidatable } from '../interfaces';
+import { Invalidatable, Point } from '../interfaces';
 import createInputSeries, {
 	InputSeries,
 	InputSeriesOptions,
 	InputSeriesState
 } from './createInputSeriesMixin';
 
-export interface ColumnPoint<T> {
-	column: Column<T>;
-	height: string;
-	width: string;
-	x: string;
-	y: string;
+export interface ColumnPoint<T> extends Point<T> {
+	datum: Column<T>;
+	displayHeight: number;
+	displayWidth: number;
 }
 
 export interface ColumnPlotState<T> extends InputSeriesState<T> {
@@ -185,29 +183,32 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 	plot<T>(): ColumnPoint<T>[] {
 		const plot: ColumnPlot<T, ColumnPlotState<T>> = this;
 		const series = columnSeries.get(plot);
-		const { columnHeight, columnSpacing, columnWidth } = plot;
+		const { columnHeight, columnSpacing, columnWidth: displayWidth } = plot;
 		return series.map((column, index) => {
-			const height = column.relativeValue * columnHeight;
-			const x = (columnWidth + columnSpacing) * index;
-			const y = columnHeight - height;
+			const displayHeight = column.relativeValue * columnHeight;
+			const x1 = (displayWidth + columnSpacing) * index;
+			const x2 = x1 + displayWidth + columnSpacing;
+			const y1 = columnHeight - displayHeight;
 			return {
-				column,
-				height: String(height),
-				width: String(columnWidth),
-				x: String(x),
-				y: String(y)
+				datum: column,
+				displayHeight,
+				displayWidth,
+				x1,
+				x2,
+				y1,
+				y2: columnHeight
 			};
 		});
 	},
 
 	renderPlot<T>(points: ColumnPoint<T>[]) {
-		return points.map(({ column, height, width, x, y}) => {
+		return points.map(({ datum, displayHeight, displayWidth, x1, y1 }) => {
 			return h('rect', {
-				key: column.input,
-				height,
-				width,
-				x,
-				y
+				key: datum.input,
+				height: String(displayHeight),
+				width: String(displayWidth),
+				x: String(x1),
+				y: String(y1)
 			});
 		});
 	}

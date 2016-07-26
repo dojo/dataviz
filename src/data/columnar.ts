@@ -1,10 +1,14 @@
 import { Observable } from 'rxjs/Rx';
 
-import { InputObservable, DivisorOperator, ValueSelector } from './interfaces';
+import {
+	Datum,
+	DivisorOperator,
+	InputObservable,
+	ValueSelector
+} from './interfaces';
 import relativeValues from './relative-values';
 
-export interface Column<T> {
-	input: T;
+export interface Column<T> extends Datum<T> {
 	relativeValue: number;
 	value: number;
 }

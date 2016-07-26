@@ -11,10 +11,10 @@ import createColumnChart, {
 	ColumnChartState,
 	ColumnPoint
 } from './createColumnChart';
+import { Point } from './interfaces';
 
-export interface GroupedColumnPoint<T, U> {
+export interface GroupedColumnPoint<T, U> extends Point<T> {
 	columnPoints: ColumnPoint<U>[];
-	group: T;
 	translateX?: number;
 }
 
@@ -96,7 +96,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 					const groups = new Map<any, ColumnPoint<T>[]>();
 
 					for (const point of columnPoints) {
-						const { input } = point.column;
+						const { input } = point.datum;
 
 						// Note that the ordering of the groups is determined by the original sort order, as is the
 						// ordering of nodes within the group.
@@ -111,7 +111,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 					let offset = 0;
 
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
-					return from(<any> groups, (entry: any, index: number) => {
+					return from<GroupedColumnPoint<any, T>>(<any> groups, (entry: any, index: number) => {
 						const [group, columnPoints] = <[any, ColumnPoint<T>[]]> entry;
 
 						let translateX: number;
@@ -120,10 +120,23 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 							translateX = offset;
 						}
 
+						const value = Math.max(...columnPoints.map(({ datum: { value } }) => value));
+						const x1 = columnPoints[0].x1 + offset;
+						const x2 = columnPoints[columnPoints.length - 1].x2 + offset;
+						const y1 = Math.min(...columnPoints.map(({ y1 }) => y1));
+						const y2 = Math.max(...columnPoints.map(({ y2 }) => y2));
+
 						return {
 							columnPoints,
-							group,
-							translateX
+							datum: {
+								input: group,
+								value
+							},
+							translateX,
+							x1,
+							x2,
+							y1,
+							y2
 						};
 					});
 				}
@@ -132,9 +145,9 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 			around: {
 				renderPlot<T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
 					return (groupPoints: GroupedColumnPoint<any, T>[]) => {
-						return groupPoints.map(({ group, columnPoints, translateX }) => {
+						return groupPoints.map(({ columnPoints, datum, translateX }) => {
 							const props: VNodeProperties = {
-								key: group
+								key: datum.input
 							};
 							if (translateX) {
 								props['transform'] = `translate(${translateX})`;
