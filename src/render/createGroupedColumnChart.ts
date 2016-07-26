@@ -12,8 +12,8 @@ import createColumnChart, {
 	ColumnPoint
 } from './createColumnChart';
 
-export interface GroupedColumnPoint<T> {
-	columnPoints: ColumnPoint<T>[];
+export interface GroupedColumnPoint<T, U> {
+	columnPoints: ColumnPoint<U>[];
 	group: T;
 	translateX?: number;
 }
@@ -90,7 +90,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 
 		aspectAdvice: {
 			after: {
-				plot(columnPoints: ColumnPoint<any>[]): GroupedColumnPoint<any>[] {
+				plot(columnPoints: ColumnPoint<any>[]): GroupedColumnPoint<any, any>[] {
 					const chart: GroupedColumnChart<any, GroupedColumnChartState<any>> = this;
 					const groupSelector = groupSelectors.get(chart);
 					const groups = new Map<any, ColumnPoint<any>[]>();
@@ -131,7 +131,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 
 			around: {
 				renderPlot(renderColumns: (points: ColumnPoint<any>[]) => VNode[]) {
-					return (groupPoints: GroupedColumnPoint<any>[]) => {
+					return (groupPoints: GroupedColumnPoint<any, any>[]) => {
 						return groupPoints.map(({ group, columnPoints, translateX }) => {
 							const props: VNodeProperties = {
 								key: group
