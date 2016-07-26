@@ -3,6 +3,7 @@ import { Observable } from 'rxjs/Rx';
 
 export interface Datum<T> {
 	input: T;
+	value: number;
 }
 
 export type Divisor = Observable<number>;
