@@ -23,8 +23,8 @@ const store = createMemoryStore({
 });
 
 // Example of patching the store every time the data changes.
-playCounts.subscribe((data) => {
-	store.patch({ data }, { id: 'percentageChart' });
+playCounts.subscribe((inputSeries) => {
+	store.patch({ inputSeries }, { id: 'percentageChart' });
 });
 
 const percentageChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
@@ -51,7 +51,7 @@ const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	columnSpacing: 1,
 	columnWidth: 20,
 	// Example of passing an observable to the chart.
-	data: playCounts,
+	inputSeries: playCounts,
 	divisorOperator: max,
 	height: 100,
 	valueSelector(input: PlayCount) {
@@ -66,7 +66,7 @@ const groupedByProvinceChart = (<GroupedColumnChartFactory<PlayCount>> createGro
 	columnSpacing: 1,
 	columnWidth: 10,
 	// Example of passing an observable to the chart.
-	data: byProvince,
+	inputSeries: byProvince,
 	divisorOperator: max,
 	groupSelector(input) {
 		return input.province;

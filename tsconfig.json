@@ -35,7 +35,7 @@
 		"./src/render/createGroupedColumnChart.ts",
 		"./src/render/interfaces.d.ts",
 		"./src/render/mixins/createColumnStructureMixin.ts",
-		"./src/render/mixins/createDataProviderMixin.ts",
+		"./src/render/mixins/createInputSeriesMixin.ts",
 		"./src/render/mixins/createSvgRootMixin.ts",
 		"./tests/functional/all.ts",
 		"./tests/intern-local.ts",

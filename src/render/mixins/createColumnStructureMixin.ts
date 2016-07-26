@@ -7,11 +7,11 @@ import { DivisorOperator, InputObservable, ValueSelector } from '../../data/inte
 import columnar, { Column } from '../../data/columnar';
 
 import { Invalidatable } from '../interfaces';
-import createDataProviderMixin, {
-	DataProvider,
-	DataProviderOptions,
-	DataProviderState
-} from './createDataProviderMixin';
+import createInputSeries, {
+	InputSeries,
+	InputSeriesOptions,
+	InputSeriesState
+} from './createInputSeriesMixin';
 
 export interface ColumnVisualization<T> {
 	column: Column<T>;
@@ -21,7 +21,7 @@ export interface ColumnVisualization<T> {
 	y: string;
 }
 
-export interface ColumnStructureState<T> extends DataProviderState<T> {
+export interface ColumnStructureState<T> extends InputSeriesState<T> {
 	/**
 	 * Controls the maximum height of each column.
 	 */
@@ -38,7 +38,7 @@ export interface ColumnStructureState<T> extends DataProviderState<T> {
 	columnWidth?: number;
 }
 
-export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> extends DataProviderOptions<T, S> {
+export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> extends InputSeriesOptions<T, S> {
 	/**
 	 * Controls the maximum height of each column.
 	 */
@@ -55,7 +55,8 @@ export interface ColumnStructureOptions<T, S extends ColumnStructureState<T>> ex
 	columnWidth?: number;
 
 	/**
-	 * Operates on the data observable to compute the divisor, which is used to determine the height of the columns.
+	 * Operates on the input series observable to compute the divisor, which is used to determine the height of the
+	 * columns.
 	 *
 	 * May be omitted if a `divisorOperator()` implementation has been mixed in.
 	 */
@@ -86,7 +87,8 @@ export interface ColumnStructureMixin<T> {
 	columnWidth: number;
 
 	/**
-	 * Operates on the data observable to compute the divisor, which is used to determine the height of the columns.
+	 * Operates on the input series observable to compute the divisor, which is used to determine the height of the
+	 * columns.
 	 *
 	 * May be omitted if a `divisorOperator()` option has been provided.
 	 */
@@ -114,7 +116,7 @@ export interface ColumnStructureMixin<T> {
  * Renders columns. To be mixed into dojo-widgets/createWidget.
  */
 export type ColumnStructure<T, S extends ColumnStructureState<T>> =
-	DataProvider<T, S> & Invalidatable & ColumnStructureMixin<T>;
+	InputSeries<T, S> & Invalidatable & ColumnStructureMixin<T>;
 
 export interface ColumnStructureFactory<T> extends ComposeFactory<
 	ColumnStructure<T, ColumnStructureState<T>>,
@@ -123,7 +125,7 @@ export interface ColumnStructureFactory<T> extends ComposeFactory<
 	<T, S extends ColumnStructureState<T>>(options?: ColumnStructureOptions<T, S>): ColumnStructure<T, S>;
 }
 
-const columnData = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, Column<any>[]>();
+const columnSeries = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, Column<any>[]>();
 const shadowColumnHeights = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
 const shadowColumnSpacings = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
 const shadowColumnWidths = new WeakMap<ColumnStructure<any, ColumnStructureState<any>>, number>();
@@ -194,9 +196,9 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 
 	visualizeData(): ColumnVisualization<any>[] {
 		const structure: ColumnStructure<any, ColumnStructureState<any>> = this;
-		const data = columnData.get(structure);
+		const series = columnSeries.get(structure);
 		const { columnHeight, columnSpacing, columnWidth } = structure;
-		return data.map((column, index) => {
+		return series.map((column, index) => {
 			const height = column.relativeValue * columnHeight;
 			const x = (columnWidth + columnSpacing) * index;
 			const y = columnHeight - height;
@@ -210,7 +212,7 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 		});
 	}
 }).mixin({
-	mixin: createDataProviderMixin,
+	mixin: createInputSeries,
 
 	initialize<T>(
 		instance: ColumnStructure<T, ColumnStructureState<T>>,
@@ -250,18 +252,18 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 			};
 		}
 
-		// Initialize with an empty structure since the DataProvider only provides data if any is available.
-		columnData.set(instance, []);
+		// Initialize with an empty series since InputSeries only provides a series once it's available.
+		columnSeries.set(instance, []);
 
 		let handle: Handle = null;
-		const subscribe = (data: Observable<T[]>) => {
+		const subscribe = (inputSeries: Observable<T[]>) => {
 			if (handle) {
 				handle.destroy();
 			}
 
-			const subscription = columnar(data, valueSelector, divisorOperator)
-				.subscribe((data) => {
-					columnData.set(instance, data);
+			const subscription = columnar(inputSeries, valueSelector, divisorOperator)
+				.subscribe((series) => {
+					columnSeries.set(instance, series);
 					instance.invalidate();
 				});
 
@@ -272,16 +274,17 @@ const createColumnStructureMixin: ColumnStructureFactory<any> = compose({
 			});
 		};
 
-		// DataProviderMixin may emit 'datachange' before this initializer can listen for it. Access it directly.
-		if (instance.data) {
-			subscribe(instance.data);
+		// InputSeries may emit 'inputserieschange' before this initializer can listen for it.
+		// Access the series directly.
+		if (instance.inputSeries) {
+			subscribe(instance.inputSeries);
 		}
-		// Update the data if it changes.
-		instance.own(instance.on('datachange', ({ data }) => subscribe(data)));
+		// Update the series if it changes.
+		instance.own(instance.on('inputserieschange', ({ observable }) => subscribe(observable)));
 
 		instance.own({
 			destroy() {
-				columnData.delete(instance);
+				columnSeries.delete(instance);
 				shadowColumnHeights.delete(instance);
 				shadowColumnWidths.delete(instance);
 			}
