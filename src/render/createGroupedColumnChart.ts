@@ -5,7 +5,9 @@ import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode, VNodeProperties } from 'maquette/maquette';
 
+import { Datum } from '../data/interfaces';
 import createColumnChart, {
+	Column,
 	ColumnChart,
 	ColumnChartOptions,
 	ColumnChartState,
@@ -13,7 +15,11 @@ import createColumnChart, {
 } from './createColumnChart';
 import { Point } from './interfaces';
 
-export interface GroupedColumnPoint<T, U> extends Point<T> {
+export interface GroupedColumn<T, U> extends Datum<T> {
+	columns: Column<U>[];
+}
+
+export interface GroupedColumnPoint<T, U> extends Point<GroupedColumn<T, U>> {
 	columnPoints: ColumnPoint<U>[];
 	translateX: number;
 }
@@ -132,6 +138,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 							columnPoints,
 							datum: {
 								input: group,
+								columns: columnPoints.map(({ datum }) => datum),
 								value
 							},
 							translateX,

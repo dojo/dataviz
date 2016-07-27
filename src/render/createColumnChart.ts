@@ -3,13 +3,14 @@ import { h, VNode } from 'maquette/maquette';
 
 import createChart, { Chart, ChartOptions, ChartState } from './createChart';
 import createColumnPlot, {
+	Column,
 	ColumnPoint,
 	ColumnPlot,
 	ColumnPlotOptions,
 	ColumnPlotState
 } from './mixins/createColumnPlotMixin';
 
-export { ColumnPoint }
+export { Column, ColumnPoint }
 
 export type ColumnChartState<T> = ChartState & ColumnPlotState<T>;
 

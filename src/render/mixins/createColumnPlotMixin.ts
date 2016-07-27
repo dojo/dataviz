@@ -14,8 +14,9 @@ import createInputSeries, {
 	InputSeriesState
 } from './createInputSeriesMixin';
 
-export interface ColumnPoint<T> extends Point<T> {
-	datum: Column<T>;
+export { Column };
+
+export interface ColumnPoint<T> extends Point<Column<T>> {
 	displayHeight: number;
 	displayWidth: number;
 }

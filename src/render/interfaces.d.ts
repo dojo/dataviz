@@ -18,11 +18,11 @@ export interface Invalidatable {
  *
  * All coordinates assume (0, 0) starts in the top-left corner of the coordinate system.
  */
-export interface Point<T> {
+export interface Point<D extends Datum<any>> {
 	/**
 	 * Datum represented by the point.
 	 */
-	datum: Datum<T>;
+	datum: D;
 
 	/**
 	 * Horizontal start position.
