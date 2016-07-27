@@ -15,12 +15,12 @@ import createColumnChart, {
 } from './createColumnChart';
 import { Point } from './interfaces';
 
-export interface GroupedColumn<T, U> extends Datum<T> {
-	columns: Column<U>[];
+export interface GroupedColumn<G, T> extends Datum<G> {
+	columns: Column<T>[];
 }
 
-export interface GroupedColumnPoint<T, U> extends Point<GroupedColumn<T, U>> {
-	columnPoints: ColumnPoint<U>[];
+export interface GroupedColumnPoint<G, T> extends Point<GroupedColumn<G, T>> {
+	columnPoints: ColumnPoint<T>[];
 	translateX: number;
 }
 
@@ -31,15 +31,15 @@ export type GroupedColumnChartState<T> = ColumnChartState<T> & {
 	groupSpacing?: number;
 }
 
-export type GroupSelector<T> = (input: T) => any;
+export type GroupSelector<G, T> = (input: T) => G;
 
-export type GroupedColumnChartOptions<T, S extends GroupedColumnChartState<T>> = ColumnChartOptions<T, S> & {
+export type GroupedColumnChartOptions<G, T, S extends GroupedColumnChartState<T>> = ColumnChartOptions<T, S> & {
 	/**
 	 * Select the group identifier from the input.
 	 *
 	 * May be omitted if a `groupSelector()` implementation has been mixed in.
 	 */
-	groupSelector?: GroupSelector<T>;
+	groupSelector?: GroupSelector<G, T>;
 
 	/**
 	 * Controls the space between each group.
@@ -47,13 +47,13 @@ export type GroupedColumnChartOptions<T, S extends GroupedColumnChartState<T>> =
 	groupSpacing?: number;
 }
 
-export interface GroupedColumnChartMixin<T> {
+export interface GroupedColumnChartMixin<G, T> {
 	/**
 	 * Select the group identifier from the input.
 	 *
 	 * May be omitted if a `groupSelector()` option has been provided.
 	 */
-	groupSelector?: GroupSelector<T>;
+	groupSelector?: GroupSelector<G, T>;
 
 	/**
 	 * Controls the space between each group.
@@ -61,29 +61,29 @@ export interface GroupedColumnChartMixin<T> {
 	groupSpacing?: number;
 }
 
-export type GroupedColumnChart<T, S extends GroupedColumnChartState<T>> = ColumnChart<T, S> & GroupedColumnChartMixin<T>;
+export type GroupedColumnChart<G, T, S extends GroupedColumnChartState<T>> = ColumnChart<T, S> & GroupedColumnChartMixin<G, T>;
 
-export interface GroupedColumnChartFactory<T> extends ComposeFactory<
-	GroupedColumnChart<T, GroupedColumnChartState<T>>,
-	GroupedColumnChartOptions<T, GroupedColumnChartState<T>>
+export interface GroupedColumnChartFactory<G, T> extends ComposeFactory<
+	GroupedColumnChart<G, T, GroupedColumnChartState<T>>,
+	GroupedColumnChartOptions<G, T, GroupedColumnChartState<T>>
 > {
-	<T, S extends GroupedColumnChartState<T>>(options?: GroupedColumnChartOptions<T, S>): GroupedColumnChart<T, S>;
+	<G, T, S extends GroupedColumnChartState<T>>(options?: GroupedColumnChartOptions<G, T, S>): GroupedColumnChart<G, T, S>;
 }
 
-const groupSelectors = new WeakMap<GroupedColumnChart<any, GroupedColumnChartState<any>>, GroupSelector<any>>();
-const shadowGroupSpacings = new WeakMap<GroupedColumnChart<any, GroupedColumnChartState<any>>, number>();
+const groupSelectors = new WeakMap<GroupedColumnChart<any, any, GroupedColumnChartState<any>>, GroupSelector<any, any>>();
+const shadowGroupSpacings = new WeakMap<GroupedColumnChart<any, any, GroupedColumnChartState<any>>, number>();
 
-const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnChart
+const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColumnChart
 	.mixin({
 		mixin: {
 			get groupSpacing() {
-				const chart: GroupedColumnChart<any, GroupedColumnChartState<any>> = this;
+				const chart: GroupedColumnChart<any, any, GroupedColumnChartState<any>> = this;
 				const { groupSpacing = shadowGroupSpacings.get(chart) } = chart.state || {};
 				return groupSpacing;
 			},
 
 			set groupSpacing(groupSpacing) {
-				const chart: GroupedColumnChart<any, GroupedColumnChartState<any>> = this;
+				const chart: GroupedColumnChart<any, any, GroupedColumnChartState<any>> = this;
 				if (chart.state) {
 					chart.setState({ groupSpacing });
 				}
@@ -96,10 +96,10 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 
 		aspectAdvice: {
 			after: {
-				plot<T>(columnPoints: ColumnPoint<T>[]): GroupedColumnPoint<any, T>[] {
-					const chart: GroupedColumnChart<T, GroupedColumnChartState<T>> = this;
+				plot<G, T>(columnPoints: ColumnPoint<T>[]): GroupedColumnPoint<G, T>[] {
+					const chart: GroupedColumnChart<G, T, GroupedColumnChartState<T>> = this;
 					const groupSelector = groupSelectors.get(chart);
-					const groups = new Map<any, ColumnPoint<T>[]>();
+					const groups = new Map<G, ColumnPoint<T>[]>();
 
 					for (const point of columnPoints) {
 						const { input } = point.datum;
@@ -117,8 +117,8 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 					let offset = 0;
 
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
-					return from<GroupedColumnPoint<any, T>>(<any> groups, (entry: any, index: number) => {
-						const [group, columnPoints] = <[any, ColumnPoint<T>[]]> entry;
+					return from<GroupedColumnPoint<G, T>>(<any> groups, (entry: any, index: number) => {
+						const [group, columnPoints] = <[G, ColumnPoint<T>[]]> entry;
 
 						// Spend half the spacing ahead of each group, and half after.
 						const translateX = offset + (index === 0 ? groupSpacing / 2 : groupSpacing);
@@ -152,8 +152,8 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 			},
 
 			around: {
-				renderPlot<T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
-					return (groupPoints: GroupedColumnPoint<any, T>[]) => {
+				renderPlot<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
+					return (groupPoints: GroupedColumnPoint<G, T>[]) => {
 						return groupPoints.map(({ columnPoints, datum, translateX }) => {
 							const props: VNodeProperties = {
 								key: datum.input
@@ -173,12 +173,12 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any> = createColumnCha
 		// See <https://github.com/dojo/compose/issues/42>.
 		mixin: createDestroyable,
 
-		initialize<T>(
-			instance: GroupedColumnChart<T, GroupedColumnChartState<T>>,
+		initialize<G, T>(
+			instance: GroupedColumnChart<G, T, GroupedColumnChartState<T>>,
 			{
 				groupSelector,
 				groupSpacing = 0
-			}: GroupedColumnChartOptions<T, GroupedColumnChartState<T>> = {}
+			}: GroupedColumnChartOptions<G, T, GroupedColumnChartState<T>> = {}
 		) {
 			if (!groupSelector) {
 				groupSelector = (input: T) => instance.groupSelector(input);

@@ -61,14 +61,14 @@ const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	width: 200
 });
 
-const groupedByProvinceChart = (<GroupedColumnChartFactory<PlayCount>> createGroupedColumnChart)({
+const groupedByProvinceChart = (<GroupedColumnChartFactory<string, PlayCount>> createGroupedColumnChart)({
 	columnHeight: 100,
 	columnSpacing: 1,
 	columnWidth: 10,
 	// Example of passing an observable to the chart.
 	inputSeries: byProvince,
 	divisorOperator: max,
-	groupSelector(input) {
+	groupSelector(input: PlayCount) {
 		return input.province;
 	},
 	groupSpacing: 10,
