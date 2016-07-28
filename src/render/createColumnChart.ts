@@ -1,7 +1,10 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import { h, VNode } from 'maquette/maquette';
 
+import { Datum } from '../data/interfaces';
+
 import createChart, { Chart, ChartOptions, ChartState } from './createChart';
+import createAxes, { Axes, AxesOptions } from './mixins/createAxesMixin';
 import createColumnPlot, {
 	Column,
 	ColumnPoint,
@@ -12,36 +15,80 @@ import createColumnPlot, {
 
 export { Column, ColumnPoint }
 
-export type ColumnChartState<T> = ChartState & ColumnPlotState<T>;
+export type ColumnChartState<T, D> = ChartState & ColumnPlotState<T>;
 
-export type ColumnChartOptions<T, S extends ColumnChartState<T>> = ChartOptions<S> & ColumnPlotOptions<T, S>;
+export type ColumnChartOptions<T, D, S extends ColumnChartState<T, D>> = ChartOptions<S> & ColumnPlotOptions<T, S> & AxesOptions<D>;
 
-export type ColumnChart<T, S extends ColumnChartState<T>> = Chart<S> & ColumnPlot<T, S>;
+export type ColumnChart<T, D extends Datum<any>, S extends ColumnChartState<T, D>> = Chart<S> & ColumnPlot<T, S> & Axes<D>;
 
 export interface ColumnChartFactory<T> extends ComposeFactory<
-	ColumnChart<T, ColumnChartState<T>>,
-	ColumnChartOptions<T, ColumnChartState<T>>
+	ColumnChart<T, Column<T>, ColumnChartState<T, Column<T>>>,
+	ColumnChartOptions<T, Column<T>, ColumnChartState<T, Column<T>>>
 > {
-	<T, S extends ColumnChartState<T>>(options?: ColumnChartOptions<T, S>): ColumnChart<T, S>;
+	<T, D extends Column<T>, S extends ColumnChartState<T, D>>(options?: ColumnChartOptions<T, D, S>): ColumnChart<T, D, S>;
 }
 
-const createColumnChart: ColumnChartFactory<any> = createChart
+export interface GenericColumnChartFactory<T> extends ComposeFactory<
+	ColumnChart<T, Datum<any>, ColumnChartState<T, Datum<any>>>,
+	ColumnChartOptions<T, Datum<any>, ColumnChartState<T, Datum<any>>>
+> {
+	<T, D extends Datum<any>, S extends ColumnChartState<T, D>>(options?: ColumnChartOptions<T, D, S>): ColumnChart<T, D, S>;
+}
+
+// Cast to a generic factory so subclasses can modify the datum type.
+// The factory should be casted to ColumnChartFactory when creating a column chart.
+const createColumnChart: GenericColumnChartFactory<any> = createChart
+	.mixin(createAxes)
 	.mixin(createColumnPlot)
 	.extend({
 		getChildrenNodes(): VNode[] {
-			const chart: ColumnChart<any, ColumnChartState<any>> = this;
+			const chart: ColumnChart<any, any, any> = this;
 			const plot = chart.plot();
 			if (plot.length === 0) {
 				return [];
 			}
 
 			const { xInset, yInset } = chart;
-			return [
-				h('g', {
-					key: 'plot',
-					'transform': `translate(${xInset} ${yInset})`
-				}, chart.renderPlot(plot))
-			];
+
+			const nodes: VNode[] = [];
+
+			let x2 = Math.max(...plot.map(({ x2 }) => x2));
+			let y2 = Math.max(...plot.map(({ y2 }) => y2));
+			const axes = chart.createAxes(plot, x2, y2);
+			x2 += axes.extraWidth;
+			y2 += axes.extraHeight;
+
+			if (axes.bottom) {
+				nodes.push(h('g', {
+					key: 'bottom-axis',
+					transform: `translate(${xInset} ${yInset + y2})`
+				}, axes.bottom));
+			}
+			if (axes.left) {
+				nodes.push(h('g', {
+					key: 'left-axis',
+					transform: `translate(${xInset + 1} ${yInset + axes.extraHeight})`
+				}, axes.left));
+			}
+			if (axes.right) {
+				nodes.push(h('g', {
+					key: 'right-axis',
+					transform: `translate(${xInset + x2} ${yInset + axes.extraHeight})`
+				}, axes.right));
+			}
+			if (axes.top) {
+				nodes.push(h('g', {
+					key: 'top-axis',
+					transform: `translate(${xInset} ${yInset})`
+				}, axes.top));
+			}
+
+			nodes.push(h('g', {
+				key: 'plot',
+				'transform': `translate(${xInset} ${yInset + axes.extraHeight})`
+			}, chart.renderPlot(plot)));
+
+			return nodes;
 		}
 	});
 

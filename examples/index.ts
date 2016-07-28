@@ -21,4 +21,4 @@
 });
 
 /* Requiring in the main module */
-require(['examples/app'], function () {});
+require([`examples/${location.search.slice(1) || 'app'}`], function () {});
