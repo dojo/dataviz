@@ -79,7 +79,7 @@ export interface ColumnPlotMixin<T> {
 	/**
 	 * Controls the space between each column.
 	 */
-	columnSpacing?: number;
+	columnSpacing: number;
 
 	/**
 	 * Controls the width of each column.
