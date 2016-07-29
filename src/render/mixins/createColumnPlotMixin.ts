@@ -19,6 +19,7 @@ export { Column };
 export interface ColumnPoint<T> extends Point<Column<T>> {
 	displayHeight: number;
 	displayWidth: number;
+	offsetLeft: number;
 }
 
 export interface ColumnPlotState<T> extends InputSeriesState<T> {
@@ -199,6 +200,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				datum: column,
 				displayHeight,
 				displayWidth,
+				offsetLeft: columnSpacing / 2,
 				x1,
 				x2,
 				y1,
@@ -208,12 +210,12 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 	},
 
 	renderPlot<T>(points: ColumnPoint<T>[]) {
-		return points.map(({ datum, displayHeight, displayWidth, x1, y1 }) => {
+		return points.map(({ datum, displayHeight, displayWidth, offsetLeft, x1, y1 }) => {
 			return h('rect', {
 				key: datum.input,
 				height: String(displayHeight),
 				width: String(displayWidth),
-				x: String(x1),
+				x: String(x1 + offsetLeft),
 				y: String(y1)
 			});
 		});

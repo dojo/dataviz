@@ -1,5 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
+import { assign } from 'dojo-core/lang';
 import { from } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
@@ -21,7 +22,6 @@ export interface GroupedColumn<G, T> extends Datum<G> {
 
 export interface GroupedColumnPoint<G, T> extends Point<GroupedColumn<G, T>> {
 	columnPoints: ColumnPoint<T>[];
-	translateX: number;
 }
 
 export type GroupedColumnChartState<T, D> = ColumnChartState<T, D> & {
@@ -128,8 +128,11 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 							groups.set(group, { columnPoints: [], columns: [], value: 0, y1: columnHeight });
 						}
 
+						// The point will be modified below. Be friendly and copy it first.
+						const shallowCopy = assign({}, point);
+
 						const record = groups.get(group);
-						record.columnPoints.push(point);
+						record.columnPoints.push(shallowCopy);
 						record.columns.push(point.datum);
 						record.value = Math.max(record.value, point.datum.value);
 						record.y1 = Math.min(record.y1, point.y1);
@@ -140,16 +143,19 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 					return from<GroupedColumnPoint<G, T>>(<any> groups, (entry: any, index: number) => {
 						const [group, { columnPoints, columns, value, y1 }] = <[G, Record]> entry;
 
-						// Spend half the spacing ahead of each group, and half after.
-						const translateX = offset + (index === 0 ? groupSpacing / 2 : groupSpacing);
+						const x1 = offset;
 
-						// The grouped point starts at the first column, taking offset into account
-						const x1 = columnPoints[0].x1 + offset;
-						// It ends after the last column, minus its spacing, including the new offset and half the
-						// group space.
-						const x2 = columnPoints[columnPoints.length - 1].x2 - columnSpacing + translateX + groupSpacing / 2;
+						let prev = { x2: x1 + groupSpacing / 2 - columnSpacing / 2 };
+						for (const point of columnPoints) {
+							const dx = point.x2 - point.x1;
+							point.x1 = prev.x2;
+							point.x2 = point.x1 + dx;
 
-						offset = translateX;
+							prev = point;
+						}
+
+						const x2 = prev.x2 + groupSpacing / 2;
+						offset = x2;
 
 						return {
 							columnPoints,
@@ -158,7 +164,6 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 								columns,
 								value
 							},
-							translateX,
 							x1,
 							x2,
 							y1,
@@ -171,13 +176,10 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 			around: {
 				renderPlot<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
 					return (groupPoints: GroupedColumnPoint<G, T>[]) => {
-						return groupPoints.map(({ columnPoints, datum, translateX }) => {
+						return groupPoints.map(({ columnPoints, datum }) => {
 							const props: VNodeProperties = {
 								key: datum.input
 							};
-							if (translateX !== 0) {
-								props['transform'] = `translate(${translateX})`;
-							}
 							return h('g', props, renderColumns.call(this, columnPoints));
 						});
 					};

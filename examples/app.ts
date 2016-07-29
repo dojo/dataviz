@@ -83,7 +83,7 @@ const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 		ticks: { length: 10 }
 	},
 	columnHeight: 100,
-	columnSpacing: 1,
+	columnSpacing: 3,
 	columnWidth: 20,
 	// Example of passing an observable to the chart.
 	inputSeries: playCounts,
