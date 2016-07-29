@@ -48,13 +48,13 @@ const createColumnChart: GenericColumnChartFactory<any> = createChart
 				return [];
 			}
 
-			const { xInset, yInset } = chart;
+			const { domainMax, xInset, yInset } = chart;
 
 			const nodes: VNode[] = [];
 
 			let x2 = Math.max(...plot.map(({ x2 }) => x2));
 			let y2 = Math.max(...plot.map(({ y2 }) => y2));
-			const axes = chart.createAxes(plot, x2, y2);
+			const axes = chart.createAxes(plot, domainMax, x2, y2);
 			x2 += axes.extraWidth;
 			y2 += axes.extraHeight;
 

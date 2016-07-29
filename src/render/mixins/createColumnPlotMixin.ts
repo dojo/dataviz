@@ -37,6 +37,14 @@ export interface ColumnPlotState<T> extends InputSeriesState<T> {
 	 * Controls the width of each column.
 	 */
 	columnWidth?: number;
+
+	/**
+	 * The value that is plotted with the full columnHeight. Any input values that exceed this maximum will be plotted
+	 * with a height larger than the columnHeight.
+	 *
+	 * No maximum is applied if set to 0.
+	 */
+	domainMax?: number;
 }
 
 export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends InputSeriesOptions<T, S> {
@@ -63,6 +71,12 @@ export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends Inpu
 	 * Otherwise the divisor will be set to `1`.
 	 */
 	divisorOperator?: DivisorOperator<T>;
+
+	/**
+	 * The value that is plotted with the full columnHeight. Any input values that exceed this maximum will be plotted
+	 * with a height larger than the columnHeight.
+	 */
+	domainMax?: number;
 
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
@@ -97,6 +111,12 @@ export interface ColumnPlotMixin<T> {
 	 * will be used.
 	 */
 	divisorOperator?: DivisorOperator<T>;
+
+	/**
+	 * The value that is plotted with the full columnHeight. Any input values that exceed this maximum will be plotted
+	 * with a height larger than the columnHeight.
+	 */
+	domainMax: number;
 
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
@@ -134,6 +154,7 @@ const columnSeries = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Column<a
 const shadowColumnHeights = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 const shadowColumnSpacings = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 const shadowColumnWidths = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
+const shadowDomainMaximums = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 
 const createColumnPlot: ColumnPlotFactory<any> = compose({
 	get columnHeight() {
@@ -187,12 +208,40 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		plot.invalidate();
 	},
 
+	get domainMax() {
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		const { domainMax = shadowDomainMaximums.get(plot) } = plot.state || {};
+		return domainMax;
+	},
+
+	set domainMax(domainMax) {
+		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
+		if (plot.state) {
+			plot.setState({ domainMax });
+		}
+		else {
+			shadowDomainMaximums.set(plot, domainMax);
+		}
+		plot.invalidate();
+	},
+
 	plot<T>(): ColumnPoint<T>[] {
 		const plot: ColumnPlot<T, ColumnPlotState<T>> = this;
 		const series = columnSeries.get(plot);
-		const { columnHeight, columnSpacing, columnWidth: displayWidth } = plot;
+		const { columnHeight, columnSpacing, columnWidth: displayWidth, domainMax } = plot;
+
+		// The relative values computed for each column do not take any domain maximum into account. Correct them if
+		// necessary, so that only the column who's value equals the domain maximum is rendered with the full column
+		// height.
+		let domainCorrection = 1;
+		if (domainMax > 0) {
+			const maxValue = Math.max(...series.map(({ value }) => value));
+			domainCorrection = maxValue / domainMax;
+		}
+
 		return series.map((column, index) => {
-			const displayHeight = column.relativeValue * columnHeight;
+			const correctedRelativeValue = column.relativeValue * domainCorrection;
+			const displayHeight = correctedRelativeValue * columnHeight;
 			const x1 = (displayWidth + columnSpacing) * index;
 			const x2 = x1 + displayWidth + columnSpacing;
 			const y1 = columnHeight - displayHeight;
@@ -229,6 +278,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 			columnHeight = 0,
 			columnSpacing = 0,
 			columnWidth = 0,
+			domainMax = 0,
 			divisorOperator,
 			valueSelector
 		}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
@@ -236,6 +286,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		shadowColumnHeights.set(instance, columnHeight);
 		shadowColumnSpacings.set(instance, columnSpacing);
 		shadowColumnWidths.set(instance, columnWidth);
+		shadowDomainMaximums.set(instance, domainMax);
 
 		if (!divisorOperator) {
 			// Allow a divisorOperator implementation to be mixed in.
@@ -296,6 +347,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				columnSeries.delete(instance);
 				shadowColumnHeights.delete(instance);
 				shadowColumnWidths.delete(instance);
+				shadowDomainMaximums.delete(instance);
 			}
 		});
 	}

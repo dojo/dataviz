@@ -107,7 +107,8 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 			after: {
 				plot<G, T>(columnPoints: ColumnPoint<T>[]): StackedColumnPoint<G, T>[] {
 					const chart: StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T, StackedColumn<G, T>>> = this;
-					const { columnHeight, columnSpacing, columnWidth, stackSpacing } = chart;
+					const { columnHeight, columnSpacing, columnWidth, domainMax, stackSpacing } = chart;
+					let maxValue = 0;
 					let maxRelativeValue = 0;
 
 					const stackSelector = stackSelectors.get(chart);
@@ -138,9 +139,19 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 						record.relativeValue += relativeValue;
 						record.value += value;
 
+						if (record.value > maxValue) {
+							maxValue = record.value;
+						}
 						if (record.relativeValue > maxRelativeValue) {
 							maxRelativeValue = record.relativeValue;
 						}
+					}
+
+					// Recompute the domain correction, so that only the stack who's total value equals the domain
+					// maximum is rendered with the full column height.
+					let domainCorrection = 1;
+					if (domainMax > 0) {
+						domainCorrection = maxValue / domainMax;
 					}
 
 					let offset = 0;
@@ -148,15 +159,15 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 					return from<StackedColumnPoint<G, T>>(<any> stacks, (entry: any, index: number) => {
 						const [stack, { columnPoints, columns, relativeValue, value }] = <[G, Record]> entry;
 
-						let adjustedRelativeValue = relativeValue;
+						let correctedRelativeValue = relativeValue * domainCorrection;
 						// If the columns are scaled as a percentage of their total value then the maxRelativeValue will
 						// never exceed 1. If it does then rescale the stacks so the largest stack is the full column
 						// height (meaning it has a relative value of 1).
 						if (maxRelativeValue > 1) {
-							adjustedRelativeValue /= maxRelativeValue;
+							correctedRelativeValue /= maxRelativeValue;
 						}
 
-						const stackHeight = columnHeight * adjustedRelativeValue;
+						const stackHeight = columnHeight * correctedRelativeValue;
 						const y1 = columnHeight - stackHeight;
 
 						// Spend half the spacing ahead of each stack, and half after.
