@@ -107,8 +107,16 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 			after: {
 				plot<G, T>(columnPoints: ColumnPoint<T>[]): GroupedColumnPoint<G, T>[] {
 					const chart: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T, GroupedColumn<G, T>>> = this;
+					const { columnHeight, columnSpacing, groupSpacing } = chart;
+
 					const groupSelector = groupSelectors.get(chart);
-					const groups = new Map<G, ColumnPoint<T>[]>();
+					interface Record {
+						columnPoints: ColumnPoint<T>[];
+						columns: Column<T>[];
+						value: number;
+						y1: number;
+					}
+					const groups = new Map<G, Record>();
 
 					for (const point of columnPoints) {
 						const { input } = point.datum;
@@ -117,29 +125,29 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 						// ordering of nodes within the group.
 						const group = groupSelector(input);
 						if (!groups.has(group)) {
-							groups.set(group, []);
+							groups.set(group, { columnPoints: [], columns: [], value: 0, y1: columnHeight });
 						}
-						groups.get(group).push(point);
+
+						const record = groups.get(group);
+						record.columnPoints.push(point);
+						record.columns.push(point.datum);
+						record.value = Math.max(record.value, point.datum.value);
+						record.y1 = Math.min(record.y1, point.y1);
 					}
 
-					const { columnSpacing, groupSpacing } = chart;
 					let offset = 0;
-
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
 					return from<GroupedColumnPoint<G, T>>(<any> groups, (entry: any, index: number) => {
-						const [group, columnPoints] = <[G, ColumnPoint<T>[]]> entry;
+						const [group, { columnPoints, columns, value, y1 }] = <[G, Record]> entry;
 
 						// Spend half the spacing ahead of each group, and half after.
 						const translateX = offset + (index === 0 ? groupSpacing / 2 : groupSpacing);
 
-						const value = Math.max(...columnPoints.map(({ datum: { value } }) => value));
 						// The grouped point starts at the first column, taking offset into account
 						const x1 = columnPoints[0].x1 + offset;
 						// It ends after the last column, minus its spacing, including the new offset and half the
 						// group space.
 						const x2 = columnPoints[columnPoints.length - 1].x2 - columnSpacing + translateX + groupSpacing / 2;
-						const y1 = Math.min(...columnPoints.map(({ y1 }) => y1));
-						const y2 = Math.max(...columnPoints.map(({ y2 }) => y2));
 
 						offset = translateX;
 
@@ -147,14 +155,14 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 							columnPoints,
 							datum: {
 								input: group,
-								columns: columnPoints.map(({ datum }) => datum),
+								columns,
 								value
 							},
 							translateX,
 							x1,
 							x2,
 							y1,
-							y2
+							y2: columnHeight
 						};
 					});
 				}
