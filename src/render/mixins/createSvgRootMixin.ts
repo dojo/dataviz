@@ -107,7 +107,8 @@ const createSvgRootMixin = createStateful
 				const { height, width } = root;
 				return {
 					height: String(height),
-					width: String(width)
+					width: String(width),
+					'shape-rendering': 'crispEdges'
 				};
 			}
 		},
