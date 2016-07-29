@@ -18,6 +18,7 @@ import { Point } from './interfaces';
 
 export interface GroupedColumn<G, T> extends Datum<G> {
 	columns: Column<T>[];
+	totalValue: number;
 }
 
 export interface GroupedColumnPoint<G, T> extends Point<GroupedColumn<G, T>> {
@@ -113,19 +114,20 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 					interface Record {
 						columnPoints: ColumnPoint<T>[];
 						columns: Column<T>[];
+						totalValue: number;
 						value: number;
 						y1: number;
 					}
 					const groups = new Map<G, Record>();
 
 					for (const point of columnPoints) {
-						const { input } = point.datum;
+						const { input, value } = point.datum;
 
 						// Note that the ordering of the groups is determined by the original sort order, as is the
 						// ordering of nodes within the group.
 						const group = groupSelector(input);
 						if (!groups.has(group)) {
-							groups.set(group, { columnPoints: [], columns: [], value: 0, y1: columnHeight });
+							groups.set(group, { columnPoints: [], columns: [], totalValue: 0, value: 0, y1: columnHeight });
 						}
 
 						// The point will be modified below. Be friendly and copy it first.
@@ -134,14 +136,15 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 						const record = groups.get(group);
 						record.columnPoints.push(shallowCopy);
 						record.columns.push(point.datum);
-						record.value = Math.max(record.value, point.datum.value);
+						record.totalValue += value;
+						record.value = Math.max(record.value, value);
 						record.y1 = Math.min(record.y1, point.y1);
 					}
 
 					let offset = 0;
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
 					return from<GroupedColumnPoint<G, T>>(<any> groups, (entry: any, index: number) => {
-						const [group, { columnPoints, columns, value, y1 }] = <[G, Record]> entry;
+						const [group, { columnPoints, columns, totalValue, value, y1 }] = <[G, Record]> entry;
 
 						const x1 = offset;
 
@@ -162,6 +165,7 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 							datum: {
 								input: group,
 								columns,
+								totalValue,
 								value
 							},
 							x1,

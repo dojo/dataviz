@@ -113,9 +113,8 @@ const groupedByProvinceChart = (<GroupedColumnChartFactory<string, PlayCount>> c
 	},
 	topAxis: {
 		inputs: {
-			labelSelector({ columns }) {
-				const sum = columns.reduce((total, { value }) => total += value, 0);
-				return String(sum);
+			labelSelector({ totalValue }) {
+				return String(totalValue);
 			}
 		},
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: 45, offset: -5 },
