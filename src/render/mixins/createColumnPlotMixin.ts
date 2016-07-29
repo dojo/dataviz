@@ -58,14 +58,16 @@ export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends Inpu
 	 * Operates on the input series observable to compute the divisor, which is used to determine the height of the
 	 * columns.
 	 *
-	 * May be omitted if a `divisorOperator()` implementation has been mixed in.
+	 * If not provided, and a `divisorOperator()` implementation has been mixed in, that implementation is used.
+	 * Otherwise the divisor will be set to `1`.
 	 */
 	divisorOperator?: DivisorOperator<T>;
 
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
 	 *
-	 * May be omitted if a `valueSelector()` implementation has been mixed in.
+	 * If not provided, and a `valueSelector()` implementation has been mixed in, that implementation is used. Otherwise
+	 * values will be hardcoded to `0`.
 	 */
 	valueSelector?: ValueSelector<T>;
 }
@@ -90,14 +92,16 @@ export interface ColumnPlotMixin<T> {
 	 * Operates on the input series observable to compute the divisor, which is used to determine the height of the
 	 * columns.
 	 *
-	 * May be omitted if a `divisorOperator()` option has been provided.
+	 * Can be overriden by specifying a `divisorOperator()` option. If neither is available a static divisor of `1`
+	 * will be used.
 	 */
 	divisorOperator?: DivisorOperator<T>;
 
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
 	 *
-	 * May be omitted if a `valueSelector()` option has been provided.
+	 * Can be overriden by specifying a `valueSelector()` option. If neither is available all values will be hardcoded
+	 * to `0`.
 	 */
 	valueSelector?: ValueSelector<T>;
 
