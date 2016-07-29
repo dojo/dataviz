@@ -34,6 +34,7 @@
 		"./src/render/createChart.ts",
 		"./src/render/createColumnChart.ts",
 		"./src/render/createGroupedColumnChart.ts",
+		"./src/render/createStackedColumnChart.ts",
 		"./src/render/interfaces.d.ts",
 		"./src/render/mixins/createAxesMixin.ts",
 		"./src/render/mixins/createColumnPlotMixin.ts",

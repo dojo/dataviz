@@ -7,6 +7,7 @@ import sum from 'src/data/sum';
 import sort from 'src/data/sort';
 import createColumnChart, { ColumnChartFactory } from 'src/render/createColumnChart';
 import createGroupedColumnChart, { GroupedColumnChartFactory } from 'src/render/createGroupedColumnChart';
+import createStackedColumnChart, { StackedColumnChartFactory } from 'src/render/createStackedColumnChart';
 
 import getPlayCounts, { PlayCount } from './play-counts';
 
@@ -145,10 +146,58 @@ const groupedByProvinceChart = (<GroupedColumnChartFactory<string, PlayCount>> c
 groupedByProvinceChart.xInset = 75;
 groupedByProvinceChart.yInset = 25;
 
+const stackedByProvinceChart = (<StackedColumnChartFactory<string, PlayCount>> createStackedColumnChart)({
+	bottomAxis: {
+		inputs: {
+			labelSelector({ input }) { return input; }
+		},
+		labels: { anchor: 'middle', textAnchor: 'end', rotation: -45, offset: -5 },
+		ticks: { anchor: 'end', length: 10, zeroth: true }
+	},
+	leftAxis: {
+		labels: { anchor: 'end' },
+		range: { stepSize: 10000 },
+		ticks: { length: 10 }
+	},
+	topAxis: {
+		inputs: {
+			labelSelector({ value }) {
+				return String(value);
+			}
+		},
+		labels: { anchor: 'middle', textAnchor: 'end', rotation: 45, offset: -5 },
+		ticks: { anchor: 'end', length: 10, zeroth: true }
+	},
+	columnHeight: 200,
+	columnSpacing: 10,
+	columnWidth: 20,
+	state: {
+		styles: { marginTop: '20px' }
+	},
+	// stateFrom: store,
+	// Example of passing an observable to the chart.
+	inputSeries: byProvince,
+	divisorOperator: max,
+	stackSelector(input: PlayCount) {
+		return input.province;
+	},
+	stackSpacing: 1,
+	height: 330,
+	valueSelector(input: PlayCount) {
+		// Why isn't the input type inferred here? It is in percentageChart, seemingly due to the stateFrom option.
+		return input.count;
+	},
+	width: 300
+});
+
+stackedByProvinceChart.xInset = 75;
+stackedByProvinceChart.yInset = 25;
+
 // Make the charts available to the console.
 (<any> window).absoluteChart = absoluteChart;
 (<any> window).groupedByProvinceChart = groupedByProvinceChart;
 (<any> window).percentageChart = percentageChart;
+(<any> window).stackedByProvinceChart = stackedByProvinceChart;
 
-projector.append([percentageChart, absoluteChart, groupedByProvinceChart]);
+projector.append([percentageChart, absoluteChart, groupedByProvinceChart, stackedByProvinceChart]);
 projector.attach();
