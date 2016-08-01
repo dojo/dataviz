@@ -7,7 +7,7 @@ import { Observable } from 'rxjs/Rx';
 import { DivisorOperator, InputObservable, ValueSelector } from '../../data/interfaces';
 import columnar, { Column } from '../../data/columnar';
 
-import { Invalidatable, Plot, Point } from '../interfaces';
+import { Domain, DomainOption, Invalidatable, Plot, Point, Values } from '../interfaces';
 import createInputSeries, {
 	InputSeries,
 	InputSeriesOptions,
@@ -15,6 +15,10 @@ import createInputSeries, {
 } from './createInputSeriesMixin';
 
 export { Column };
+
+function normalizeDomain(domain: DomainOption): Domain {
+	return Array.isArray(domain) ? domain : [domain < 0 ? domain : 0, domain > 0 ? domain : 0];
+}
 
 export interface ColumnPoint<T> extends Point<Column<T>> {
 	displayHeight: number;
@@ -41,12 +45,15 @@ export interface ColumnPlotState<T> extends InputSeriesState<T> {
 	columnWidth?: number;
 
 	/**
-	 * The value that is plotted with the full columnHeight. Any input values that exceed this maximum will be plotted
-	 * with a height larger than the columnHeight.
+	 * Controls the range for which values are plotted with the full columnHeight. The height is distributed across the
+	 * negative and positive values commensurate with the range. Any input values that exceed the minimum or maximum
+	 * will still be plotted proportionally (but exceeding the height limits).
 	 *
-	 * No maximum is applied if set to 0.
+	 * If a single number is provided, if that number is greater than zero it implies a domain of [0, number]. If it's
+	 * less than zero it implies a domain of [number, 0]. If zero it implies there are no minimum or maximum values,
+	 * same for a domain of [0, 0].
 	 */
-	domainMax?: number;
+	domain?: DomainOption;
 }
 
 export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends InputSeriesOptions<T, S> {
@@ -75,10 +82,15 @@ export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends Inpu
 	divisorOperator?: DivisorOperator<T>;
 
 	/**
-	 * The value that is plotted with the full columnHeight. Any input values that exceed this maximum will be plotted
-	 * with a height larger than the columnHeight.
+	 * Controls the range for which values are plotted with the full columnHeight. The height is distributed across the
+	 * negative and positive values commensurate with the range. Any input values that exceed the minimum or maximum
+	 * will still be plotted proportionally (but exceeding the height limits).
+	 *
+	 * If a single number is provided, if that number is greater than zero it implies a domain of [0, number]. If it's
+	 * less than zero it implies a domain of [number, 0]. If zero it implies there are no minimum or maximum values,
+	 * same for a domain of [0, 0].
 	 */
-	domainMax?: number;
+	domain?: DomainOption;
 
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
@@ -115,10 +127,11 @@ export interface ColumnPlotMixin<T> {
 	divisorOperator?: DivisorOperator<T>;
 
 	/**
-	 * The value that is plotted with the full columnHeight. Any input values that exceed this maximum will be plotted
-	 * with a height larger than the columnHeight.
+	 * Controls the range for which values are plotted with the full columnHeight. The height is distributed across the
+	 * negative and positive values commensurate with the range. Any input values that exceed the minimum or maximum
+	 * will still be plotted proportionally (but exceeding the height limits).
 	 */
-	domainMax: number;
+	domain: Domain;
 
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
@@ -156,7 +169,7 @@ const columnSeries = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Column<a
 const shadowColumnHeights = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 const shadowColumnSpacings = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 const shadowColumnWidths = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
-const shadowDomainMaximums = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
+const shadowDomains = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Domain>();
 
 const createColumnPlot: ColumnPlotFactory<any> = compose({
 	get columnHeight() {
@@ -210,19 +223,19 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		plot.invalidate();
 	},
 
-	get domainMax() {
+	get domain() {
 		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		const { domainMax = shadowDomainMaximums.get(plot) } = plot.state || {};
-		return domainMax;
+		const { domain = shadowDomains.get(plot) } = plot.state || {};
+		return normalizeDomain(domain);
 	},
 
-	set domainMax(domainMax) {
+	set domain(domain) {
 		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
 		if (plot.state) {
-			plot.setState({ domainMax });
+			plot.setState({ domain });
 		}
 		else {
-			shadowDomainMaximums.set(plot, domainMax);
+			shadowDomains.set(plot, domain);
 		}
 		plot.invalidate();
 	},
@@ -230,25 +243,96 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 	plot<T>(): ColumnPointPlot<T> {
 		const plot: ColumnPlot<T, ColumnPlotState<T>> = this;
 		const series = columnSeries.get(plot);
-		const { columnHeight, columnSpacing, columnWidth: displayWidth, domainMax } = plot;
+		const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [domainMin, domainMax] } = plot;
 
-		// The relative values computed for each column do not take any domain maximum into account. Correct them if
-		// necessary, so that only the column who's value equals the domain maximum is rendered with the full column
-		// height.
-		let domainCorrection = 1;
-		if (domainMax > 0) {
-			const maxValue = Math.max(...series.map(({ value }) => value));
-			domainCorrection = maxValue / domainMax;
+		let mostNegativeRelValue = 0;
+		let mostNegativeValue = 0;
+		let mostPositiveRelValue = 0;
+		let mostPositiveValue = 0;
+		for (const { relativeValue, value } of series) {
+			if (relativeValue < mostNegativeRelValue) {
+				mostNegativeRelValue = relativeValue;
+			}
+			else if (relativeValue > mostPositiveRelValue) {
+				mostPositiveRelValue = relativeValue;
+			}
+
+			if (value < mostNegativeValue) {
+				mostNegativeValue = value;
+			}
+			else if (value > mostPositiveValue) {
+				mostPositiveValue = value;
+			}
 		}
 
+		// Maximum height of positive columns. Initially assume there are no negative columns, this will be refined
+		// later. The height of negative columns is determined by taking columnHeight and subtracting positiveHeight.
+		let positiveHeight = columnHeight;
+
+		// The height of each column ("display height") is determined by the column's relative value and the available
+		// positive or negative height. The relative value needs to be corrected for the available height if there are
+		// both negative and positive columns.
+		let negativeDisplayHeightCorrection = 1;
+		let positiveDisplayHeightCorrection = 1;
+		if (mostNegativeRelValue < 0 && mostPositiveRelValue > 0) {
+			negativeDisplayHeightCorrection /= -mostNegativeRelValue;
+			positiveDisplayHeightCorrection /= mostPositiveRelValue;
+		}
+
+		// Relative column values need to be further adjusted if a domain minimum and/or maximum is specified. Only
+		// negative columns who's value equals the domain minimum, or positive columns who's value equals the domain
+		// maximum, must be rendered with the full available height.
+		//
+		// This is also where enough information is available to compute the correct positiveHeight.
+		if (domainMin !== 0 || domainMax !== 0) {
+			if (domainMin < 0) {
+				if (domainMax === 0) {
+					// There shouldn't be any positive columns.
+					negativeDisplayHeightCorrection *= mostNegativeValue / domainMin;
+					positiveHeight = 0;
+				}
+				else if (domainMax > 0) {
+					// There may be both positive and negative columns.
+					negativeDisplayHeightCorrection *= mostNegativeValue / domainMin;
+					positiveDisplayHeightCorrection *= mostPositiveValue / domainMax;
+					positiveHeight *= domainMax / (domainMax - domainMin);
+				}
+			}
+			else if (domainMin === 0 && domainMax > 0) {
+				// There should only be positive columns.
+				positiveDisplayHeightCorrection *= mostPositiveValue / domainMax;
+			}
+			// FIXME: Should this raise an error if domainMin > 0 or domainMax < 0? These are not valid domains for column
+			// charts.
+		}
+		// Without a domain, adjust the positiveHeight only if there are negative columns.
+		else if (mostNegativeRelValue < 0) {
+			if (mostPositiveRelValue === 0) {
+				// There are definitely no positive columns.
+				positiveHeight = 0;
+			}
+			else {
+				// There are both positive and negative columns.
+				positiveHeight *= mostPositiveRelValue / (mostPositiveRelValue - mostNegativeRelValue);
+			}
+		}
+
+		// There should be space for a line dividing negative and positive columns, so start 1px lower.
+		const negativeOffset = positiveHeight + 1;
+
+		let verticalValues = Values.None;
 		let x2 = 0;
 
 		const points = series.map((column, index) => {
-			const correctedRelativeValue = column.relativeValue * domainCorrection;
-			const displayHeight = correctedRelativeValue * columnHeight;
+			const isNegative = column.relativeValue < 0;
+			verticalValues |= isNegative ? Values.Negative : Values.Positive;
+
+			const availableHeight = isNegative ? positiveHeight - columnHeight : positiveHeight;
+			const correction = isNegative ? negativeDisplayHeightCorrection : positiveDisplayHeightCorrection;
+			const displayHeight = availableHeight * column.relativeValue * correction;
+
 			const x1 = (displayWidth + columnSpacing) * index;
 			x2 = x1 + displayWidth + columnSpacing;
-			const y1 = columnHeight - displayHeight;
 
 			return {
 				datum: column,
@@ -257,15 +341,24 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				offsetLeft: columnSpacing / 2,
 				x1,
 				x2,
-				y1,
-				y2: columnHeight
+				y1: isNegative ? negativeOffset : positiveHeight - displayHeight,
+				y2: isNegative ? negativeOffset + displayHeight + 1 : positiveHeight
 			};
 		});
 
+		let height = columnHeight;
+		if (verticalValues & Values.Negative) {
+			// Chart height includes the line between negative and positive columns.
+			height += 1;
+		}
+
 		return {
-			height: columnHeight,
+			height,
+			horizontalValues: Values.Positive,
 			points,
-			width: x2
+			verticalValues,
+			width: x2,
+			zero: { x: 0, y: positiveHeight }
 		};
 	},
 
@@ -289,7 +382,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 			columnHeight = 0,
 			columnSpacing = 0,
 			columnWidth = 0,
-			domainMax = 0,
+			domain = [0, 0] as Domain,
 			divisorOperator,
 			valueSelector
 		}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
@@ -297,7 +390,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		shadowColumnHeights.set(instance, columnHeight);
 		shadowColumnSpacings.set(instance, columnSpacing);
 		shadowColumnWidths.set(instance, columnWidth);
-		shadowDomainMaximums.set(instance, domainMax);
+		shadowDomains.set(instance, normalizeDomain(domain));
 
 		if (!divisorOperator) {
 			// Allow a divisorOperator implementation to be mixed in.
@@ -358,7 +451,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				columnSeries.delete(instance);
 				shadowColumnHeights.delete(instance);
 				shadowColumnWidths.delete(instance);
-				shadowDomainMaximums.delete(instance);
+				shadowDomains.delete(instance);
 			}
 		});
 	}

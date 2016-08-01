@@ -4,15 +4,13 @@ import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette/maquette';
 
 import { Datum } from '../../data/interfaces';
-import { Invalidatable, Point, Plot } from '../interfaces';
+import { Domain, Invalidatable, Point, Plot, Values } from '../interfaces';
 
 /* TODO! FIXME!
 
 Hello! This mixin is not yet feature complete:
 
-	* It assumes datum values are >= 0 (no negative values)
-	* Configuration of the start value for range based axes is ignored. This will be necessary for line and
-	  scatterplot charts, if not more chart types
+	* It assumes datum values are >= 0 for horizontal axes (no negative values), but <= is supported for vertical axes
 	* Axes configuration cannot be provided through the widget state. This would also require label selectors to be
 	  defined on the prototype since they can't be serialized into the state. Perhaps as topInputLabelSelector, etc
 	* Axes configuration cannot be provided through the prototype. This is necessary to create widgets with a
@@ -28,6 +26,7 @@ Hello! This mixin is not yet feature complete:
 	  dominantBaseline
 	* We may need perpendicularOffset anyhow (e.g. for the bottom axis it would move the label down, for the left axis
 	  it would move it further left)
+	* Axes tend to draw duplicate ticks and grid lines for the "zero" position
 
 Good luck!
 */
@@ -171,7 +170,8 @@ export interface RangeBasedAxis extends SharedConfiguration {
 		 * The end of the range (inclusive). Defaults to the closest stepSize multiple that is greater than or equal to
 		 * the largest datum value.
 		 *
-		 * abs(end) must be a multiple of stepSize, else is rounded up to the nearest stepSize multiple.
+		 * Must be greater than or equal to zero. Must be a multiple of stepSize, else is rounded up to the nearest
+		 * stepSize multiple.
 		 */
 		end?: number;
 
@@ -193,7 +193,8 @@ export interface RangeBasedAxis extends SharedConfiguration {
 		/**
 		 * The starting point of the range. Defaults to zero.
 		 *
-		 * abs(start) must be a multiple of stepSize, else is rounded down to the nearest stepSize multiple.
+		 * Must be less than or equal to zero. Must be a multiple of stepSize, else is rounded down to the nearest
+		 * stepSize multiple.
 		 */
 		start?: number;
 
@@ -262,9 +263,9 @@ export interface AxesMixin<D extends Datum<any>> {
 	 */
 	topAxis?: AxisConfiguration<D>;
 
-	createAxes(plot: Plot<Point<D>>, domainMax: number): CreatedAxes;
+	createAxes(plot: Plot<Point<D>>, domain: Domain): CreatedAxes;
 
-	createAxis(cfg: AxisConfiguration<D>, side: Side, plot: Plot<Point<D>>, domainMax: number): [VNode[], number];
+	createAxis(cfg: AxisConfiguration<D>, side: Side, plot: Plot<Point<D>>, domain: Domain): [VNode[], number];
 
 	createAxisLabel(
 		cfg: LabelConfiguration,
@@ -273,6 +274,7 @@ export interface AxesMixin<D extends Datum<any>> {
 		index: number,
 		p1: number,
 		p2: number,
+		isNegative: boolean,
 		ticks?: TickConfiguration
 	): VNode;
 
@@ -284,7 +286,14 @@ export interface AxesMixin<D extends Datum<any>> {
 		y: number
 	): VNode;
 
-	createAxisTick(cfg: TickConfiguration, side: Side, index: number, p1: number, p2?: number): VNode;
+	createAxisTick(
+		cfg: TickConfiguration,
+		side: Side,
+		index: number,
+		p1: number,
+		p2?: number,
+		isNegative?: boolean
+	): VNode;
 
 	createHardcodedAxis(
 		cfg: HardcodedAxis,
@@ -311,7 +320,7 @@ export interface AxesMixin<D extends Datum<any>> {
 		gridLineLength: number,
 		side: Side,
 		plot: Plot<Point<D>>,
-		domainMax: number
+		domain: Domain
 	): [VNode[], number];
 }
 
@@ -378,7 +387,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		axes.invalidate();
 	},
 
-	createAxes<D extends Datum<any>>(plot: Plot<Point<D>>, domainMax: number): CreatedAxes {
+	createAxes<D extends Datum<any>>(plot: Plot<Point<D>>, domain: Domain): CreatedAxes {
 		const axes: Axes<D> = this;
 		const configuration = shadowConfiguration.get(axes);
 
@@ -388,22 +397,22 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		};
 
 		if (configuration.bottom) {
-			const [nodes, extra] = axes.createAxis(configuration.bottom, 'bottom', plot, domainMax);
+			const [nodes, extra] = axes.createAxis(configuration.bottom, 'bottom', plot, domain);
 			result.bottom = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
 		if (configuration.left) {
-			const [nodes, extra] = axes.createAxis(configuration.left, 'left', plot, domainMax);
+			const [nodes, extra] = axes.createAxis(configuration.left, 'left', plot, domain);
 			result.left = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
 		if (configuration.right) {
-			const [nodes, extra] = axes.createAxis(configuration.right, 'right', plot, domainMax);
+			const [nodes, extra] = axes.createAxis(configuration.right, 'right', plot, domain);
 			result.right = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
 		if (configuration.top) {
-			const [nodes, extra] = axes.createAxis(configuration.top, 'top', plot, domainMax);
+			const [nodes, extra] = axes.createAxis(configuration.top, 'top', plot, domain);
 			result.top = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
@@ -414,11 +423,11 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		cfg: AxisConfiguration<D>,
 		side: Side,
 		plot: Plot<Point<D>>,
-		domainMax: number
+		domain: Domain
 	): [VNode[], number] {
 		const axes: Axes<D> = this;
 		const { gridLines, ticks } = cfg;
-		const { height, width } = plot;
+		const { height, width, zero } = plot;
 
 		let labels: LabelConfiguration;
 		if (cfg.labels !== false) {
@@ -447,7 +456,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 				nodes.push(axes.createAxisTick(ticks, side, 0, 0));
 			}
 			else {
-				nodes.push(axes.createAxisTick(ticks, side, 0, height));
+				nodes.push(axes.createAxisTick(ticks, side, 0, zero.y));
 			}
 		}
 
@@ -456,7 +465,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, 0));
 			}
 			else {
-				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, height));
+				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, zero.y));
 			}
 		}
 
@@ -468,7 +477,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		}
 		else if (isRangeBased(cfg)) {
 			let stepNodes: VNode[];
-			[stepNodes, extraSpace] = axes.createRangeBasedAxis(cfg, labels, ticks, gridLineLength, side, plot, domainMax);
+			[stepNodes, extraSpace] = axes.createRangeBasedAxis(cfg, labels, ticks, gridLineLength, side, plot, domain);
 			nodes.push(...stepNodes);
 		}
 
@@ -480,13 +489,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		return [nodes, extraSpace];
 	},
 
-	createAxisGridLine(
-		length: number,
-		side: Side,
-		index: number,
-		x1: number,
-		y1: number
-	) {
+	createAxisGridLine(length: number, side: Side, index: number, x1: number, y1: number) {
 		let x2 = x1;
 		let y2 = y1;
 		if (side === 'bottom') {
@@ -525,6 +528,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		index: number,
 		p1: number,
 		p2: number,
+		isNegative: boolean,
 		ticks: TickConfiguration = { length: 0 }
 	) {
 		let x = 0;
@@ -545,13 +549,13 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		else if (side === 'left' || side === 'right') {
 			dominantBaseline = dominantBaseline || 'middle';
 			if (anchor === 'start') {
-				y = p2;
+				y = isNegative ? p1 : p2;
 			}
 			else if (anchor === 'middle') {
 				y = p2 - (p2 - p1) / 2;
 			}
 			else if (anchor === 'end') {
-				y = p1;
+				y = isNegative ? p2 : p1;
 			}
 			y += offset;
 		}
@@ -592,7 +596,8 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		side: Side,
 		index: number,
 		p1: number,
-		p2: number = p1
+		p2: number = p1,
+		isNegative: boolean = false
 	) {
 		let x1 = 0;
 		let y1 = 0;
@@ -610,13 +615,13 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		}
 		else if (side === 'left' || side === 'right') {
 			if (anchor === 'start') {
-				y1 = p2;
+				y1 = isNegative ? p1 : p2;
 			}
 			else if (anchor === 'middle') {
 				y1 = p2 - (p2 - p1) / 2;
 			}
 			else {
-				y1 = p1;
+				y1 = isNegative ? p2 : p1;
 			}
 			y1 += offset;
 		}
@@ -677,10 +682,12 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 			const x = isHorizontal ? relative * width : 0;
 			const y = isHorizontal ? 0 : height - relative * height;
+			// FIXME: Don't repeat zeroth tick
 			if (ticks) {
 				const p = isHorizontal ? x : y;
 				nodes.push(axes.createAxisTick(ticks, side, index, p));
 			}
+			// FIXME: Don't repeat zeroth grid line
 			if (gridLineLength) {
 				nodes.push(axes.createAxisGridLine(gridLineLength, side, index, x, y));
 			}
@@ -688,7 +695,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			if (labels && text !== '') {
 				const p1 = isHorizontal ? x : y;
 				const p2 = prev;
-				nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, ticks));
+				nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, false, ticks));
 			}
 
 			index++;
@@ -704,7 +711,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		{ points }: Plot<Point<D>>
+		{ points, zero }: Plot<Point<D>>
 	) {
 		const axes: Axes<D> = this;
 		const labelSelector = typeof inputs === 'boolean' ? null : inputs.labelSelector;
@@ -718,10 +725,14 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 			const p1 = isHorizontal ? x1 : y1;
 			const p2 = isHorizontal ? x2 : y2;
+			const isNegative = isHorizontal ? false : y2 > zero.y;
+
 			if (ticks || gridLineLength) {
+				// FIXME: Don't repeat zeroth tick
 				if (ticks) {
-					nodes.push(axes.createAxisTick(ticks, side, index, p1, p2));
+					nodes.push(axes.createAxisTick(ticks, side, index, p1, p2, isNegative));
 				}
+				// FIXME: Don't repeat zeroth grid line
 				if (gridLineLength) {
 					const x = isHorizontal ? x2 : 0;
 					const y = isHorizontal ? 0 : y1;
@@ -732,7 +743,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			if (labels && labelSelector) {
 				const text = labelSelector(datum);
 				if (text !== '') {
-					nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, ticks));
+					nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, isNegative, ticks));
 				}
 			}
 		}
@@ -748,10 +759,13 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		side: Side,
 		{
 			height,
+			horizontalValues,
 			points,
-			width
+			verticalValues,
+			width,
+			zero
 		}: Plot<Point<D>>,
-		domainMax: number
+		[domainMin, domainMax]: Domain
 	) {
 		const axes: Axes<D> = this;
 		const {
@@ -762,25 +776,43 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		const isHorizontal = side === 'bottom' || side === 'top';
 		const nodes: VNode[] = [];
 
-		const maxValue = domainMax || Math.max(...points.map(({ datum: { value } }) => value));
-		let { end = maxValue } = range;
-
-		// Heya! If you're looking to support configuration of the start value, please note that any non-zero start value
-		// will impact the chart position and other axes, and that's not even considering negative values.
-		const start = 0;
-
-		const chartSize = isHorizontal ? width : height;
-		let size = chartSize;
+		let mostNegativeValue = domainMin;
+		let mostPositiveValue = domainMax;
+		// [0, 0] domains should be ignored.
+		if (domainMin === 0 && domainMax === 0) {
+			for (const { datum: { value } } of points) {
+				if (value < mostNegativeValue) {
+					mostNegativeValue = value;
+				}
+				else if (value > mostPositiveValue) {
+					mostPositiveValue = value;
+				}
+			}
+		}
 
 		const { stepSize } = range;
-		let extraSpace = 0;
-		// Ensure max is a multiple of the stepSize.
+		let { end = mostPositiveValue, start = mostNegativeValue } = range;
+		// Ensure start and end are multiples of the stepSize.
 		if (end % stepSize > 0) {
-			end = Math.ceil(maxValue / stepSize) * stepSize;
+			end = Math.ceil(mostPositiveValue / stepSize) * stepSize;
 		}
-		if (!fixed && end !== maxValue) {
+		if (start % stepSize > 0) {
+			start = Math.floor(mostNegativeValue / stepSize) * stepSize;
+		}
+		const delta = end - start;
+
+		// Assume the size is inflated by 1 pixel for the line between negative and positive values.
+		let inflation = 0;
+		if ((isHorizontal ? horizontalValues : verticalValues) & Values.Negative) {
+			inflation = 1;
+		}
+		const chartSize = (isHorizontal ? width : height) - inflation;
+		let size = chartSize;
+		let extraSpace = 0;
+		if (!fixed && (end !== mostPositiveValue || start !== mostNegativeValue)) {
+			const deltaValue = mostPositiveValue - mostNegativeValue;
 			// Adjust size so the steps are scaled correctly.
-			size = chartSize / maxValue * end;
+			size = chartSize / deltaValue * delta;
 			if (size > chartSize) {
 				// Percolate the extra size to the chart.
 				extraSpace = size - chartSize;
@@ -790,25 +822,29 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		let index = 1;
 		let prev = isHorizontal ? 0 : height;
 		for (let step = start; step <= end; step += stepSize) {
-			const x = isHorizontal ? step / end * size : 0;
-			const y = isHorizontal ? 0 : height - step / end * size;
+			const isNegative = step < 0;
+			const x = isHorizontal ? zero.x + step / delta * size : 0;
+			const y = isHorizontal ? 0 : zero.y - step / delta * size;
+			const p = isHorizontal ? x : y;
+
+			// FIXME: Don't repeat zeroth tick
 			if (ticks) {
-				const p = isHorizontal ? x : y;
 				nodes.push(axes.createAxisTick(ticks, side, index, p));
 			}
+			// FIXME: Don't duplicate zeroth gridline
 			if (gridLineLength) {
 				nodes.push(axes.createAxisGridLine(gridLineLength, side, index, x, y));
 			}
 
 			const text = labelSelector ? labelSelector(step) : String(step);
 			if (labels && text !== '') {
-				const p1 = isHorizontal ? x : y;
-				const p2 = prev;
-				nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, ticks));
+				const p1 = isNegative ? prev : p;
+				const p2 = isNegative ? p : prev;
+				nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, isNegative, ticks));
 			}
 
 			index++;
-			prev = isHorizontal ? x : y;
+			prev = p;
 		}
 
 		return [nodes, extraSpace];

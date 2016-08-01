@@ -20,6 +20,12 @@ import { Plot, Point } from './interfaces';
 export interface GroupedColumn<G, T> extends Datum<G> {
 	columns: Column<T>[];
 	totalValue: number;
+
+	/**
+	 * Assuming all columns in the group are positive, the largest value in the group. If all columns are negative
+	 * this is the smallest value. If the group contains both positive and negative columns the value is undetermined.
+	 */
+	value: number;
 }
 
 export interface GroupedColumnPoint<G, T> extends Point<GroupedColumn<G, T>> {
@@ -111,8 +117,11 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 			after: {
 				plot<G, T>({
 					height,
+					horizontalValues,
 					points: columnPoints,
-					width
+					verticalValues,
+					width,
+					zero
 				}: ColumnPointPlot<T>): GroupedColumnPointPlot<G, T> {
 					const chart: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T, GroupedColumn<G, T>>> = this;
 					const { columnHeight, columnSpacing, groupSpacing } = chart;
@@ -128,7 +137,7 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 					const groups = new Map<G, Record>();
 
 					for (const point of columnPoints) {
-						const { input, value } = point.datum;
+						const { input, relativeValue, value } = point.datum;
 
 						// Note that the ordering of the groups is determined by the original sort order, as is the
 						// ordering of nodes within the group.
@@ -144,7 +153,13 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 						record.columnPoints.push(shallowCopy);
 						record.columns.push(point.datum);
 						record.totalValue += value;
-						record.value = Math.max(record.value, value);
+						if (relativeValue < 0) {
+							record.value = Math.min(record.value, value);
+						}
+						else {
+							// Note that the expected value for mixed groups is undefined.
+							record.value = Math.max(record.value, value);
+						}
 						record.y1 = Math.min(record.y1, point.y1);
 					}
 
@@ -182,7 +197,7 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 						};
 					});
 
-					return { height, points, width };
+					return { height, horizontalValues, points, verticalValues, width, zero };
 				}
 			},
 

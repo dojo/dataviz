@@ -86,7 +86,7 @@ const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	columnHeight: 100,
 	columnSpacing: 3,
 	columnWidth: 20,
-	domainMax: 35000,
+	domain: 35000,
 	// Example of passing an observable to the chart.
 	inputSeries: playCounts,
 	divisorOperator: max,
@@ -172,7 +172,7 @@ const stackedByProvinceChart = (<StackedColumnChartFactory<string, PlayCount>> c
 	columnHeight: 200,
 	columnSpacing: 10,
 	columnWidth: 20,
-	domainMax: 50000,
+	domain: 50000,
 	state: {
 		styles: { marginTop: '20px' }
 	},

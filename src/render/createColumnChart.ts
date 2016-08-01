@@ -49,10 +49,10 @@ const createColumnChart: GenericColumnChartFactory<any> = createChart
 				return [];
 			}
 
-			const { domainMax, xInset, yInset } = chart;
+			const { domain, xInset, yInset } = chart;
 			const nodes: VNode[] = [];
 
-			const axes = chart.createAxes(plot, domainMax);
+			const axes = chart.createAxes(plot, domain);
 			let { height: chartHeight, width: chartWidth } = plot;
 			chartWidth += axes.extraWidth;
 			chartHeight += axes.extraHeight;
