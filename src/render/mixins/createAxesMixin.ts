@@ -43,7 +43,7 @@ export interface SharedConfiguration {
 	 *
 	 * The lines will eminating from this axis and be aligned with the axis markings.
 	 */
-	gridLines?: GridLineConfiguration;
+	gridLines?: boolean | GridLineConfiguration; // TODO: TS2 use true, not boolean
 
 	/**
 	 * Set to `false` to disable labels. Alternatively provide configuration for how the labels are positioned.
@@ -441,7 +441,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 		let gridLineLength = 0;
 		if (gridLines) {
-			if ('length' in gridLines) {
+			if (typeof gridLines === 'object' && 'length' in gridLines) {
 				gridLineLength = gridLines.length;
 			}
 			else if (isHorizontal) {
@@ -461,7 +461,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			}
 		}
 
-		if (gridLines && gridLines.zeroth) {
+		if (typeof gridLines === 'object' && gridLines.zeroth) {
 			if (isHorizontal) {
 				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, 0));
 			}
