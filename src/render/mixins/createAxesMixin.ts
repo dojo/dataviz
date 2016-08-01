@@ -75,7 +75,7 @@ export interface LabelConfiguration {
 	/**
 	 * The side of the plot point the label should be anchored to.
 	 *
-	 * Follows the direction of the axis. Defaults to 'middle'. Only has an effect for input based axes.
+	 * Follows the direction of the axis. Defaults to 'middle'. Only has an effect for input and range based axes.
 	 */
 	anchor?: Anchor;
 
