@@ -7,7 +7,7 @@ function sum<T> (observable: InputObservable<T>, valueSelector: ValueSelector<T>
 		let sum = 0;
 		forOf(inputs, (input) => {
 			// FIXME: Handle Infinity and -Infinity?
-			sum += valueSelector(input) || 0;
+			sum += Math.abs(valueSelector(input)) || 0;
 		});
 		return sum;
 	});
