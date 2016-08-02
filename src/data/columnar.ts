@@ -23,6 +23,10 @@ export default function columnar<T> (
 		.map((inputsAndRelativeValues) => {
 			return inputsAndRelativeValues.map(([input, relativeValue]) => {
 				const value = valueSelector(input);
+				// Ensure the relative value retains the same sign as the input's value, irrespective of the divisors.
+				if (value < 0 && relativeValue > 0 || value > 0 && relativeValue < 0) {
+					relativeValue *= -1;
+				}
 				return { input, relativeValue, value };
 			});
 		});
