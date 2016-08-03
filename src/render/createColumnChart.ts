@@ -10,10 +10,11 @@ import createColumnPlot, {
 	ColumnPoint,
 	ColumnPlot,
 	ColumnPlotOptions,
-	ColumnPlotState
+	ColumnPlotState,
+	ColumnPointPlot
 } from './mixins/createColumnPlotMixin';
 
-export { Column, ColumnPoint }
+export { Column, ColumnPoint, ColumnPointPlot }
 
 export type ColumnChartState<T, D> = ChartState & ColumnPlotState<T>;
 
@@ -44,24 +45,22 @@ const createColumnChart: GenericColumnChartFactory<any> = createChart
 		getChildrenNodes(): VNode[] {
 			const chart: ColumnChart<any, any, any> = this;
 			const plot = chart.plot();
-			if (plot.length === 0) {
+			if (plot.points.length === 0) {
 				return [];
 			}
 
 			const { domainMax, xInset, yInset } = chart;
-
 			const nodes: VNode[] = [];
 
-			let x2 = Math.max(...plot.map(({ x2 }) => x2));
-			let y2 = Math.max(...plot.map(({ y2 }) => y2));
-			const axes = chart.createAxes(plot, domainMax, x2, y2);
-			x2 += axes.extraWidth;
-			y2 += axes.extraHeight;
+			const axes = chart.createAxes(plot, domainMax);
+			let { height: chartHeight, width: chartWidth } = plot;
+			chartWidth += axes.extraWidth;
+			chartHeight += axes.extraHeight;
 
 			if (axes.bottom) {
 				nodes.push(h('g', {
 					key: 'bottom-axis',
-					transform: `translate(${xInset} ${yInset + y2})`
+					transform: `translate(${xInset} ${yInset + chartHeight})`
 				}, axes.bottom));
 			}
 			if (axes.left) {
@@ -73,7 +72,7 @@ const createColumnChart: GenericColumnChartFactory<any> = createChart
 			if (axes.right) {
 				nodes.push(h('g', {
 					key: 'right-axis',
-					transform: `translate(${xInset + x2} ${yInset + axes.extraHeight})`
+					transform: `translate(${xInset + chartWidth} ${yInset + axes.extraHeight})`
 				}, axes.right));
 			}
 			if (axes.top) {
@@ -86,7 +85,7 @@ const createColumnChart: GenericColumnChartFactory<any> = createChart
 			nodes.push(h('g', {
 				key: 'plot',
 				'transform': `translate(${xInset} ${yInset + axes.extraHeight})`
-			}, chart.renderPlot(plot)));
+			}, chart.renderPlotPoints(plot.points)));
 
 			return nodes;
 		}

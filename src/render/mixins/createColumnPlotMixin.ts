@@ -7,7 +7,7 @@ import { Observable } from 'rxjs/Rx';
 import { DivisorOperator, InputObservable, ValueSelector } from '../../data/interfaces';
 import columnar, { Column } from '../../data/columnar';
 
-import { Invalidatable, Point } from '../interfaces';
+import { Invalidatable, Plot, Point } from '../interfaces';
 import createInputSeries, {
 	InputSeries,
 	InputSeriesOptions,
@@ -21,6 +21,8 @@ export interface ColumnPoint<T> extends Point<Column<T>> {
 	displayWidth: number;
 	offsetLeft: number;
 }
+
+export interface ColumnPointPlot<T> extends Plot<ColumnPoint<T>> {}
 
 export interface ColumnPlotState<T> extends InputSeriesState<T> {
 	/**
@@ -129,12 +131,12 @@ export interface ColumnPlotMixin<T> {
 	/**
 	 * Plot "points" for each column.
 	 */
-	plot(): ColumnPoint<T>[];
+	plot(): ColumnPointPlot<T>;
 
 	/**
 	 * Create VNodes for each column given its points.
 	 */
-	renderPlot(points: ColumnPoint<T>[]): VNode[];
+	renderPlotPoints(points: ColumnPoint<T>[]): VNode[];
 }
 
 /**
@@ -225,7 +227,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		plot.invalidate();
 	},
 
-	plot<T>(): ColumnPoint<T>[] {
+	plot<T>(): ColumnPointPlot<T> {
 		const plot: ColumnPlot<T, ColumnPlotState<T>> = this;
 		const series = columnSeries.get(plot);
 		const { columnHeight, columnSpacing, columnWidth: displayWidth, domainMax } = plot;
@@ -239,12 +241,15 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 			domainCorrection = maxValue / domainMax;
 		}
 
-		return series.map((column, index) => {
+		let x2 = 0;
+
+		const points = series.map((column, index) => {
 			const correctedRelativeValue = column.relativeValue * domainCorrection;
 			const displayHeight = correctedRelativeValue * columnHeight;
 			const x1 = (displayWidth + columnSpacing) * index;
-			const x2 = x1 + displayWidth + columnSpacing;
+			x2 = x1 + displayWidth + columnSpacing;
 			const y1 = columnHeight - displayHeight;
+
 			return {
 				datum: column,
 				displayHeight,
@@ -256,9 +261,15 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				y2: columnHeight
 			};
 		});
+
+		return {
+			height: columnHeight,
+			points,
+			width: x2
+		};
 	},
 
-	renderPlot<T>(points: ColumnPoint<T>[]) {
+	renderPlotPoints<T>(points: ColumnPoint<T>[]) {
 		return points.map(({ datum, displayHeight, displayWidth, offsetLeft, x1, y1 }) => {
 			return h('rect', {
 				key: datum.input,

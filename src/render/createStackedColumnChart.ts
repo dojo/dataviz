@@ -12,9 +12,10 @@ import createColumnChart, {
 	ColumnChart,
 	ColumnChartOptions,
 	ColumnChartState,
-	ColumnPoint
+	ColumnPoint,
+	ColumnPointPlot
 } from './createColumnChart';
-import { Point } from './interfaces';
+import { Plot, Point } from './interfaces';
 
 export interface StackedColumn<G, T> extends Datum<G> {
 	columns: Column<T>[];
@@ -23,6 +24,8 @@ export interface StackedColumn<G, T> extends Datum<G> {
 export interface StackedColumnPoint<G, T> extends Point<StackedColumn<G, T>> {
 	columnPoints: ColumnPoint<T>[];
 }
+
+export interface StackedColumnPointPlot<G, T> extends Plot<StackedColumnPoint<G, T>> {}
 
 export type StackedColumnChartState<T, D> = ColumnChartState<T, D> & {
 	/**
@@ -105,7 +108,11 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 
 		aspectAdvice: {
 			after: {
-				plot<G, T>(columnPoints: ColumnPoint<T>[]): StackedColumnPoint<G, T>[] {
+				plot<G, T>({
+					height,
+					points: columnPoints,
+					width
+				}: ColumnPointPlot<T>): StackedColumnPointPlot<G, T> {
 					const chart: StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T, StackedColumn<G, T>>> = this;
 					const { columnHeight, columnSpacing, columnWidth, domainMax, stackSpacing } = chart;
 					let maxValue = 0;
@@ -154,9 +161,9 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 						domainCorrection = maxValue / domainMax;
 					}
 
-					let offset = 0;
+					let chartWidth = 0;
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
-					return from<StackedColumnPoint<G, T>>(<any> stacks, (entry: any, index: number) => {
+					const points = from<StackedColumnPoint<G, T>>(<any> stacks, (entry: any, index: number) => {
 						const [stack, { columnPoints, columns, relativeValue, value }] = <[G, Record]> entry;
 
 						let correctedRelativeValue = relativeValue * domainCorrection;
@@ -171,10 +178,10 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 						const y1 = columnHeight - stackHeight;
 
 						// Spend half the spacing ahead of each stack, and half after.
-						const x1 = offset;
+						const x1 = chartWidth;
 						// Assume each column's displayWidth is indeed the columnWidth
 						const x2 = x1 + columnWidth + columnSpacing;
-						offset = x2;
+						chartWidth = x2;
 
 						let prev = { displayHeight: 0, y1: columnHeight };
 						for (const point of columnPoints) {
@@ -207,11 +214,17 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 							y2: columnHeight
 						};
 					});
+
+					return {
+						height,
+						points,
+						width
+					};
 				}
 			},
 
 			around: {
-				renderPlot<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
+				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
 					return (stackPoints: StackedColumnPoint<G, T>[]) => {
 						return stackPoints.map(({ columnPoints, datum }) => {
 							const props: VNodeProperties = {

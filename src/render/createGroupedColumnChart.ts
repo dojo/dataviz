@@ -12,9 +12,10 @@ import createColumnChart, {
 	ColumnChart,
 	ColumnChartOptions,
 	ColumnChartState,
-	ColumnPoint
+	ColumnPoint,
+	ColumnPointPlot
 } from './createColumnChart';
-import { Point } from './interfaces';
+import { Plot, Point } from './interfaces';
 
 export interface GroupedColumn<G, T> extends Datum<G> {
 	columns: Column<T>[];
@@ -24,6 +25,8 @@ export interface GroupedColumn<G, T> extends Datum<G> {
 export interface GroupedColumnPoint<G, T> extends Point<GroupedColumn<G, T>> {
 	columnPoints: ColumnPoint<T>[];
 }
+
+export interface GroupedColumnPointPlot<G, T> extends Plot<GroupedColumnPoint<G, T>> {}
 
 export type GroupedColumnChartState<T, D> = ColumnChartState<T, D> & {
 	/**
@@ -106,7 +109,11 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 
 		aspectAdvice: {
 			after: {
-				plot<G, T>(columnPoints: ColumnPoint<T>[]): GroupedColumnPoint<G, T>[] {
+				plot<G, T>({
+					height,
+					points: columnPoints,
+					width
+				}: ColumnPointPlot<T>): GroupedColumnPointPlot<G, T> {
 					const chart: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T, GroupedColumn<G, T>>> = this;
 					const { columnHeight, columnSpacing, groupSpacing } = chart;
 
@@ -141,12 +148,12 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 						record.y1 = Math.min(record.y1, point.y1);
 					}
 
-					let offset = 0;
+					let chartWidth = 0;
 					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
-					return from<GroupedColumnPoint<G, T>>(<any> groups, (entry: any, index: number) => {
+					const points = from<GroupedColumnPoint<G, T>>(<any> groups, (entry: any, index: number) => {
 						const [group, { columnPoints, columns, totalValue, value, y1 }] = <[G, Record]> entry;
 
-						const x1 = offset;
+						const x1 = chartWidth;
 
 						let prev = { x2: x1 + groupSpacing / 2 - columnSpacing / 2 };
 						for (const point of columnPoints) {
@@ -158,7 +165,7 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 						}
 
 						const x2 = prev.x2 + groupSpacing / 2;
-						offset = x2;
+						chartWidth = x2;
 
 						return {
 							columnPoints,
@@ -174,11 +181,13 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 							y2: columnHeight
 						};
 					});
+
+					return { height, points, width };
 				}
 			},
 
 			around: {
-				renderPlot<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
+				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
 					return (groupPoints: GroupedColumnPoint<G, T>[]) => {
 						return groupPoints.map(({ columnPoints, datum }) => {
 							const props: VNodeProperties = {

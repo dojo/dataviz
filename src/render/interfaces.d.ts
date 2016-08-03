@@ -11,6 +11,15 @@ export interface Invalidatable {
 }
 
 /**
+ * Describes multiple plotted points and properties of the resulting chart.
+ */
+export interface Plot<P extends Point<any>> {
+	height: number;
+	points: P[];
+	width: number;
+}
+
+/**
  * Describes a plot point.
  *
  * Note that the rendered shape may not be a "point" at all, and may occupy only a subset of the area described by the

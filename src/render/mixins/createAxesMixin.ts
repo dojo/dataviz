@@ -4,7 +4,7 @@ import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette/maquette';
 
 import { Datum } from '../../data/interfaces';
-import { Invalidatable, Point } from '../interfaces';
+import { Invalidatable, Point, Plot } from '../interfaces';
 
 /* TODO! FIXME!
 
@@ -262,16 +262,9 @@ export interface AxesMixin<D extends Datum<any>> {
 	 */
 	topAxis?: AxisConfiguration<D>;
 
-	createAxes(points: Point<D>[], domainMax: number, chartX2: number, chartY2: number): CreatedAxes;
+	createAxes(plot: Plot<Point<D>>, domainMax: number): CreatedAxes;
 
-	createAxis(
-		cfg: AxisConfiguration<D>,
-		side: Side,
-		points: Point<D>[],
-		domainMax: number,
-		chartX2: number,
-		chartY2: number
-	): [VNode[], number];
+	createAxis(cfg: AxisConfiguration<D>, side: Side, plot: Plot<Point<D>>, domainMax: number): [VNode[], number];
 
 	createAxisLabel(
 		cfg: LabelConfiguration,
@@ -299,8 +292,7 @@ export interface AxesMixin<D extends Datum<any>> {
 		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		chartX2: number,
-		chartY2: number
+		plot: Plot<Point<D>>
 	): VNode[];
 
 	createInputBasedAxis(
@@ -309,7 +301,7 @@ export interface AxesMixin<D extends Datum<any>> {
 		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		points: Point<D>[]
+		plot: Plot<Point<D>>
 	): VNode[];
 
 	createRangeBasedAxis(
@@ -318,10 +310,8 @@ export interface AxesMixin<D extends Datum<any>> {
 		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		points: Point<D>[],
-		domainMax: number,
-		chartX2: number,
-		chartY2: number
+		plot: Plot<Point<D>>,
+		domainMax: number
 	): [VNode[], number];
 }
 
@@ -388,7 +378,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		axes.invalidate();
 	},
 
-	createAxes<D extends Datum<any>>(points: Point<D>[], domainMax: number, chartX2: number, chartY2: number): CreatedAxes {
+	createAxes<D extends Datum<any>>(plot: Plot<Point<D>>, domainMax: number): CreatedAxes {
 		const axes: Axes<D> = this;
 		const configuration = shadowConfiguration.get(axes);
 
@@ -398,22 +388,22 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		};
 
 		if (configuration.bottom) {
-			const [nodes, extra] = axes.createAxis(configuration.bottom, 'bottom', points, domainMax, chartX2, chartY2);
+			const [nodes, extra] = axes.createAxis(configuration.bottom, 'bottom', plot, domainMax);
 			result.bottom = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
 		if (configuration.left) {
-			const [nodes, extra] = axes.createAxis(configuration.left, 'left', points, domainMax, chartX2, chartY2);
+			const [nodes, extra] = axes.createAxis(configuration.left, 'left', plot, domainMax);
 			result.left = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
 		if (configuration.right) {
-			const [nodes, extra] = axes.createAxis(configuration.right, 'right', points, domainMax, chartX2, chartY2);
+			const [nodes, extra] = axes.createAxis(configuration.right, 'right', plot, domainMax);
 			result.right = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
 		if (configuration.top) {
-			const [nodes, extra] = axes.createAxis(configuration.top, 'top', points, domainMax, chartX2, chartY2);
+			const [nodes, extra] = axes.createAxis(configuration.top, 'top', plot, domainMax);
 			result.top = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
@@ -423,13 +413,13 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	createAxis<D extends Datum<any>>(
 		cfg: AxisConfiguration<D>,
 		side: Side,
-		points: Point<D>[],
-		domainMax: number,
-		chartX2: number,
-		chartY2: number
+		plot: Plot<Point<D>>,
+		domainMax: number
 	): [VNode[], number] {
 		const axes: Axes<D> = this;
 		const { gridLines, ticks } = cfg;
+		const { height, width } = plot;
+
 		let labels: LabelConfiguration;
 		if (cfg.labels !== false) {
 			labels = cfg.labels || {};
@@ -445,10 +435,10 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 				gridLineLength = gridLines.length;
 			}
 			else if (isHorizontal) {
-				gridLineLength = chartY2;
+				gridLineLength = height;
 			}
 			else {
-				gridLineLength = chartX2;
+				gridLineLength = width;
 			}
 		}
 
@@ -457,7 +447,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 				nodes.push(axes.createAxisTick(ticks, side, 0, 0));
 			}
 			else {
-				nodes.push(axes.createAxisTick(ticks, side, 0, chartY2));
+				nodes.push(axes.createAxisTick(ticks, side, 0, height));
 			}
 		}
 
@@ -466,23 +456,23 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, 0));
 			}
 			else {
-				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, chartY2));
+				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, height));
 			}
 		}
 
 		if (isHardcoded(cfg)) {
-			nodes.push(...axes.createHardcodedAxis(cfg, labels, ticks, gridLineLength, side, chartX2, chartY2));
+			nodes.push(...axes.createHardcodedAxis(cfg, labels, ticks, gridLineLength, side, plot));
 		}
 		else if (isInputBased(cfg)) {
-			nodes.push(...axes.createInputBasedAxis(cfg, labels, ticks, gridLineLength, side, points));
+			nodes.push(...axes.createInputBasedAxis(cfg, labels, ticks, gridLineLength, side, plot));
 		}
 		else if (isRangeBased(cfg)) {
 			let stepNodes: VNode[];
-			[stepNodes, extraSpace] = axes.createRangeBasedAxis(cfg, labels, ticks, gridLineLength, side, points, domainMax, chartX2, chartY2);
+			[stepNodes, extraSpace] = axes.createRangeBasedAxis(cfg, labels, ticks, gridLineLength, side, plot, domainMax);
 			nodes.push(...stepNodes);
 		}
 
-		const chartSize = isHorizontal ? chartY2 : chartX2;
+		const chartSize = isHorizontal ? height : width;
 		if (gridLineLength > chartSize) {
 			extraSpace = Math.max(extraSpace, gridLineLength - chartSize);
 		}
@@ -662,8 +652,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		chartX2: number,
-		chartY2: number
+		{ height, width }: Plot<any>
 	) {
 		const axes: Axes<any> = this;
 
@@ -671,7 +660,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		const nodes: VNode[] = [];
 
 		let index = 1;
-		let prev = isHorizontal ? 0 : chartY2;
+		let prev = isHorizontal ? 0 : height;
 		for (const marking of hardcoded) {
 			let relative: number;
 			let text = '';
@@ -686,8 +675,8 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 				continue;
 			}
 
-			const x = isHorizontal ? relative * chartX2 : 0;
-			const y = isHorizontal ? 0 : chartY2 - relative * chartY2;
+			const x = isHorizontal ? relative * width : 0;
+			const y = isHorizontal ? 0 : height - relative * height;
 			if (ticks) {
 				const p = isHorizontal ? x : y;
 				nodes.push(axes.createAxisTick(ticks, side, index, p));
@@ -715,7 +704,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		points: Point<D>[]
+		{ points }: Plot<Point<D>>
 	) {
 		const axes: Axes<D> = this;
 		const labelSelector = typeof inputs === 'boolean' ? null : inputs.labelSelector;
@@ -757,10 +746,12 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		points: Point<D>[],
-		domainMax: number,
-		chartX2: number,
-		chartY2: number
+		{
+			height,
+			points,
+			width
+		}: Plot<Point<D>>,
+		domainMax: number
 	) {
 		const axes: Axes<D> = this;
 		const {
@@ -778,7 +769,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		// will impact the chart position and other axes, and that's not even considering negative values.
 		const start = 0;
 
-		const chartSize = isHorizontal ? chartX2 : chartY2;
+		const chartSize = isHorizontal ? width : height;
 		let size = chartSize;
 
 		const { stepSize } = range;
@@ -797,10 +788,10 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		}
 
 		let index = 1;
-		let prev = isHorizontal ? 0 : chartY2;
+		let prev = isHorizontal ? 0 : height;
 		for (let step = start; step <= end; step += stepSize) {
 			const x = isHorizontal ? step / end * size : 0;
-			const y = isHorizontal ? 0 : chartY2 - step / end * size;
+			const y = isHorizontal ? 0 : height - step / end * size;
 			if (ticks) {
 				const p = isHorizontal ? x : y;
 				nodes.push(axes.createAxisTick(ticks, side, index, p));
