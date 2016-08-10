@@ -1,5 +1,4 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette/maquette';
 
@@ -324,7 +323,7 @@ export interface AxesMixin<D extends Datum<any>> {
 	): [VNode[], number];
 }
 
-export type Axes<D extends Datum<any>> = Destroyable & Invalidatable & AxesMixin<D>;
+export type Axes<D extends Datum<any>> = Invalidatable & AxesMixin<D>;
 
 export interface AxesFactory<D extends Datum<any>> extends ComposeFactory<
 	Axes<D>,
@@ -850,8 +849,6 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		return [nodes, extraSpace];
 	}
 }).mixin({
-	mixin: createDestroyable,
-
 	initialize<D extends Datum<any>>(
 		instance: Axes<D>,
 		{
@@ -876,11 +873,6 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		}
 
 		shadowConfiguration.set(instance, configuration);
-		instance.own({
-			destroy() {
-				shadowConfiguration.delete(instance);
-			}
-		});
 	}
 });
 

@@ -445,15 +445,6 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		}
 		// Update the series if it changes.
 		instance.own(instance.on('inputserieschange', ({ observable }) => subscribe(observable)));
-
-		instance.own({
-			destroy() {
-				columnSeries.delete(instance);
-				shadowColumnHeights.delete(instance);
-				shadowColumnWidths.delete(instance);
-				shadowDomains.delete(instance);
-			}
-		});
 	}
 });
 

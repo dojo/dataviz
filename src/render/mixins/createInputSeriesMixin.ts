@@ -133,12 +133,6 @@ const createInputSeries: InputSeriesFactory<any> = createStateful
 					latestValue = inputSeries;
 				}
 			}));
-
-			instance.own({
-				destroy() {
-					observables.delete(instance);
-				}
-			});
 		}
 	});
 

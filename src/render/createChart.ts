@@ -117,12 +117,6 @@ const createChart: ChartFactory = createWidget
 		) {
 			shadowXInsets.set(instance, xInset);
 			shadowYInsets.set(instance, yInset);
-			instance.own({
-				destroy() {
-					shadowXInsets.delete(instance);
-					shadowYInsets.delete(instance);
-				}
-			});
 		}
 	});
 

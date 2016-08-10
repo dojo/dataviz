@@ -1,5 +1,4 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { assign } from 'dojo-core/lang';
 import { from } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
@@ -216,10 +215,6 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 		}
 	})
 	.mixin({
-		// Add createDestroyable to ensure instance.own() is available at runtime.
-		// See <https://github.com/dojo/compose/issues/42>.
-		mixin: createDestroyable,
-
 		initialize<G, T, D extends GroupedColumn<G, T>>(
 			instance: GroupedColumnChart<G, T, D, GroupedColumnChartState<T, D>>,
 			{
@@ -233,12 +228,6 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 
 			groupSelectors.set(instance, groupSelector);
 			shadowGroupSpacings.set(instance, groupSpacing);
-			instance.own({
-				destroy() {
-					groupSelectors.delete(instance);
-					shadowGroupSpacings.delete(instance);
-				}
-			});
 		}
 	});
 

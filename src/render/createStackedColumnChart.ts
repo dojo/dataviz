@@ -1,5 +1,4 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { assign } from 'dojo-core/lang';
 import { from } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
@@ -357,10 +356,6 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 		}
 	})
 	.mixin({
-		// Add createDestroyable to ensure instance.own() is available at runtime.
-		// See <https://github.com/dojo/compose/issues/42>.
-		mixin: createDestroyable,
-
 		initialize<G, T, D extends StackedColumn<G, T>>(
 			instance: StackedColumnChart<G, T, D, StackedColumnChartState<T, D>>,
 			{
@@ -374,12 +369,6 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 
 			stackSelectors.set(instance, stackSelector);
 			shadowStackSpacings.set(instance, stackSpacing);
-			instance.own({
-				destroy() {
-					stackSelectors.delete(instance);
-					shadowStackSpacings.delete(instance);
-				}
-			});
 		}
 	});
 
