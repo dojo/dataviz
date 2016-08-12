@@ -1,4 +1,5 @@
-import compose, { ComposeFactory } from 'dojo-compose/compose';
+import { ComposeFactory } from 'dojo-compose/compose';
+import createEvented, { Evented, EventedListenerOrArray, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette/maquette';
@@ -142,6 +143,12 @@ export interface ColumnPlotMixin<T> {
 	valueSelector?: ValueSelector<T>;
 
 	/**
+	 * Emits events for columns.
+	 */
+	emitPlotEvent(prefix: 'select', plotNode: VNode, evt: TargettedEventObject): void;
+	emitPlotEvent(prefix: string, plotNode: VNode, evt: TargettedEventObject): void;
+
+	/**
 	 * Plot "points" for each column.
 	 */
 	plot(): ColumnPointPlot<T>;
@@ -152,11 +159,21 @@ export interface ColumnPlotMixin<T> {
 	renderPlotPoints(points: ColumnPoint<T>[], plotHeight: number, extraHeight: number): VNode[][];
 }
 
+export interface ColumnPlotOverrides<T> {
+	on(type: 'selectcolumn', listener: EventedListenerOrArray<SelectColumnEvent<T>>): Handle;
+	on(type: string, listener: EventedListenerOrArray<TargettedEventObject>): Handle;
+}
+
+export interface SelectColumnEvent<T> extends TargettedEventObject {
+	input: T;
+	target: ColumnPoint<T>;
+}
+
 /**
  * Renders columns. To be mixed into dojo-widgets/createWidget.
  */
 export type ColumnPlot<T, S extends ColumnPlotState<T>> =
-	InputSeries<T, S> & Invalidatable & ColumnPlotMixin<T>;
+	Evented & InputSeries<T, S> & Invalidatable & ColumnPlotMixin<T> & ColumnPlotOverrides<T>;
 
 export interface ColumnPlotFactory<T> extends ComposeFactory<
 	ColumnPlot<T, ColumnPlotState<T>>,
@@ -170,8 +187,9 @@ const shadowColumnHeights = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, n
 const shadowColumnSpacings = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 const shadowColumnWidths = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 const shadowDomains = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Domain>();
+const pointsByNode = new WeakMap<VNode, ColumnPoint<any>>();
 
-const createColumnPlot: ColumnPlotFactory<any> = compose({
+const createColumnPlot: ColumnPlotFactory<any> = createEvented.extend({
 	get columnHeight(this: ColumnPlot<any, ColumnPlotState<any>>) {
 		const { columnHeight = shadowColumnHeights.get(this) } = this.state || {};
 		return columnHeight;
@@ -230,6 +248,18 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 			shadowDomains.set(this, domain);
 		}
 		this.invalidate();
+	},
+
+	emitPlotEvent<T>(this: ColumnPlot<T, any>, prefix: string, plotNode: VNode, evt: TargettedEventObject) {
+		const target: ColumnPoint<T> = pointsByNode.get(plotNode);
+		if (!target) {
+			return;
+		}
+
+		const { datum: { input } } = target;
+		if (prefix === 'select') {
+			this.emit({ type: 'selectcolumn', input, target });
+		}
 	},
 
 	plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
@@ -360,7 +390,8 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 
 		const fullHeight = String(plotHeight + extraHeight);
 		const fullY = String(-extraHeight);
-		for (const { datum: { input: key }, displayHeight, displayWidth, offsetLeft, x1, x2, y1 } of points) {
+		for (const point of points) {
+			const { datum: { input: key }, displayHeight, displayWidth, offsetLeft, x1, x2, y1 } = point;
 			const innerWidth = String(displayWidth);
 			const innerX = String(x1 + offsetLeft);
 
@@ -382,13 +413,15 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				y: fullY
 			}));
 
-			columnNodes.push(h('rect', {
+			const columnNode = h('rect', {
 				key,
 				height: String(displayHeight),
 				width: innerWidth,
 				x: innerX,
 				y: String(y1)
-			}));
+			});
+			pointsByNode.set(columnNode, point);
+			columnNodes.push(columnNode);
 		}
 
 		return [outerNodes, innerNodes, columnNodes];

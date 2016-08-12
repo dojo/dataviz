@@ -1,4 +1,9 @@
 import { ComposeFactory } from 'dojo-compose/compose';
+import { assign } from 'dojo-core/lang';
+import { find } from 'dojo-shim/array';
+import Set from 'dojo-shim/Set';
+import WeakMap from 'dojo-shim/WeakMap';
+import { VNodeListeners } from 'dojo-widgets/mixins/createVNodeEvented';
 import { h, VNode } from 'maquette/maquette';
 
 import { Datum } from '../data/interfaces';
@@ -11,10 +16,11 @@ import createColumnPlot, {
 	ColumnPlot,
 	ColumnPlotOptions,
 	ColumnPlotState,
-	ColumnPointPlot
+	ColumnPointPlot,
+	SelectColumnEvent
 } from './mixins/createColumnPlotMixin';
 
-export { Column, ColumnPoint, ColumnPointPlot }
+export { Column, ColumnPoint, ColumnPointPlot, SelectColumnEvent }
 
 export type ColumnChartState<T> = ChartState & ColumnPlotState<T>;
 
@@ -42,6 +48,9 @@ export interface ColumnChartFactory<T> extends ComposeFactory<
 		options?: ColumnChartOptions<T, Column<T>, ColumnChartState<T>>
 	): ColumnChart<T, Column<T>, ColumnChartState<T>>;
 }
+
+const listeners = new WeakMap<ColumnChart<any, any, any>, VNodeListeners>();
+const virtualPlotNodes = new WeakMap<ColumnChart<any, any, any>, VNode[]>();
 
 // Cast to a generic factory so subclasses can modify the datum type.
 // The factory should be casted to ColumnChartFactory when creating a column chart.
@@ -89,12 +98,42 @@ const createColumnChart: ColumnChartFactory<any> = createChart
 			}
 
 			const groups = this.renderPlotPoints(plot.points, plot.height, axes.extraHeight);
-			nodes.push(h('g', {
+			nodes.push(h('g', assign({
 				key: 'plot',
 				'transform': `translate(${xInset} ${yInset + axes.extraHeight})`
-			}, groups.map((nodes, key) => h('g', { key }, nodes))));
+			}, listeners.get(this)), groups.map((nodes, key) => h('g', { key }, nodes))));
+
+			const plotNodes: VNode[] = [];
+			for (const nodes of groups) {
+				plotNodes.push(...nodes);
+			}
+			virtualPlotNodes.set(this, plotNodes);
 
 			return nodes;
+		}
+	})
+	.mixin({
+		initialize(instance) {
+			// FIXME: Can this be done lazily? Perhaps an 'interactive' opt-in option?
+			listeners.set(instance, {
+				onclick(evt) {
+					const { currentTarget } = evt;
+					const target = <Node> evt.target;
+					if (target === currentTarget) {
+						return;
+					}
+
+					const path = new Set<Node>();
+					for (let node = target; node !== currentTarget; node = node.parentNode) {
+						path.add(node);
+					}
+
+					const plotNode = find(virtualPlotNodes.get(instance), ({ domNode }) => path.has(domNode));
+					instance.emitPlotEvent('select', plotNode, evt);
+				}
+			});
+
+			virtualPlotNodes.set(instance, []);
 		}
 	});
 

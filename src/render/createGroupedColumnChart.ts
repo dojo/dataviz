@@ -1,6 +1,8 @@
 import { ComposeFactory } from 'dojo-compose/compose';
+import { EventedListenerOrArray, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import { Handle } from 'dojo-core/interfaces';
 import { assign } from 'dojo-core/lang';
-import { from } from 'dojo-shim/array';
+import { from, findIndex } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette/maquette';
@@ -12,7 +14,8 @@ import createColumnChart, {
 	ColumnChartOptions,
 	ColumnChartState,
 	ColumnPoint,
-	ColumnPointPlot
+	ColumnPointPlot,
+	SelectColumnEvent
 } from './createColumnChart';
 import { Plot, Point } from './interfaces';
 
@@ -77,6 +80,16 @@ export interface GroupedColumnChartMixin<G, T> {
 	groupSpacing?: number;
 }
 
+export interface GroupedColumnOverrides<G, T>{
+	on(type: 'selectcolumn', listener: EventedListenerOrArray<SelectColumnInGroupEvent<G, T>>): Handle;
+	on(type: string, listener: EventedListenerOrArray<TargettedEventObject>): Handle;
+}
+
+export interface SelectColumnInGroupEvent<G, T> extends SelectColumnEvent<T> {
+	group: G;
+	groupPoint: GroupedColumnPoint<G, T>;
+}
+
 export type GroupedColumnChart<
 	G,
 	T,
@@ -97,6 +110,7 @@ export interface GroupedColumnChartFactory<G, T> extends ComposeFactory<
 
 const groupSelectors = new WeakMap<GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>, GroupSelector<any, any>>();
 const shadowGroupSpacings = new WeakMap<GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>, number>();
+const pointsByNode = new WeakMap<VNode, GroupedColumnPoint<any, any>>();
 
 // Cast to a generic factory so subclasses can modify the datum type.
 // The factory should be casted to GroupedColumnChartFactory when creating a grouped column chart.
@@ -116,6 +130,34 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 					shadowGroupSpacings.set(this, groupSpacing);
 				}
 				this.invalidate();
+			},
+
+			emitPlotEvent<G, T>(
+				this: GroupedColumnChart<any, any, any, any>,
+				prefix: string,
+				plotNode: VNode,
+				evt: TargettedEventObject
+			) {
+				const groupPoint: GroupedColumnPoint<G, T> = pointsByNode.get(plotNode);
+				if (!groupPoint) {
+					return;
+				}
+
+				const index = findIndex(plotNode.children, ({ domNode }) => domNode === evt.target);
+				if (index === -1) {
+					return;
+				}
+
+				const target = groupPoint.columnPoints[index];
+				if (!target) {
+					return;
+				}
+
+				const { datum: { input: group } } = groupPoint;
+				const { datum: { input } } = target;
+				if (prefix === 'select') {
+					this.emit({ type: 'selectcolumn', group, groupPoint, input, target });
+				}
 			}
 		},
 
@@ -211,7 +253,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 			around: {
 				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[], plotHeight: number, extraHeight: number) => VNode[][]) {
 					return function(
-						this: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T, GroupedColumn<G, T>>>,
+						this: GroupedColumnChart<G, T, GroupedColumn<G, T>, any>,
 						groupPoints: GroupedColumnPoint<G, T>[],
 						plotHeight: number,
 						extraHeight: number
@@ -226,7 +268,9 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 
 						const fullHeight = String(plotHeight + extraHeight);
 						const fullY = String(-extraHeight);
-						for (const { columnPoints, datum: { input: key }, x1, x2 } of groupPoints) {
+						for (const point of groupPoints) {
+							const { columnPoints, datum: { input: key }, x1, x2 } = point;
+
 							outerGroupNodes.push(h('rect', {
 								key,
 								'fill-opacity': '0',
@@ -248,7 +292,10 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 							const [outer, inner, nodes] = renderColumns.call(this, columnPoints, plotHeight, extraHeight);
 							outerColumnNodes.push(...outer);
 							innerColumnNodes.push(...inner);
-							groupNodes.push(h('g', { key }, nodes));
+
+							const groupNode = h('g', { key }, nodes);
+							groupNodes.push(groupNode);
+							pointsByNode.set(groupNode, point);
 						}
 
 						return [outerGroupNodes, innerGroupNodes, outerColumnNodes, innerColumnNodes, groupNodes];
