@@ -3,7 +3,7 @@ import { assign } from 'dojo-core/lang';
 import { from } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
-import { h, VNode, VNodeProperties } from 'maquette/maquette';
+import { h, VNode } from 'maquette/maquette';
 
 import { Datum } from '../data/interfaces';
 import createColumnChart, {
@@ -350,14 +350,20 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 			},
 
 			around: {
-				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
-					return function(this: any, stackPoints: StackedColumnPoint<G, T>[]) {
-						return stackPoints.map(({ columnPoints, datum }) => {
-							const props: VNodeProperties = {
-								key: datum.input
-							};
-							return h('g', props, renderColumns.call(this, columnPoints));
-						});
+				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[], plotHeight: number, extraHeight: number) => VNode[][]) {
+					return function(this: any, stackPoints: StackedColumnPoint<G, T>[], plotHeight: number, extraHeight: number) {
+						const outerNodes: VNode[] = [];
+						const innerNodes: VNode[] = [];
+						const stackNodes: VNode[] = [];
+
+						for (const { columnPoints, datum: { input: key } } of stackPoints) {
+							const [outer, inner, nodes] = renderColumns.call(this, columnPoints, plotHeight, extraHeight);
+							outerNodes.push(outer[0]);
+							innerNodes.push(inner[0]);
+							stackNodes.push(h('g', { key }, nodes));
+						}
+
+						return [outerNodes, innerNodes, stackNodes];
 					};
 				}
 			}

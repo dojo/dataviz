@@ -3,7 +3,7 @@ import { assign } from 'dojo-core/lang';
 import { from } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
-import { h, VNode, VNodeProperties } from 'maquette/maquette';
+import { h, VNode } from 'maquette/maquette';
 
 import { Datum } from '../data/interfaces';
 import createColumnChart, {
@@ -209,14 +209,49 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 			},
 
 			around: {
-				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
-					return function(this: any, groupPoints: GroupedColumnPoint<G, T>[]) {
-						return groupPoints.map(({ columnPoints, datum }) => {
-							const props: VNodeProperties = {
-								key: datum.input
-							};
-							return h('g', props, renderColumns.call(this, columnPoints));
-						});
+				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[], plotHeight: number, extraHeight: number) => VNode[][]) {
+					return function(
+						this: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T, GroupedColumn<G, T>>>,
+						groupPoints: GroupedColumnPoint<G, T>[],
+						plotHeight: number,
+						extraHeight: number
+					) {
+						const { groupSpacing } = this;
+
+						const outerGroupNodes: VNode[] = [];
+						const innerGroupNodes: VNode[] = [];
+						const outerColumnNodes: VNode[] = [];
+						const innerColumnNodes: VNode[] = [];
+						const groupNodes: VNode[] = [];
+
+						const fullHeight = String(plotHeight + extraHeight);
+						const fullY = String(-extraHeight);
+						for (const { columnPoints, datum: { input: key }, x1, x2 } of groupPoints) {
+							outerGroupNodes.push(h('rect', {
+								key,
+								'fill-opacity': '0',
+								height: fullHeight,
+								width: String(x2 - x1),
+								x: String(x1),
+								y: fullY
+							}));
+
+							innerGroupNodes.push(h('rect', {
+								key,
+								'fill-opacity': '0',
+								height: fullHeight,
+								width: String(x2 - x1 - groupSpacing),
+								x: String(x1 + groupSpacing / 2),
+								y: fullY
+							}));
+
+							const [outer, inner, nodes] = renderColumns.call(this, columnPoints, plotHeight, extraHeight);
+							outerColumnNodes.push(...outer);
+							innerColumnNodes.push(...inner);
+							groupNodes.push(h('g', { key }, nodes));
+						}
+
+						return [outerGroupNodes, innerGroupNodes, outerColumnNodes, innerColumnNodes, groupNodes];
 					};
 				}
 			}

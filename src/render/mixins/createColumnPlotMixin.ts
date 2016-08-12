@@ -149,7 +149,7 @@ export interface ColumnPlotMixin<T> {
 	/**
 	 * Create VNodes for each column given its points.
 	 */
-	renderPlotPoints(points: ColumnPoint<T>[]): VNode[];
+	renderPlotPoints(points: ColumnPoint<T>[], plotHeight: number, extraHeight: number): VNode[][];
 }
 
 /**
@@ -353,16 +353,45 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		};
 	},
 
-	renderPlotPoints<T>(points: ColumnPoint<T>[]) {
-		return points.map(({ datum, displayHeight, displayWidth, offsetLeft, x1, y1 }) => {
-			return h('rect', {
-				key: datum.input,
+	renderPlotPoints<T>(points: ColumnPoint<T>[], plotHeight: number, extraHeight: number) {
+		const outerNodes: VNode[] = [];
+		const innerNodes: VNode[] = [];
+		const columnNodes: VNode[] = [];
+
+		const fullHeight = String(plotHeight + extraHeight);
+		const fullY = String(-extraHeight);
+		for (const { datum: { input: key }, displayHeight, displayWidth, offsetLeft, x1, x2, y1 } of points) {
+			const innerWidth = String(displayWidth);
+			const innerX = String(x1 + offsetLeft);
+
+			outerNodes.push(h('rect', {
+				key,
+				'fill-opacity': '0',
+				height: fullHeight,
+				width: String(x2 - x1),
+				x: String(x1),
+				y: fullY
+			}));
+
+			innerNodes.push(h('rect', {
+				key,
+				'fill-opacity': '0',
+				height: fullHeight,
+				width: innerWidth,
+				x: innerX,
+				y: fullY
+			}));
+
+			columnNodes.push(h('rect', {
+				key,
 				height: String(displayHeight),
-				width: String(displayWidth),
-				x: String(x1 + offsetLeft),
+				width: innerWidth,
+				x: innerX,
 				y: String(y1)
-			});
-		});
+			}));
+		}
+
+		return [outerNodes, innerNodes, columnNodes];
 	}
 }).mixin({
 	mixin: createInputSeries,

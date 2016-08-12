@@ -88,10 +88,11 @@ const createColumnChart: ColumnChartFactory<any> = createChart
 				}, axes.top));
 			}
 
+			const groups = this.renderPlotPoints(plot.points, plot.height, axes.extraHeight);
 			nodes.push(h('g', {
 				key: 'plot',
 				'transform': `translate(${xInset} ${yInset + axes.extraHeight})`
-			}, this.renderPlotPoints(plot.points)));
+			}, groups.map((nodes, key) => h('g', { key }, nodes))));
 
 			return nodes;
 		}
