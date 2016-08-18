@@ -248,8 +248,10 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 					const negativeOffset = positiveHeight + 1;
 
 					let chartWidth = 0;
-					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
-					const points = from<StackedColumnPoint<G, T>>(<any> stacks, (entry: any, index: number) => {
+					const points = from<
+						[G, [Record, Record]],
+						StackedColumnPoint<G, T>
+					>(stacks.entries(), (entry, index) => {
 						const [stack, signed] = <[G, [Record, Record]]> entry;
 
 						const value = signed[0].value + signed[1].value;

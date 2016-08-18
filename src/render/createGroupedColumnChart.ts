@@ -163,9 +163,11 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 					}
 
 					let chartWidth = 0;
-					// Workaround for bad from() typing <https://github.com/dojo/shim/issues/3>
-					const points = from<GroupedColumnPoint<G, T>>(<any> groups, (entry: any, index: number) => {
-						const [group, { columnPoints, columns, totalValue, value, y1 }] = <[G, Record]> entry;
+					const points = from<
+						[G, Record],
+						GroupedColumnPoint<G, T>
+					>(groups.entries(), (entry, index) => {
+						const [group, { columnPoints, columns, totalValue, value, y1 }] = entry;
 
 						const x1 = chartWidth;
 
