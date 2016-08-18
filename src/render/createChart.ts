@@ -65,43 +65,38 @@ const createChart: ChartFactory = createWidget
 	.mixin({
 		aspectAdvice: {
 			before: {
-				getNodeAttributes(overrides?: VNodeProperties): VNodeProperties[] {
-					const chart: Chart<ChartState> = this;
-					return [assign(chart.getRootAttributes(), overrides)];
+				getNodeAttributes(this: Chart<ChartState>, overrides?: VNodeProperties): VNodeProperties[] {
+					return [assign(this.getRootAttributes(), overrides)];
 				}
 			}
 		},
 
 		mixin: <ChartMixin> {
-			get xInset() {
-				const chart: Chart<ChartState> = this;
-				const { xInset = shadowXInsets.get(chart) } = chart.state || {};
+			get xInset(this: Chart<ChartState>) {
+				const { xInset = shadowXInsets.get(this) } = this.state || {};
 				return xInset;
 			},
 
 			set xInset(xInset) {
-				const chart: Chart<ChartState> = this;
-				if (chart.state) {
-					chart.setState({ xInset });
+				if (this.state) {
+					this.setState({ xInset });
 				}
 				else {
-					shadowXInsets.set(chart, xInset);
+					shadowXInsets.set(this, xInset);
 				}
 			},
 
-			get yInset() {
-				const chart: Chart<ChartState> = this;
-				const { yInset = shadowYInsets.get(chart) } = chart.state || {};
+			get yInset(this: Chart<ChartState>) {
+				const { yInset = shadowYInsets.get(this) } = this.state || {};
 				return yInset;
 			},
 
 			set yInset(yInset) {
-				const chart: Chart<ChartState> = this;
-				if (chart.state) {
-					chart.setState({ yInset });
+				if (this.state) {
+					this.setState({ yInset });
 				}
 				else {
-					shadowYInsets.set(chart, yInset);
+					shadowYInsets.set(this, yInset);
 				}
 			},
 

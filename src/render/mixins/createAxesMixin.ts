@@ -342,53 +342,44 @@ interface AxesConfiguration<D> {
 const shadowConfiguration = new WeakMap<Axes<any>, AxesConfiguration<any>>();
 
 const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
-	get bottomAxis() {
-		const axes: Axes<any> = this;
-		return shadowConfiguration.get(axes).bottom;
+	get bottomAxis(this: Axes<any>) {
+		return shadowConfiguration.get(this).bottom;
 	},
 
 	set bottomAxis(axis: AxisConfiguration<any>) {
-		const axes: Axes<any> = this;
-		shadowConfiguration.get(axes).bottom = axis;
-		axes.invalidate();
+		shadowConfiguration.get(this).bottom = axis;
+		this.invalidate();
 	},
 
-	get leftAxis() {
-		const axes: Axes<any> = this;
-		return shadowConfiguration.get(axes).left;
+	get leftAxis(this: Axes<any>) {
+		return shadowConfiguration.get(this).left;
 	},
 
 	set leftAxis(axis: AxisConfiguration<any>) {
-		const axes: Axes<any> = this;
-		shadowConfiguration.get(axes).left = axis;
-		axes.invalidate();
+		shadowConfiguration.get(this).left = axis;
+		this.invalidate();
 	},
 
-	get rightAxis() {
-		const axes: Axes<any> = this;
-		return shadowConfiguration.get(axes).right;
+	get rightAxis(this: Axes<any>) {
+		return shadowConfiguration.get(this).right;
 	},
 
 	set rightAxis(axis: AxisConfiguration<any>) {
-		const axes: Axes<any> = this;
-		shadowConfiguration.get(axes).right = axis;
-		axes.invalidate();
+		shadowConfiguration.get(this).right = axis;
+		this.invalidate();
 	},
 
-	get topAxis() {
-		const axes: Axes<any> = this;
-		return shadowConfiguration.get(axes).top;
+	get topAxis(this: Axes<any>) {
+		return shadowConfiguration.get(this).top;
 	},
 
 	set topAxis(axis: AxisConfiguration<any>) {
-		const axes: Axes<any> = this;
-		shadowConfiguration.get(axes).top = axis;
-		axes.invalidate();
+		shadowConfiguration.get(this).top = axis;
+		this.invalidate();
 	},
 
-	createAxes<D extends Datum<any>>(plot: Plot<Point<D>>, domain: Domain): CreatedAxes {
-		const axes: Axes<D> = this;
-		const configuration = shadowConfiguration.get(axes);
+	createAxes<D extends Datum<any>>(this: Axes<D>, plot: Plot<Point<D>>, domain: Domain): CreatedAxes {
+		const configuration = shadowConfiguration.get(this);
 
 		const result: CreatedAxes = {
 			extraHeight: 0,
@@ -396,22 +387,22 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		};
 
 		if (configuration.bottom) {
-			const [nodes, extra] = axes.createAxis(configuration.bottom, 'bottom', plot, domain);
+			const [nodes, extra] = this.createAxis(configuration.bottom, 'bottom', plot, domain);
 			result.bottom = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
 		if (configuration.left) {
-			const [nodes, extra] = axes.createAxis(configuration.left, 'left', plot, domain);
+			const [nodes, extra] = this.createAxis(configuration.left, 'left', plot, domain);
 			result.left = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
 		if (configuration.right) {
-			const [nodes, extra] = axes.createAxis(configuration.right, 'right', plot, domain);
+			const [nodes, extra] = this.createAxis(configuration.right, 'right', plot, domain);
 			result.right = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
 		if (configuration.top) {
-			const [nodes, extra] = axes.createAxis(configuration.top, 'top', plot, domain);
+			const [nodes, extra] = this.createAxis(configuration.top, 'top', plot, domain);
 			result.top = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
@@ -419,12 +410,12 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	},
 
 	createAxis<D extends Datum<any>>(
+		this: Axes<D>,
 		cfg: AxisConfiguration<D>,
 		side: Side,
 		plot: Plot<Point<D>>,
 		domain: Domain
 	): [VNode[], number] {
-		const axes: Axes<D> = this;
 		const { gridLines, ticks } = cfg;
 		const { height, width, zero } = plot;
 
@@ -452,31 +443,31 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 		if (ticks && ticks.zeroth) {
 			if (isHorizontal) {
-				nodes.push(axes.createAxisTick(ticks, side, 0, 0));
+				nodes.push(this.createAxisTick(ticks, side, 0, 0));
 			}
 			else {
-				nodes.push(axes.createAxisTick(ticks, side, 0, zero.y));
+				nodes.push(this.createAxisTick(ticks, side, 0, zero.y));
 			}
 		}
 
 		if (typeof gridLines === 'object' && gridLines.zeroth) {
 			if (isHorizontal) {
-				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, 0));
+				nodes.push(this.createAxisGridLine(gridLineLength, side, 0, 0, 0));
 			}
 			else {
-				nodes.push(axes.createAxisGridLine(gridLineLength, side, 0, 0, zero.y));
+				nodes.push(this.createAxisGridLine(gridLineLength, side, 0, 0, zero.y));
 			}
 		}
 
 		if (isHardcoded(cfg)) {
-			nodes.push(...axes.createHardcodedAxis(cfg, labels, ticks, gridLineLength, side, plot));
+			nodes.push(...this.createHardcodedAxis(cfg, labels, ticks, gridLineLength, side, plot));
 		}
 		else if (isInputBased(cfg)) {
-			nodes.push(...axes.createInputBasedAxis(cfg, labels, ticks, gridLineLength, side, plot));
+			nodes.push(...this.createInputBasedAxis(cfg, labels, ticks, gridLineLength, side, plot));
 		}
 		else if (isRangeBased(cfg)) {
 			let stepNodes: VNode[];
-			[stepNodes, extraSpace] = axes.createRangeBasedAxis(cfg, labels, ticks, gridLineLength, side, plot, domain);
+			[stepNodes, extraSpace] = this.createRangeBasedAxis(cfg, labels, ticks, gridLineLength, side, plot, domain);
 			nodes.push(...stepNodes);
 		}
 
@@ -651,6 +642,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	},
 
 	createHardcodedAxis(
+		this: Axes<any>,
 		{ hardcoded }: HardcodedAxis,
 		labels: LabelConfiguration,
 		ticks: TickConfiguration,
@@ -658,8 +650,6 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		side: Side,
 		{ height, width }: Plot<any>
 	) {
-		const axes: Axes<any> = this;
-
 		const isHorizontal = side === 'bottom' || side === 'top';
 		const nodes: VNode[] = [];
 
@@ -684,17 +674,17 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			// FIXME: Don't repeat zeroth tick
 			if (ticks) {
 				const p = isHorizontal ? x : y;
-				nodes.push(axes.createAxisTick(ticks, side, index, p));
+				nodes.push(this.createAxisTick(ticks, side, index, p));
 			}
 			// FIXME: Don't repeat zeroth grid line
 			if (gridLineLength) {
-				nodes.push(axes.createAxisGridLine(gridLineLength, side, index, x, y));
+				nodes.push(this.createAxisGridLine(gridLineLength, side, index, x, y));
 			}
 
 			if (labels && text !== '') {
 				const p1 = isHorizontal ? x : y;
 				const p2 = prev;
-				nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, false, ticks));
+				nodes.push(this.createAxisLabel(labels, text, side, index, p1, p2, false, ticks));
 			}
 
 			index++;
@@ -705,6 +695,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	},
 
 	createInputBasedAxis<D extends Datum<any>>(
+		this: Axes<D>,
 		{ inputs }: InputBasedAxis<D>,
 		labels: LabelConfiguration,
 		ticks: TickConfiguration,
@@ -712,7 +703,6 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		side: Side,
 		{ points, zero }: Plot<Point<D>>
 	) {
-		const axes: Axes<D> = this;
 		const labelSelector = typeof inputs === 'boolean' ? null : inputs.labelSelector;
 
 		const isHorizontal = side === 'bottom' || side === 'top';
@@ -729,20 +719,20 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			if (ticks || gridLineLength) {
 				// FIXME: Don't repeat zeroth tick
 				if (ticks) {
-					nodes.push(axes.createAxisTick(ticks, side, index, p1, p2, isNegative));
+					nodes.push(this.createAxisTick(ticks, side, index, p1, p2, isNegative));
 				}
 				// FIXME: Don't repeat zeroth grid line
 				if (gridLineLength) {
 					const x = isHorizontal ? x2 : 0;
 					const y = isHorizontal ? 0 : y1;
-					nodes.push(axes.createAxisGridLine(gridLineLength, side, index, x, y));
+					nodes.push(this.createAxisGridLine(gridLineLength, side, index, x, y));
 				}
 			}
 
 			if (labels && labelSelector) {
 				const text = labelSelector(datum);
 				if (text !== '') {
-					nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, isNegative, ticks));
+					nodes.push(this.createAxisLabel(labels, text, side, index, p1, p2, isNegative, ticks));
 				}
 			}
 		}
@@ -751,6 +741,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	},
 
 	createRangeBasedAxis<D extends Datum<any>>(
+		this: Axes<D>,
 		{ range }: RangeBasedAxis,
 		labels: LabelConfiguration,
 		ticks: TickConfiguration,
@@ -766,7 +757,6 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		}: Plot<Point<D>>,
 		[domainMin, domainMax]: Domain
 	) {
-		const axes: Axes<D> = this;
 		const {
 			fixed = false,
 			labelSelector
@@ -828,18 +818,18 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 			// FIXME: Don't repeat zeroth tick
 			if (ticks) {
-				nodes.push(axes.createAxisTick(ticks, side, index, p));
+				nodes.push(this.createAxisTick(ticks, side, index, p));
 			}
 			// FIXME: Don't duplicate zeroth gridline
 			if (gridLineLength) {
-				nodes.push(axes.createAxisGridLine(gridLineLength, side, index, x, y));
+				nodes.push(this.createAxisGridLine(gridLineLength, side, index, x, y));
 			}
 
 			const text = labelSelector ? labelSelector(step) : String(step);
 			if (labels && text !== '') {
 				const p1 = isNegative ? prev : p;
 				const p2 = isNegative ? p : prev;
-				nodes.push(axes.createAxisLabel(labels, text, side, index, p1, p2, isNegative, ticks));
+				nodes.push(this.createAxisLabel(labels, text, side, index, p1, p2, isNegative, ticks));
 			}
 
 			index++;

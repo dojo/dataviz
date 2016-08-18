@@ -94,38 +94,38 @@ const shadowGroupSpacings = new WeakMap<GroupedColumnChart<any, any, any, Groupe
 const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = createColumnChart
 	.mixin({
 		mixin: {
-			get groupSpacing() {
-				const chart: GroupedColumnChart<any, any, any, GroupedColumnChartState<any, any>> = this;
-				const { groupSpacing = shadowGroupSpacings.get(chart) } = chart.state || {};
+			get groupSpacing(this: GroupedColumnChart<any, any, any, GroupedColumnChartState<any, any>>) {
+				const { groupSpacing = shadowGroupSpacings.get(this) } = this.state || {};
 				return groupSpacing;
 			},
 
 			set groupSpacing(groupSpacing) {
-				const chart: GroupedColumnChart<any, any, any, GroupedColumnChartState<any, any>> = this;
-				if (chart.state) {
-					chart.setState({ groupSpacing });
+				if (this.state) {
+					this.setState({ groupSpacing });
 				}
 				else {
-					shadowGroupSpacings.set(chart, groupSpacing);
+					shadowGroupSpacings.set(this, groupSpacing);
 				}
-				chart.invalidate();
+				this.invalidate();
 			}
 		},
 
 		aspectAdvice: {
 			after: {
-				plot<G, T>({
-					height,
-					horizontalValues,
-					points: columnPoints,
-					verticalValues,
-					width,
-					zero
-				}: ColumnPointPlot<T>): GroupedColumnPointPlot<G, T> {
-					const chart: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T, GroupedColumn<G, T>>> = this;
-					const { columnHeight, columnSpacing, groupSpacing } = chart;
+				plot<G, T>(
+					this: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T, GroupedColumn<G, T>>>,
+					{
+						height,
+						horizontalValues,
+						points: columnPoints,
+						verticalValues,
+						width,
+						zero
+					}: ColumnPointPlot<T>
+				): GroupedColumnPointPlot<G, T> {
+					const { columnHeight, columnSpacing, groupSpacing } = this;
 
-					const groupSelector = groupSelectors.get(chart);
+					const groupSelector = groupSelectors.get(this);
 					interface Record {
 						columnPoints: ColumnPoint<T>[];
 						columns: Column<T>[];
@@ -204,7 +204,7 @@ const createGroupedColumnChart: GenericGroupedColumnChartFactory<any, any> = cre
 
 			around: {
 				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
-					return (groupPoints: GroupedColumnPoint<G, T>[]) => {
+					return function(this: any, groupPoints: GroupedColumnPoint<G, T>[]) {
 						return groupPoints.map(({ columnPoints, datum }) => {
 							const props: VNodeProperties = {
 								key: datum.input

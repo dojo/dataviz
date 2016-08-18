@@ -61,20 +61,18 @@ const shadowWidths = new WeakMap<SvgRoot<SvgRootState>, number>();
 const createSvgRootMixin = createStateful
 	.mixin({
 		mixin: <SvgRootMixin> {
-			get height() {
-				const root: SvgRoot<SvgRootState> = this;
-				const { height = shadowHeights.get(root) } = root.state || {};
+			get height(this: SvgRoot<SvgRootState>) {
+				const { height = shadowHeights.get(this) } = this.state || {};
 				return height;
 			},
 
 			set height(height) {
-				const root: SvgRoot<SvgRootState> = this;
-				if (root.state) {
-					root.setState({ height });
+				if (this.state) {
+					this.setState({ height });
 				}
 				else {
-					shadowHeights.set(root, height);
-					root.invalidate();
+					shadowHeights.set(this, height);
+					this.invalidate();
 				}
 			},
 
@@ -84,27 +82,24 @@ const createSvgRootMixin = createStateful
 
 			set tagName(noop) {},
 
-			get width() {
-				const root: SvgRoot<SvgRootState> = this;
-				const { width = shadowWidths.get(root) } = root.state || {};
+			get width(this: SvgRoot<SvgRootState>) {
+				const { width = shadowWidths.get(this) } = this.state || {};
 				return width;
 			},
 
 			set width(width) {
-				const root: SvgRoot<SvgRootState> = this;
-				if (root.state) {
-					root.setState({ width });
+				if (this.state) {
+					this.setState({ width });
 				}
 				else {
-					shadowWidths.set(root, width);
-					root.invalidate();
+					shadowWidths.set(this, width);
+					this.invalidate();
 				}
 			},
 
-			getRootAttributes(): VNodeProperties {
-				const root: SvgRoot<SvgRootState> = this;
+			getRootAttributes(this: SvgRoot<SvgRootState>): VNodeProperties {
 				// TODO: Move defaults into height/weight getters on root.
-				const { height, width } = root;
+				const { height, width } = this;
 				return {
 					height: String(height),
 					width: String(width),

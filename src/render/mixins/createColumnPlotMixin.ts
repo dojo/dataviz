@@ -172,78 +172,69 @@ const shadowColumnWidths = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, nu
 const shadowDomains = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Domain>();
 
 const createColumnPlot: ColumnPlotFactory<any> = compose({
-	get columnHeight() {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		const { columnHeight = shadowColumnHeights.get(plot) } = plot.state || {};
+	get columnHeight(this: ColumnPlot<any, ColumnPlotState<any>>) {
+		const { columnHeight = shadowColumnHeights.get(this) } = this.state || {};
 		return columnHeight;
 	},
 
 	set columnHeight(columnHeight) {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		if (plot.state) {
-			plot.setState({ columnHeight });
+		if (this.state) {
+			this.setState({ columnHeight });
 		}
 		else {
-			shadowColumnHeights.set(plot, columnHeight);
+			shadowColumnHeights.set(this, columnHeight);
 		}
-		plot.invalidate();
+		this.invalidate();
 	},
 
-	get columnSpacing() {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		const { columnSpacing = shadowColumnSpacings.get(plot) } = plot.state || {};
+	get columnSpacing(this: ColumnPlot<any, ColumnPlotState<any>>) {
+		const { columnSpacing = shadowColumnSpacings.get(this) } = this.state || {};
 		return columnSpacing;
 	},
 
 	set columnSpacing(columnSpacing) {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		if (plot.state) {
-			plot.setState({ columnSpacing });
+		if (this.state) {
+			this.setState({ columnSpacing });
 		}
 		else {
-			shadowColumnSpacings.set(plot, columnSpacing);
+			shadowColumnSpacings.set(this, columnSpacing);
 		}
-		plot.invalidate();
+		this.invalidate();
 	},
 
-	get columnWidth() {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		const { columnWidth = shadowColumnWidths.get(plot) } = plot.state || {};
+	get columnWidth(this: ColumnPlot<any, ColumnPlotState<any>>) {
+		const { columnWidth = shadowColumnWidths.get(this) } = this.state || {};
 		return columnWidth;
 	},
 
 	set columnWidth(columnWidth) {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		if (plot.state) {
-			plot.setState({ columnWidth });
+		if (this.state) {
+			this.setState({ columnWidth });
 		}
 		else {
-			shadowColumnWidths.set(plot, columnWidth);
+			shadowColumnWidths.set(this, columnWidth);
 		}
-		plot.invalidate();
+		this.invalidate();
 	},
 
-	get domain() {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		const { domain = shadowDomains.get(plot) } = plot.state || {};
+	get domain(this: ColumnPlot<any, ColumnPlotState<any>>) {
+		const { domain = shadowDomains.get(this) } = this.state || {};
 		return normalizeDomain(domain);
 	},
 
 	set domain(domain) {
-		const plot: ColumnPlot<any, ColumnPlotState<any>> = this;
-		if (plot.state) {
-			plot.setState({ domain });
+		if (this.state) {
+			this.setState({ domain });
 		}
 		else {
-			shadowDomains.set(plot, domain);
+			shadowDomains.set(this, domain);
 		}
-		plot.invalidate();
+		this.invalidate();
 	},
 
-	plot<T>(): ColumnPointPlot<T> {
-		const plot: ColumnPlot<T, ColumnPlotState<T>> = this;
-		const series = columnSeries.get(plot);
-		const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [domainMin, domainMax] } = plot;
+	plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
+		const series = columnSeries.get(this);
+		const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [domainMin, domainMax] } = this;
 
 		let mostNegativeRelValue = 0;
 		let mostNegativeValue = 0;

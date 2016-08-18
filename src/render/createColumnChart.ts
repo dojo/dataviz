@@ -42,17 +42,16 @@ const createColumnChart: GenericColumnChartFactory<any> = createChart
 	.mixin(createAxes)
 	.mixin(createColumnPlot)
 	.extend({
-		getChildrenNodes(): VNode[] {
-			const chart: ColumnChart<any, any, any> = this;
-			const plot = chart.plot();
+		getChildrenNodes(this: ColumnChart<any, any, any>): VNode[] {
+			const plot = this.plot();
 			if (plot.points.length === 0) {
 				return [];
 			}
 
-			const { domain, xInset, yInset } = chart;
+			const { domain, xInset, yInset } = this;
 			const nodes: VNode[] = [];
 
-			const axes = chart.createAxes(plot, domain);
+			const axes = this.createAxes(plot, domain);
 			let { height: chartHeight, width: chartWidth } = plot;
 			chartWidth += axes.extraWidth;
 			chartHeight += axes.extraHeight;
@@ -85,7 +84,7 @@ const createColumnChart: GenericColumnChartFactory<any> = createChart
 			nodes.push(h('g', {
 				key: 'plot',
 				'transform': `translate(${xInset} ${yInset + axes.extraHeight})`
-			}, chart.renderPlotPoints(plot.points)));
+			}, this.renderPlotPoints(plot.points)));
 
 			return nodes;
 		}

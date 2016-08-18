@@ -70,7 +70,7 @@ const observables = new WeakMap<InputSeries<any, InputSeriesState<any>>, Observa
 
 const createInputSeries: InputSeriesFactory<any> = createStateful
 	.extend({
-		get inputSeries() {
+		get inputSeries(this: InputSeries<any, InputSeriesState<any>>) {
 			return observables.get(this);
 		}
 	})

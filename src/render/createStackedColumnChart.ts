@@ -87,49 +87,49 @@ const shadowStackSpacings = new WeakMap<StackedColumnChart<any, any, any, Stacke
 const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = createColumnChart
 	.mixin({
 		mixin: {
-			get stackSpacing() {
-				const chart: StackedColumnChart<any, any, any, StackedColumnChartState<any, any>> = this;
-				const { stackSpacing = shadowStackSpacings.get(chart) } = chart.state || {};
+			get stackSpacing(this: StackedColumnChart<any, any, any, StackedColumnChartState<any, any>>) {
+				const { stackSpacing = shadowStackSpacings.get(this) } = this.state || {};
 				return stackSpacing;
 			},
 
 			set stackSpacing(stackSpacing) {
-				const chart: StackedColumnChart<any, any, any, StackedColumnChartState<any, any>> = this;
-				if (chart.state) {
-					chart.setState({ stackSpacing });
+				if (this.state) {
+					this.setState({ stackSpacing });
 				}
 				else {
-					shadowStackSpacings.set(chart, stackSpacing);
+					shadowStackSpacings.set(this, stackSpacing);
 				}
-				chart.invalidate();
+				this.invalidate();
 			}
 		},
 
 		aspectAdvice: {
 			after: {
-				plot<G, T>({
-					height,
-					horizontalValues,
-					points: columnPoints,
-					verticalValues,
-					width,
-					zero
-				}: ColumnPointPlot<T>): StackedColumnPointPlot<G, T> {
-					const chart: StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T, StackedColumn<G, T>>> = this;
+				plot<G, T>(
+					this: StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T, StackedColumn<G, T>>>,
+					{
+						height,
+						horizontalValues,
+						points: columnPoints,
+						verticalValues,
+						width,
+						zero
+					}: ColumnPointPlot<T>
+				): StackedColumnPointPlot<G, T> {
 					const {
 						columnHeight,
 						columnSpacing,
 						columnWidth,
 						domain: [domainMin, domainMax],
 						stackSpacing
-					} = chart;
+					} = this;
 
 					let mostNegativeRelValue = 0;
 					let mostNegativeValue = 0;
 					let mostPositiveRelValue = 0;
 					let mostPositiveValue = 0;
 
-					const stackSelector = stackSelectors.get(chart);
+					const stackSelector = stackSelectors.get(this);
 					interface Record {
 						columnPoints: ColumnPoint<T>[];
 						columns: Column<T>[];
@@ -345,7 +345,7 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 
 			around: {
 				renderPlotPoints<G, T>(renderColumns: (points: ColumnPoint<T>[]) => VNode[]) {
-					return (stackPoints: StackedColumnPoint<G, T>[]) => {
+					return function(this: any, stackPoints: StackedColumnPoint<G, T>[]) {
 						return stackPoints.map(({ columnPoints, datum }) => {
 							const props: VNodeProperties = {
 								key: datum.input
