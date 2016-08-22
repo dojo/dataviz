@@ -41,12 +41,12 @@ export interface SharedConfiguration {
 	 *
 	 * The lines will eminating from this axis and be aligned with the axis markings.
 	 */
-	gridLines?: boolean | GridLineConfiguration; // TODO: TS2 use true, not boolean
+	gridLines?: boolean | GridLineConfiguration; // TODO: When supported, use `true` literal type, not boolean
 
 	/**
 	 * Set to `false` to disable labels. Alternatively provide configuration for how the labels are positioned.
 	 */
-	labels?: boolean | LabelConfiguration; // TODO: TS2 use false, not boolean
+	labels?: boolean | LabelConfiguration; // TODO: When supported, use `false` literal type, not boolean
 
 	/**
 	 * Set to display ticks for the axis markings.
@@ -148,7 +148,7 @@ export interface InputBasedAxis<D> extends SharedConfiguration {
 	/**
 	 * Distribute markings based on how the inputs are plotted.
 	 */
-	inputs: boolean | { // TODO: TS2 use true, not boolean.
+	inputs: boolean | { // TODO: When supported, use `true` literal type, not boolean
 		/**
 		 * Selects the label to be shown next to the marking.
 		 */
