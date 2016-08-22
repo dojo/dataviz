@@ -98,7 +98,6 @@ const createSvgRootMixin = createStateful
 			},
 
 			getRootAttributes(this: SvgRoot<SvgRootState>): VNodeProperties {
-				// TODO: Move defaults into height/weight getters on root.
 				const { height, width } = this;
 				return {
 					height: String(height),
