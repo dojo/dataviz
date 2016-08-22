@@ -1,13 +1,12 @@
 import createMemoryStore from 'dojo-widgets/util/createMemoryStore';
 import projector from 'dojo-widgets/projector';
 
-import { Datum } from 'src/data/interfaces';
 import max from 'src/data/max';
 import sum from 'src/data/sum';
 import sort from 'src/data/sort';
-import createColumnChart, { ColumnChartFactory } from 'src/render/createColumnChart';
-import createGroupedColumnChart, { GroupedColumnChartFactory } from 'src/render/createGroupedColumnChart';
-import createStackedColumnChart, { StackedColumnChartFactory } from 'src/render/createStackedColumnChart';
+import createColumnChart from 'src/render/createColumnChart';
+import createGroupedColumnChart from 'src/render/createGroupedColumnChart';
+import createStackedColumnChart from 'src/render/createStackedColumnChart';
 
 import getPlayCounts, { PlayCount } from './play-counts';
 
@@ -34,7 +33,7 @@ playCounts.subscribe((inputSeries) => {
 	store.patch({ inputSeries }, { id: 'percentageChart' });
 });
 
-const percentageChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
+const percentageChart = createColumnChart<PlayCount>({
 	id: 'percentageChart',
 	bottomAxis: {
 		inputs: {
@@ -60,9 +59,7 @@ const percentageChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 		height: 250
 	},
 	stateFrom: store,
-	valueSelector(input) { // Note how the input type is inferred to be PlayCount.
-		return input.count;
-	},
+	valueSelector(input) { return input.count; },
 	// Example of passing width
 	width: 300
 });
@@ -70,10 +67,10 @@ const percentageChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 // Example of setting columnWidth
 percentageChart.columnWidth = 20;
 
-const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
+const absoluteChart = createColumnChart<PlayCount>({
 	bottomAxis: {
 		inputs: {
-			labelSelector({ input }: Datum<PlayCount>) { return input.artist; }
+			labelSelector({ input }) { return input.artist; }
 		},
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: -45, offset: -5 },
 		ticks: { anchor: 'end', length: 10, zeroth: true }
@@ -91,16 +88,13 @@ const absoluteChart = (<ColumnChartFactory<PlayCount>> createColumnChart)({
 	inputSeries: playCounts,
 	divisorOperator: max,
 	height: 260,
-	valueSelector(input: PlayCount) {
-		// Why isn't the input type inferred here? It is in percentageChart, seemingly due to the stateFrom option.
-		return input.count;
-	},
+	valueSelector(input) { return input.count; },
 	width: 300,
 	xInset: 50,
 	yInset: 30
 });
 
-const groupedByProvinceChart = (<GroupedColumnChartFactory<string, PlayCount>> createGroupedColumnChart)({
+const groupedByProvinceChart = createGroupedColumnChart<string, PlayCount>({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input; }
@@ -128,26 +122,20 @@ const groupedByProvinceChart = (<GroupedColumnChartFactory<string, PlayCount>> c
 	state: {
 		styles: { marginTop: '20px' }
 	},
-	// stateFrom: store,
 	// Example of passing an observable to the chart.
 	inputSeries: byProvince,
 	divisorOperator: max,
-	groupSelector(input: PlayCount) {
-		return input.province;
-	},
+	groupSelector(input) { return input.province; },
 	groupSpacing: 10,
 	height: 230,
-	valueSelector(input: PlayCount) {
-		// Why isn't the input type inferred here? It is in percentageChart, seemingly due to the stateFrom option.
-		return input.count;
-	},
+	valueSelector(input) { return input.count; },
 	width: 300
 });
 
 groupedByProvinceChart.xInset = 75;
 groupedByProvinceChart.yInset = 25;
 
-const stackedByProvinceChart = (<StackedColumnChartFactory<string, PlayCount>> createStackedColumnChart)({
+const stackedByProvinceChart = createStackedColumnChart<string, PlayCount>({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input; }
@@ -176,19 +164,13 @@ const stackedByProvinceChart = (<StackedColumnChartFactory<string, PlayCount>> c
 	state: {
 		styles: { marginTop: '20px' }
 	},
-	// stateFrom: store,
 	// Example of passing an observable to the chart.
 	inputSeries: byProvince,
 	divisorOperator: max,
-	stackSelector(input: PlayCount) {
-		return input.province;
-	},
+	stackSelector(input) { return input.province; },
 	stackSpacing: 1,
 	height: 330,
-	valueSelector(input: PlayCount) {
-		// Why isn't the input type inferred here? It is in percentageChart, seemingly due to the stateFrom option.
-		return input.count;
-	},
+	valueSelector(input) { return input.count; },
 	width: 300
 });
 

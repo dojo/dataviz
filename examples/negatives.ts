@@ -1,11 +1,11 @@
 import projector from 'dojo-widgets/projector';
 
 import max from 'src/data/max';
-import createColumnChart, { ColumnChartFactory } from 'src/render/createColumnChart';
-import createGroupedColumnChart, { GroupedColumnChartFactory } from 'src/render/createGroupedColumnChart';
-import createStackedColumnChart, { StackedColumnChartFactory } from 'src/render/createStackedColumnChart';
+import createColumnChart from 'src/render/createColumnChart';
+import createGroupedColumnChart from 'src/render/createGroupedColumnChart';
+import createStackedColumnChart from 'src/render/createStackedColumnChart';
 
-const basic = (<ColumnChartFactory<number>> createColumnChart)({
+const basic = createColumnChart<number>({
 	bottomAxis: {
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
@@ -21,12 +21,12 @@ const basic = (<ColumnChartFactory<number>> createColumnChart)({
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
 	},
-	valueSelector(input: number) { return input; },
+	valueSelector(input) { return input; },
 	width: 100,
 	xInset: 30
 });
 
-const domain = (<ColumnChartFactory<number>> createColumnChart)({
+const domain = createColumnChart<number>({
 	bottomAxis: {
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
@@ -43,12 +43,12 @@ const domain = (<ColumnChartFactory<number>> createColumnChart)({
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	valueSelector(input: number) { return input; },
+	valueSelector(input) { return input; },
 	width: 100,
 	xInset: 30
 });
 
-const allNegative = (<ColumnChartFactory<number>> createColumnChart)({
+const allNegative = createColumnChart<number>({
 	bottomAxis: {
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
@@ -66,12 +66,12 @@ const allNegative = (<ColumnChartFactory<number>> createColumnChart)({
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	valueSelector(input: number) { return input; },
+	valueSelector(input) { return input; },
 	width: 100,
 	xInset: 30
 });
 
-const allNegativeDomain = (<ColumnChartFactory<number>> createColumnChart)({
+const allNegativeDomain = createColumnChart<number>({
 	bottomAxis: {
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
@@ -88,12 +88,12 @@ const allNegativeDomain = (<ColumnChartFactory<number>> createColumnChart)({
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	valueSelector(input: number) { return input; },
+	valueSelector(input) { return input; },
 	width: 100,
 	xInset: 30
 });
 
-const group = (<GroupedColumnChartFactory<string, [string, number]>> createGroupedColumnChart)({
+const group = createGroupedColumnChart<string, [string, number]>({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input; }
@@ -106,19 +106,19 @@ const group = (<GroupedColumnChartFactory<string, [string, number]>> createGroup
 	columnWidth: 10,
 	divisorOperator: max,
 	height: 200,
-	groupSelector(input: [string, number]) { return input[0]; },
+	groupSelector(input) { return input[0]; },
 	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10]],
 	leftAxis: {
 		labels: { anchor: 'end' },
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
 	},
-	valueSelector(input: [string, number]) { return input[1]; },
+	valueSelector(input) { return input[1]; },
 	width: 100,
 	xInset: 30
 });
 
-const stack = (<StackedColumnChartFactory<string, [string, number]>> createStackedColumnChart)({
+const stack = createStackedColumnChart<string, [string, number]>({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input; }
@@ -137,14 +137,14 @@ const stack = (<StackedColumnChartFactory<string, [string, number]>> createStack
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
 	},
-	stackSelector(input: [string, number]) { return input[0]; },
+	stackSelector(input) { return input[0]; },
 	stackSpacing: 1,
-	valueSelector(input: [string, number]) { return input[1]; },
+	valueSelector(input) { return input[1]; },
 	width: 100,
 	xInset: 30
 });
 
-const stackDomain = (<StackedColumnChartFactory<string, [string, number]>> createStackedColumnChart)({
+const stackDomain = createStackedColumnChart<string, [string, number]>({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input; }
@@ -164,9 +164,9 @@ const stackDomain = (<StackedColumnChartFactory<string, [string, number]>> creat
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
 	},
-	stackSelector(input: [string, number]) { return input[0]; },
+	stackSelector(input) { return input[0]; },
 	stackSpacing: 1,
-	valueSelector(input: [string, number]) { return input[1]; },
+	valueSelector(input) { return input[1]; },
 	width: 100,
 	xInset: 30
 });

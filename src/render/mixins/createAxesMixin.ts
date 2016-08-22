@@ -219,7 +219,7 @@ export interface CreatedAxes {
 
 export type Side = 'bottom' | 'left' | 'right' | 'top';
 
-export interface AxesOptions<D> {
+export interface AxesOptions<D extends Datum<any>> {
 	/**
 	 * An axis that will be displayed below the plotted chart.
 	 */

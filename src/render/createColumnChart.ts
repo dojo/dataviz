@@ -16,29 +16,36 @@ import createColumnPlot, {
 
 export { Column, ColumnPoint, ColumnPointPlot }
 
-export type ColumnChartState<T, D> = ChartState & ColumnPlotState<T>;
+export type ColumnChartState<T> = ChartState & ColumnPlotState<T>;
 
-export type ColumnChartOptions<T, D, S extends ColumnChartState<T, D>> = ChartOptions<S> & ColumnPlotOptions<T, S> & AxesOptions<D>;
+export type ColumnChartOptions<
+	T,
+	// Extend Datum<any> so subclasses can use their own datum type without having to extend from Column<T>.
+	D extends Datum<any>,
+	// Extend ColumnChartState<T> since subclasses must still support the state properties of ColumnChart.
+	S extends ColumnChartState<T>
+> = ChartOptions<S> & ColumnPlotOptions<T, S> & AxesOptions<D>;
 
-export type ColumnChart<T, D extends Datum<any>, S extends ColumnChartState<T, D>> = Chart<S> & ColumnPlot<T, S> & Axes<D>;
+export type ColumnChart<
+	T,
+	// Extend Datum<any> so subclasses can use their own datum type without having to extend from Column<T>.
+	D extends Datum<any>,
+	// Extend ColumnChartState<T> since subclasses must still support the state properties of ColumnChart.
+	S extends ColumnChartState<T>
+> = Chart<S> & ColumnPlot<T, S> & Axes<D>;
 
 export interface ColumnChartFactory<T> extends ComposeFactory<
-	ColumnChart<T, Column<T>, ColumnChartState<T, Column<T>>>,
-	ColumnChartOptions<T, Column<T>, ColumnChartState<T, Column<T>>>
+	ColumnChart<T, Column<T>, ColumnChartState<T>>,
+	ColumnChartOptions<T, Column<T>, ColumnChartState<T>>
 > {
-	<T, D extends Column<T>, S extends ColumnChartState<T, D>>(options?: ColumnChartOptions<T, D, S>): ColumnChart<T, D, S>;
-}
-
-export interface GenericColumnChartFactory<T> extends ComposeFactory<
-	ColumnChart<T, Datum<any>, ColumnChartState<T, Datum<any>>>,
-	ColumnChartOptions<T, Datum<any>, ColumnChartState<T, Datum<any>>>
-> {
-	<T, D extends Datum<any>, S extends ColumnChartState<T, D>>(options?: ColumnChartOptions<T, D, S>): ColumnChart<T, D, S>;
+	<T>(
+		options?: ColumnChartOptions<T, Column<T>, ColumnChartState<T>>
+	): ColumnChart<T, Column<T>, ColumnChartState<T>>;
 }
 
 // Cast to a generic factory so subclasses can modify the datum type.
 // The factory should be casted to ColumnChartFactory when creating a column chart.
-const createColumnChart: GenericColumnChartFactory<any> = createChart
+const createColumnChart: ColumnChartFactory<any> = createChart
 	.mixin(createAxes)
 	.mixin(createColumnPlot)
 	.extend({

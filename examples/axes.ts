@@ -6,7 +6,7 @@ import projector from 'dojo-widgets/projector';
 
 import max from 'src/data/max';
 import { Datum } from 'src/data/interfaces';
-import createColumnChart, { ColumnChartFactory, ColumnChartOptions } from 'src/render/createColumnChart';
+import createColumnChart, { ColumnChartOptions } from 'src/render/createColumnChart';
 import { AxisConfiguration } from 'src/render/mixins/createAxesMixin';
 
 const MAX_INPUT = 30;
@@ -46,7 +46,7 @@ function createAxesConfiguration(shared: AxisConfiguration<Datum<number>>, chart
 	return assign(config, chartOptions);
 }
 
-const inputs = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const inputs = createColumnChart<number>(createAxesConfiguration({
 	inputs: {
 		labelSelector({ input }) {
 			return String(input);
@@ -59,7 +59,7 @@ const inputs = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfig
 	}
 }, chartOptions));
 
-const inputsGridLines = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const inputsGridLines = createColumnChart<number>(createAxesConfiguration({
 	inputs: {
 		labelSelector({ input }) {
 			return String(input);
@@ -86,10 +86,10 @@ const inputsNoTicks = (() => {
 	config.bottomAxis.labels.textAnchor = 'start';
 	config.topAxis.labels.textAnchor = 'end';
 
-	return (<ColumnChartFactory<number>> createColumnChart)(config);
+	return createColumnChart<number>(config);
 })();
 
-const range = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const range = createColumnChart<number>(createAxesConfiguration({
 	range: { stepSize: 5 },
 	ticks: {
 		anchor: 'end',
@@ -97,7 +97,7 @@ const range = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfigu
 	}
 }, chartOptions));
 
-const rangeAdjustedMax = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const rangeAdjustedMax = createColumnChart<number>(createAxesConfiguration({
 	range: {
 		end: 32, // Needs to be rounded up to 35
 		stepSize: 5
@@ -108,7 +108,7 @@ const rangeAdjustedMax = (<ColumnChartFactory<number>> createColumnChart)(create
 	}
 }, chartOptions));
 
-const rangeGridLines = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const rangeGridLines = createColumnChart<number>(createAxesConfiguration({
 	range: { stepSize: 5 },
 	gridLines: { zeroth: true },
 	ticks: {
@@ -117,7 +117,7 @@ const rangeGridLines = (<ColumnChartFactory<number>> createColumnChart)(createAx
 	}
 }, chartOptions));
 
-const rangeMax25 = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const rangeMax25 = createColumnChart<number>(createAxesConfiguration({
 	range: { end: 25, stepSize: 5 },
 	ticks: {
 		anchor: 'end',
@@ -125,11 +125,11 @@ const rangeMax25 = (<ColumnChartFactory<number>> createColumnChart)(createAxesCo
 	}
 }, chartOptions));
 
-const rangeNoTicks = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const rangeNoTicks = createColumnChart<number>(createAxesConfiguration({
 	range: { stepSize: 5 }
 }, chartOptions));
 
-const hardcoded = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const hardcoded = createColumnChart<number>(createAxesConfiguration({
 	hardcoded: [0, ...inputSeries.map(input => input / MAX_INPUT)].map<[number, string]>(relative => {
 		return [relative, String((relative * 100).toFixed(0)) + '%'];
 	}),
@@ -140,7 +140,7 @@ const hardcoded = (<ColumnChartFactory<number>> createColumnChart)(createAxesCon
 	}
 }, chartOptions));
 
-const hardcodedGridLines = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const hardcodedGridLines = createColumnChart<number>(createAxesConfiguration({
 	hardcoded: [0, ...inputSeries.map(input => input / MAX_INPUT)].map<[number, string]>(relative => {
 		return [relative, String((relative * 100).toFixed(0)) + '%'];
 	}),
@@ -154,13 +154,13 @@ const hardcodedGridLines = (<ColumnChartFactory<number>> createColumnChart)(crea
 	}
 }, chartOptions));
 
-const hardcodedNoTicks = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const hardcodedNoTicks = createColumnChart<number>(createAxesConfiguration({
 	hardcoded: [0, ...inputSeries.map(input => input / MAX_INPUT)].map<[number, string]>(relative => {
 		return [relative, String((relative * 100).toFixed(0)) + '%'];
 	})
 }, chartOptions));
 
-const hardcodedWithIgnoredSteps = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const hardcodedWithIgnoredSteps = createColumnChart<number>(createAxesConfiguration({
 	hardcoded: [-1, 0, ...inputSeries.map(input => input / MAX_INPUT), 2].map<[number, string]>(relative => {
 		return [relative, String((relative * 100).toFixed(0)) + '%'];
 	}),
@@ -171,7 +171,7 @@ const hardcodedWithIgnoredSteps = (<ColumnChartFactory<number>> createColumnChar
 	}
 }, chartOptions));
 
-const shortGridLines = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const shortGridLines = createColumnChart<number>(createAxesConfiguration({
 	hardcoded: inputSeries.map(input => input / MAX_INPUT).map<[number, string]>(relative => {
 		return [relative, String((relative * 100).toFixed(0)) + '%'];
 	}),
@@ -185,7 +185,7 @@ const shortGridLines = (<ColumnChartFactory<number>> createColumnChart)(createAx
 	}
 }, chartOptions));
 
-const longGridLines = (<ColumnChartFactory<number>> createColumnChart)(createAxesConfiguration({
+const longGridLines = createColumnChart<number>(createAxesConfiguration({
 	hardcoded: inputSeries.map(input => input / MAX_INPUT).map<[number, string]>(relative => {
 		return [relative, String((relative * 100).toFixed(0)) + '%'];
 	}),

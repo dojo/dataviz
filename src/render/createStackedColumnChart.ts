@@ -26,7 +26,7 @@ export interface StackedColumnPoint<G, T> extends Point<StackedColumn<G, T>> {
 
 export interface StackedColumnPointPlot<G, T> extends Plot<StackedColumnPoint<G, T>> {}
 
-export type StackedColumnChartState<T, D> = ColumnChartState<T, D> & {
+export type StackedColumnChartState<T> = ColumnChartState<T> & {
 	/**
 	 * Controls the vertical space between each column in the stack.
 	 */
@@ -35,7 +35,14 @@ export type StackedColumnChartState<T, D> = ColumnChartState<T, D> & {
 
 export type StackSelector<G, T> = (input: T) => G;
 
-export type StackedColumnChartOptions<G, T, D, S extends StackedColumnChartState<T, D>> = ColumnChartOptions<T, D, S> & {
+export type StackedColumnChartOptions<
+	G,
+	T,
+	// Extend Datum<any> so subclasses can use their own datum type without having to extend from StackedColumn<G, T>.
+	D extends Datum<any>,
+	// Extend StackedColumnChartState<T> since subclasses must still support the state properties of StackedColumnChart.
+	S extends StackedColumnChartState<T>
+> = ColumnChartOptions<T, D, S> & {
 	/**
 	 * Select the stack identifier from the input.
 	 *
@@ -63,31 +70,33 @@ export interface StackedColumnChartMixin<G, T> {
 	stackSpacing: number;
 }
 
-export type StackedColumnChart<G, T, D extends Datum<G>, S extends StackedColumnChartState<T, D>> = ColumnChart<T, D, S> & StackedColumnChartMixin<G, T>;
+export type StackedColumnChart<
+	G,
+	T,
+	// Extend Datum<any> so subclasses can use their own datum type without having to extend from StackedColumn<G, T>.
+	D extends Datum<any>,
+	// Extend StackedColumnChartState<T> since subclasses must still support the state properties of StackedColumnChart.
+	S extends StackedColumnChartState<T>
+> = ColumnChart<T, D, S> & StackedColumnChartMixin<G, T>;
 
 export interface StackedColumnChartFactory<G, T> extends ComposeFactory<
-	StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T, StackedColumn<G, T>>>,
-	StackedColumnChartOptions<G, T, StackedColumn<G, T>, StackedColumnChartState<T, StackedColumn<G, T>>>
+	StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>,
+	StackedColumnChartOptions<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>
 > {
-	<G, T, D extends StackedColumn<G, T>, S extends StackedColumnChartState<T, D>>(options?: StackedColumnChartOptions<G, T, D, S>): StackedColumnChart<G, T, D, S>;
+	<G, T>(
+		options?: StackedColumnChartOptions<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>
+	): StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>;
 }
 
-export interface GenericStackedColumnChartFactory<G, T> extends ComposeFactory<
-	StackedColumnChart<G, T, Datum<any>, StackedColumnChartState<T, Datum<any>>>,
-	StackedColumnChartOptions<G, T, Datum<any>, StackedColumnChartState<T, Datum<any>>>
-> {
-	<G, T, D extends Datum<any>, S extends StackedColumnChartState<T, D>>(options?: StackedColumnChartOptions<G, T, D, S>): StackedColumnChart<G, T, D, S>;
-}
-
-const stackSelectors = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any, any>>, StackSelector<any, any>>();
-const shadowStackSpacings = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any, any>>, number>();
+const stackSelectors = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any>>, StackSelector<any, any>>();
+const shadowStackSpacings = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any>>, number>();
 
 // Cast to a generic factory so subclasses can modify the datum type.
 // The factory should be casted to StackedColumnChartFactory when creating a stacked column chart.
-const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = createColumnChart
+const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColumnChart
 	.mixin({
 		mixin: {
-			get stackSpacing(this: StackedColumnChart<any, any, any, StackedColumnChartState<any, any>>) {
+			get stackSpacing(this: StackedColumnChart<any, any, any, StackedColumnChartState<any>>) {
 				const { stackSpacing = shadowStackSpacings.get(this) } = this.state || {};
 				return stackSpacing;
 			},
@@ -105,17 +114,14 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 
 		aspectAdvice: {
 			after: {
-				plot<G, T>(
-					this: StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T, StackedColumn<G, T>>>,
-					{
-						height,
-						horizontalValues,
-						points: columnPoints,
-						verticalValues,
-						width,
-						zero
-					}: ColumnPointPlot<T>
-				): StackedColumnPointPlot<G, T> {
+				plot<G, T>(this: StackedColumnChart<G, T, StackedColumn<G, T>, any>, {
+					height,
+					horizontalValues,
+					points: columnPoints,
+					verticalValues,
+					width,
+					zero
+				}: ColumnPointPlot<T>): StackedColumnPointPlot<G, T> {
 					const {
 						columnHeight,
 						columnSpacing,
@@ -358,12 +364,12 @@ const createStackedColumnChart: GenericStackedColumnChartFactory<any, any> = cre
 		}
 	})
 	.mixin({
-		initialize<G, T, D extends StackedColumn<G, T>>(
-			instance: StackedColumnChart<G, T, D, StackedColumnChartState<T, D>>,
+		initialize<G, T>(
+			instance: StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>,
 			{
 				stackSelector,
 				stackSpacing = 0
-			}: StackedColumnChartOptions<G, T, D, StackedColumnChartState<T, D>> = {}
+			}: StackedColumnChartOptions<G, T, StackedColumn<G, T>, StackedColumnChartState<T>> = {}
 		) {
 			if (!stackSelector) {
 				stackSelector = (input: T) => instance.stackSelector(input);
