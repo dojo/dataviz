@@ -27,7 +27,7 @@ Hello! This mixin is not yet feature complete:
 	  it would move it further left)
 	* Axes tend to draw duplicate ticks and grid lines for the "zero" position
 
-Good luck!
+See issue #9. Good luck!
 */
 
 /**
@@ -41,12 +41,12 @@ export interface SharedConfiguration {
 	 *
 	 * The lines will eminating from this axis and be aligned with the axis markings.
 	 */
-	gridLines?: boolean | GridLineConfiguration; // TODO: When supported, use `true` literal type, not boolean
+	gridLines?: boolean | GridLineConfiguration; // TODO: When supported, use `true` literal type, not boolean (issue #4)
 
 	/**
 	 * Set to `false` to disable labels. Alternatively provide configuration for how the labels are positioned.
 	 */
-	labels?: boolean | LabelConfiguration; // TODO: When supported, use `false` literal type, not boolean
+	labels?: boolean | LabelConfiguration; // TODO: When supported, use `false` literal type, not boolean (issue #4)
 
 	/**
 	 * Set to display ticks for the axis markings.
@@ -148,7 +148,7 @@ export interface InputBasedAxis<D> extends SharedConfiguration {
 	/**
 	 * Distribute markings based on how the inputs are plotted.
 	 */
-	inputs: boolean | { // TODO: When supported, use `true` literal type, not boolean
+	inputs: boolean | { // TODO: When supported, use `true` literal type, not boolean (issue #4)
 		/**
 		 * Selects the label to be shown next to the marking.
 		 */
@@ -671,12 +671,12 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 			const x = isHorizontal ? relative * width : 0;
 			const y = isHorizontal ? 0 : height - relative * height;
-			// FIXME: Don't repeat zeroth tick
+			// FIXME: Don't repeat zeroth tick (issue #7)
 			if (ticks) {
 				const p = isHorizontal ? x : y;
 				nodes.push(this.createAxisTick(ticks, side, index, p));
 			}
-			// FIXME: Don't repeat zeroth grid line
+			// FIXME: Don't repeat zeroth grid line (issue #7)
 			if (gridLineLength) {
 				nodes.push(this.createAxisGridLine(gridLineLength, side, index, x, y));
 			}
@@ -717,11 +717,11 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			const isNegative = isHorizontal ? false : y2 > zero.y;
 
 			if (ticks || gridLineLength) {
-				// FIXME: Don't repeat zeroth tick
+				// FIXME: Don't repeat zeroth tick (issue #7)
 				if (ticks) {
 					nodes.push(this.createAxisTick(ticks, side, index, p1, p2, isNegative));
 				}
-				// FIXME: Don't repeat zeroth grid line
+				// FIXME: Don't repeat zeroth grid line (issue #7)
 				if (gridLineLength) {
 					const x = isHorizontal ? x2 : 0;
 					const y = isHorizontal ? 0 : y1;
@@ -816,11 +816,11 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			const y = isHorizontal ? 0 : zero.y - step / delta * size;
 			const p = isHorizontal ? x : y;
 
-			// FIXME: Don't repeat zeroth tick
+			// FIXME: Don't repeat zeroth tick (issue #7)
 			if (ticks) {
 				nodes.push(this.createAxisTick(ticks, side, index, p));
 			}
-			// FIXME: Don't duplicate zeroth gridline
+			// FIXME: Don't repeat zeroth grid line (issue #7)
 			if (gridLineLength) {
 				nodes.push(this.createAxisGridLine(gridLineLength, side, index, x, y));
 			}

@@ -293,8 +293,8 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				// There should only be positive columns.
 				positiveDisplayHeightCorrection *= mostPositiveValue / domainMax;
 			}
-			// FIXME: Should this raise an error if domainMin > 0 or domainMax < 0? These are not valid domains for column
-			// charts.
+			// FIXME: Should this raise an error if domainMin > 0 or domainMax < 0? These are not valid domains for
+			// column charts (issue #6).
 		}
 		// Without a domain, adjust the positiveHeight only if there are negative columns.
 		else if (mostNegativeRelValue < 0) {

@@ -6,7 +6,7 @@ function max<T> (observable: InputObservable<T>, valueSelector: ValueSelector<T>
 	return observable.map((inputs) => {
 		let max = 0;
 		forOf(inputs, (input) => {
-			// FIXME: Handle Infinity?
+			// FIXME: Handle Infinity? (issue #5)
 			const value = Math.abs(valueSelector(input)) || 0;
 			if (value > max) {
 				max = value;

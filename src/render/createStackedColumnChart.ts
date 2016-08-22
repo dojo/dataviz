@@ -235,8 +235,8 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 							// There should only be positive stacks.
 							positiveStackHeightCorrection *= mostPositiveValue / domainMax;
 						}
-						// FIXME: Should this raise an error if domainMin > 0 or domainMax < 0? These are not valid domains
-						// for column charts.
+						// FIXME: Should this raise an error if domainMin > 0 or domainMax < 0? These are not valid
+						// domains for column charts (issue #6).
 					}
 					// Without a domain, adjust the positiveHeight only if there are negative stacks.
 					else if (mostNegativeRelValue < 0) {
@@ -294,7 +294,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 
 								// Column spacing eats into the height of the column farthest from the zero line.
 								// TODO: Support spacing around the zero line? Would need to track whether there was
-								// a negative stack, and the first point in that stack.
+								// a negative stack, and the first point in that stack (issue #8).
 								if (point !== firstPoint) {
 									displayHeight -= stackSpacing;
 									if (isNegative) {
