@@ -1,10 +1,8 @@
 # dojo-dataviz
 
-<!-- TODO: change and uncomment
 [![Build Status](https://travis-ci.org/dojo/dataviz.svg?branch=master)](https://travis-ci.org/dojo/dataviz)
 [![codecov](https://codecov.io/gh/dojo/dataviz/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/dataviz)
 [![npm version](https://badge.fury.io/js/dojo-dataviz.svg)](http://badge.fury.io/js/dojo-dataviz)
--->
 
 TODO: Replace with a description of this package
 
