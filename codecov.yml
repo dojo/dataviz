@@ -1,3 +1,10 @@
+coverage:
+  notify:
+    slack:
+      default:
+        url: "secret:IMv5/nUAZWG45XI8uwsXBLFOBZU3+kYqZKJizli45GQplpGEcbv76b41W9m8SsmPj+DuTrPxtBAk+hRPv7EATkXjXI38pcJgeJq7vImlHO4gqbQBogi7s29yHkZq39LxxnjP+MzBaR15lkUHu5W/YeNNBoJ50gfTiKyoiTAymLU="
+        threshold: 2
+        attachments: "sunburst, diff"
 comment:
   branches:
   - master
