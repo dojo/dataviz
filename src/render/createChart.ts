@@ -2,7 +2,7 @@ import { ComposeFactory } from 'dojo-compose/compose';
 import { assign } from 'dojo-core/lang';
 import createWidget, { Widget, WidgetOptions, WidgetState } from 'dojo-widgets/createWidget';
 import WeakMap from 'dojo-shim/WeakMap';
-import { VNode, VNodeProperties } from 'maquette/maquette';
+import { VNode, VNodeProperties } from 'maquette';
 
 import createSvgRootMixin, { SvgRoot, SvgRootOptions, SvgRootState } from './mixins/createSvgRootMixin';
 

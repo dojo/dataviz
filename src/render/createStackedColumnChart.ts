@@ -3,7 +3,7 @@ import { assign } from 'dojo-core/lang';
 import { from } from 'dojo-shim/array';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
-import { h, VNode, VNodeProperties } from 'maquette/maquette';
+import { h, VNode, VNodeProperties } from 'maquette';
 
 import { Datum } from '../data/interfaces';
 import createColumnChart, {

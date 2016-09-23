@@ -1,6 +1,6 @@
 import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import WeakMap from 'dojo-shim/WeakMap';
-import { VNodeProperties } from 'maquette/maquette';
+import { VNodeProperties } from 'maquette';
 
 import { Invalidatable } from '../interfaces';
 
