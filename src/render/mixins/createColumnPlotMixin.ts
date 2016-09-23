@@ -1,7 +1,7 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
-import { h, VNode } from 'maquette/maquette';
+import { h, VNode } from 'maquette';
 import { Observable } from 'rxjs/Rx';
 
 import { DivisorOperator, InputObservable, ValueSelector } from '../../data/interfaces';

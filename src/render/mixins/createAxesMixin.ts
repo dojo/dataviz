@@ -1,6 +1,6 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import WeakMap from 'dojo-shim/WeakMap';
-import { h, VNode } from 'maquette/maquette';
+import { h, VNode } from 'maquette';
 
 import { Datum } from '../../data/interfaces';
 import { Domain, Invalidatable, Point, Plot, Values } from '../interfaces';

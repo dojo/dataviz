@@ -1,5 +1,5 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import { h, VNode } from 'maquette/maquette';
+import { h, VNode } from 'maquette';
 
 import { Datum } from '../data/interfaces';
 
