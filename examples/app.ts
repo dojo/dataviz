@@ -1,4 +1,4 @@
-import createMemoryStore from 'dojo-widgets/util/createMemoryStore';
+import createMemoryStore from 'dojo-stores/createMemoryStore';
 import projector from 'dojo-widgets/projector';
 
 import max from 'src/data/max';
