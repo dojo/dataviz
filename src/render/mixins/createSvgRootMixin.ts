@@ -1,3 +1,4 @@
+import { ComposeFactory } from 'dojo-compose/compose';
 import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import WeakMap from 'dojo-shim/WeakMap';
 import { VNodeProperties } from 'maquette/maquette';
@@ -55,10 +56,12 @@ export interface SvgRootMixin {
  */
 export type SvgRoot<S extends SvgRootState> = Stateful<S> & Invalidatable & SvgRootMixin;
 
+export type SvgRootFactory = ComposeFactory<SvgRoot<SvgRootState>, SvgRootOptions<SvgRootState>>;
+
 const shadowHeights = new WeakMap<SvgRoot<SvgRootState>, number>();
 const shadowWidths = new WeakMap<SvgRoot<SvgRootState>, number>();
 
-const createSvgRootMixin = createStateful
+const createSvgRootMixin: SvgRootFactory = createStateful
 	.mixin({
 		mixin: <SvgRootMixin> {
 			get height(this: SvgRoot<SvgRootState>) {
