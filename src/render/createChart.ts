@@ -18,7 +18,7 @@ export interface ChartState extends WidgetState, SvgRootState {
 	yInset?: number;
 }
 
-export interface ChartOptions<S extends ChartState> extends WidgetOptions<S>, SvgRootOptions<S> {
+export type ChartOptions<S extends ChartState> = WidgetOptions<S> & SvgRootOptions<S> & {
 	/**
 	 * How many pixels from the left, within the <svg> root, the chart sthould be rendered.
 	 */
