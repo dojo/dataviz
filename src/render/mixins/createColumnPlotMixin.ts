@@ -381,7 +381,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 			columnHeight = 0,
 			columnSpacing = 0,
 			columnWidth = 0,
-			domain = [ 0, 0 ] as Domain,
+			domain = [ 0, 0 ],
 			divisorOperator,
 			valueSelector
 		}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
