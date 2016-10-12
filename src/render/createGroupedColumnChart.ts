@@ -95,7 +95,10 @@ export interface GroupedColumnChartFactory<G, T> extends ComposeFactory<
 	): GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T>>;
 }
 
-const groupSelectors = new WeakMap<GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>, GroupSelector<any, any>>();
+const groupSelectors = new WeakMap<
+	GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>,
+	GroupSelector<any, any>
+>();
 const shadowGroupSpacings = new WeakMap<GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>, number>();
 
 // Cast to a generic factory so subclasses can modify the datum type.
@@ -171,11 +174,8 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 					}
 
 					let chartWidth = 0;
-					const points = from<
-						[G, Record],
-						GroupedColumnPoint<G, T>
-					>(groups.entries(), (entry, index) => {
-						const [group, { columnPoints, columns, totalValue, value, y1 }] = entry;
+					const points = from<[ G, Record ], GroupedColumnPoint<G, T>>(groups.entries(), (entry, index) => {
+						const [ group, { columnPoints, columns, totalValue, value, y1 } ] = entry;
 
 						const x1 = chartWidth;
 

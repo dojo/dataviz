@@ -137,7 +137,7 @@ export interface HardcodedAxis extends SharedConfiguration {
 	 *
 	 * By default no label is shown, however you can provide tuples of marking numbers and label strings.
 	 */
-	hardcoded: number[] | [number, string][];
+	hardcoded: number[] | [ number, string ][];
 }
 
 export function isHardcoded(cfg: AxisConfiguration<any>): cfg is HardcodedAxis {
@@ -177,8 +177,8 @@ export interface RangeBasedAxis extends SharedConfiguration {
 		/**
 		 * Whether the axis should be fixed to the end of the chart (in the direction of the axis).
 		 *
-		 * Defaults to `false`, in which case the axis is scaled proportionally to the size of the chart in order to show
-		 * the range.
+		 * Defaults to `false`, in which case the axis is scaled proportionally to the size of the chart in order to
+		 * show the range.
 		 */
 		fixed?: boolean;
 
@@ -264,7 +264,7 @@ export interface AxesMixin<D extends Datum<any>> {
 
 	createAxes(plot: Plot<Point<D>>, domain: Domain): CreatedAxes;
 
-	createAxis(cfg: AxisConfiguration<D>, side: Side, plot: Plot<Point<D>>, domain: Domain): [VNode[], number];
+	createAxis(cfg: AxisConfiguration<D>, side: Side, plot: Plot<Point<D>>, domain: Domain): [ VNode[], number ];
 
 	createAxisLabel(
 		cfg: LabelConfiguration,
@@ -320,7 +320,7 @@ export interface AxesMixin<D extends Datum<any>> {
 		domain: Domain,
 		labels?: LabelConfiguration,
 		ticks?: TickConfiguration
-	): [VNode[], number];
+	): [ VNode[], number ];
 }
 
 export type Axes<D extends Datum<any>> = Invalidatable & AxesMixin<D>;
@@ -407,22 +407,22 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		};
 
 		if (configuration.bottom) {
-			const [nodes, extra] = this.createAxis(configuration.bottom, 'bottom', plot, domain);
+			const [ nodes, extra ] = this.createAxis(configuration.bottom, 'bottom', plot, domain);
 			result.bottom = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
 		if (configuration.left) {
-			const [nodes, extra] = this.createAxis(configuration.left, 'left', plot, domain);
+			const [ nodes, extra ] = this.createAxis(configuration.left, 'left', plot, domain);
 			result.left = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
 		if (configuration.right) {
-			const [nodes, extra] = this.createAxis(configuration.right, 'right', plot, domain);
+			const [ nodes, extra ] = this.createAxis(configuration.right, 'right', plot, domain);
 			result.right = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
 		if (configuration.top) {
-			const [nodes, extra] = this.createAxis(configuration.top, 'top', plot, domain);
+			const [ nodes, extra ] = this.createAxis(configuration.top, 'top', plot, domain);
 			result.top = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
@@ -435,7 +435,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		side: Side,
 		plot: Plot<Point<D>>,
 		domain: Domain
-	): [VNode[], number] {
+	): [ VNode[], number ] {
 		const { gridLines, ticks } = cfg;
 		const { height, width, zero } = plot;
 
@@ -487,7 +487,9 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		}
 		else if (isRangeBased(cfg)) {
 			let stepNodes: VNode[];
-			[stepNodes, extraSpace] = this.createRangeBasedAxis(cfg, gridLineLength, side, plot, domain, labels, ticks);
+			[ stepNodes, extraSpace ] = this.createRangeBasedAxis(
+				cfg, gridLineLength, side, plot, domain, labels, ticks
+			);
 			nodes.push(...stepNodes);
 		}
 
@@ -496,7 +498,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			extraSpace = Math.max(extraSpace, gridLineLength - chartSize);
 		}
 
-		return [nodes, extraSpace];
+		return [ nodes, extraSpace ];
 	},
 
 	createAxisGridLine(length: number, side: Side, index: number, x1: number, y1: number) {
@@ -679,7 +681,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			let relative: number;
 			let text = '';
 			if (Array.isArray(marking)) {
-				[relative, text] = marking;
+				[ relative, text ] = marking;
 			}
 			else {
 				relative = marking;
@@ -773,7 +775,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			width,
 			zero
 		}: Plot<Point<D>>,
-		[domainMin, domainMax]: Domain,
+		[ domainMin, domainMax ]: Domain,
 		labels?: LabelConfiguration,
 		ticks?: TickConfiguration
 	) {
@@ -787,7 +789,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 		let mostNegativeValue = domainMin;
 		let mostPositiveValue = domainMax;
-		// [0, 0] domains should be ignored.
+		// [ 0, 0 ] domains should be ignored.
 		if (domainMin === 0 && domainMax === 0) {
 			for (const { datum: { value } } of points) {
 				if (value < mostNegativeValue) {
@@ -856,7 +858,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			prev = p;
 		}
 
-		return [nodes, extraSpace];
+		return [ nodes, extraSpace ];
 	}
 }).mixin({
 	initialize<D extends Datum<any>>(

@@ -77,16 +77,19 @@ const createInputSeries: InputSeriesFactory<any> = createStateful
 	.mixin({
 		mixin: createEvented,
 
-		initialize<T>(instance: InputSeries<T, InputSeriesState<T>>, { inputSeries }: InputSeriesOptions<T, InputSeriesState<T>> = {}) {
+		initialize<T>(
+			instance: InputSeries<T, InputSeriesState<T>>,
+			{ inputSeries }: InputSeriesOptions<T, InputSeriesState<T>> = {}
+		) {
 			if (inputSeries) {
 				// Create an observable if the data option was provided.
 				let observable: Observable<T[]>;
 				if (isArrayLike(inputSeries)) {
-					observable = Observable.from([from(inputSeries)]);
+					observable = Observable.from([ from(inputSeries) ]);
 				}
 				else if (isIterable(inputSeries)) {
 					// The repetition is a workaround for <https://github.com/dojo/shim/issues/9>.
-					observable = Observable.from([from(inputSeries)]);
+					observable = Observable.from([ from(inputSeries) ]);
 				}
 				else {
 					observable = inputSeries;

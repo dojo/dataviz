@@ -9,7 +9,7 @@ export interface PlayCount {
 	province: 'British Columbia' | 'Manitoba' | 'Nova Scotia' | 'Ontario' | 'Quebec';
 }
 
-export default function getObservable (): Observable<PlayCount[]> {
+export default function getObservable(): Observable<PlayCount[]> {
 	const source = new Observable<PlayCount>((subscriber: Subscriber<PlayCount>) => {
 		const data: PlayCount[] = [
 			{ artist: 'Hawksley Workman', count: 31910, province: 'Ontario' },

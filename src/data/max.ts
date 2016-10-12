@@ -2,7 +2,7 @@ import { forOf } from 'dojo-shim/iterator';
 
 import { DivisorOperator, InputObservable, ValueSelector } from './interfaces';
 
-function max<T> (observable: InputObservable<T>, valueSelector: ValueSelector<T>) {
+function max<T>(observable: InputObservable<T>, valueSelector: ValueSelector<T>) {
 	return observable.map((inputs) => {
 		let max = 0;
 		forOf(inputs, (input) => {

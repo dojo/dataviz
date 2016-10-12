@@ -17,7 +17,7 @@ import createInputSeries, {
 export { Column };
 
 function normalizeDomain(domain: DomainOption): Domain {
-	return Array.isArray(domain) ? domain : [domain < 0 ? domain : 0, domain > 0 ? domain : 0];
+	return Array.isArray(domain) ? domain : [ domain < 0 ? domain : 0, domain > 0 ? domain : 0 ];
 }
 
 export interface ColumnPoint<T> extends Point<Column<T>> {
@@ -49,9 +49,9 @@ export interface ColumnPlotState<T> extends InputSeriesState<T> {
 	 * negative and positive values commensurate with the range. Any input values that exceed the minimum or maximum
 	 * will still be plotted proportionally (but exceeding the height limits).
 	 *
-	 * If a single number is provided, if that number is greater than zero it implies a domain of [0, number]. If it's
-	 * less than zero it implies a domain of [number, 0]. If zero it implies there are no minimum or maximum values,
-	 * same for a domain of [0, 0].
+	 * If a single number is provided, if that number is greater than zero it implies a domain of [ 0, number ]. If it's
+	 * less than zero it implies a domain of [ number, 0 ]. If zero it implies there are no minimum or maximum values,
+	 * same for a domain of [ 0, 0 ].
 	 */
 	domain?: DomainOption;
 }
@@ -86,9 +86,9 @@ export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends Inpu
 	 * negative and positive values commensurate with the range. Any input values that exceed the minimum or maximum
 	 * will still be plotted proportionally (but exceeding the height limits).
 	 *
-	 * If a single number is provided, if that number is greater than zero it implies a domain of [0, number]. If it's
-	 * less than zero it implies a domain of [number, 0]. If zero it implies there are no minimum or maximum values,
-	 * same for a domain of [0, 0].
+	 * If a single number is provided, if that number is greater than zero it implies a domain of [ 0, number ]. If it's
+	 * less than zero it implies a domain of [ number, 0 ]. If zero it implies there are no minimum or maximum values,
+	 * same for a domain of [ 0, 0 ].
 	 */
 	domain?: DomainOption;
 
@@ -242,7 +242,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 
 	plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
 		const series = columnSeries.get(this);
-		const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [domainMin, domainMax] } = this;
+		const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [ domainMin, domainMax ] } = this;
 
 		let mostNegativeRelValue = 0;
 		let mostNegativeValue = 0;
@@ -381,7 +381,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 			columnHeight = 0,
 			columnSpacing = 0,
 			columnWidth = 0,
-			domain = [0, 0] as Domain,
+			domain = [ 0, 0 ] as Domain,
 			divisorOperator,
 			valueSelector
 		}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
