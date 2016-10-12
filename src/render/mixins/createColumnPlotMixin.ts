@@ -184,7 +184,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		else {
 			shadowColumnHeights.set(this, columnHeight);
 		}
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get columnSpacing(this: ColumnPlot<any, ColumnPlotState<any>>) {
@@ -199,7 +201,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		else {
 			shadowColumnSpacings.set(this, columnSpacing);
 		}
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get columnWidth(this: ColumnPlot<any, ColumnPlotState<any>>) {
@@ -214,7 +218,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		else {
 			shadowColumnWidths.set(this, columnWidth);
 		}
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get domain(this: ColumnPlot<any, ColumnPlotState<any>>) {
@@ -229,7 +235,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		else {
 			shadowDomains.set(this, domain);
 		}
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
@@ -419,7 +427,10 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 			const subscription = columnar(inputSeries, valueSelector, divisorOperator)
 				.subscribe((series) => {
 					columnSeries.set(instance, series);
-					instance.invalidate();
+					// invalidate() is typed as being optional, but that's just a workaround until
+					// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+					// for now.
+					instance.invalidate!();
 				});
 
 			handle = instance.own({

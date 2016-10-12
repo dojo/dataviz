@@ -351,7 +351,9 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 	set bottomAxis(axis: AxisConfiguration<any>) {
 		shadowConfiguration.get(this).bottom = axis;
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get leftAxis(this: Axes<any>) {
@@ -363,7 +365,9 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 	set leftAxis(axis: AxisConfiguration<any>) {
 		shadowConfiguration.get(this).left = axis;
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get rightAxis(this: Axes<any>) {
@@ -375,7 +379,9 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 	set rightAxis(axis: AxisConfiguration<any>) {
 		shadowConfiguration.get(this).right = axis;
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get topAxis(this: Axes<any>) {
@@ -387,7 +393,9 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 	set topAxis(axis: AxisConfiguration<any>) {
 		shadowConfiguration.get(this).top = axis;
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	createAxes<D extends Datum<any>>(this: Axes<D>, plot: Plot<Point<D>>, domain: Domain): CreatedAxes {
