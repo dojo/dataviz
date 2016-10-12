@@ -343,7 +343,10 @@ const shadowConfiguration = new WeakMap<Axes<any>, AxesConfiguration<any>>();
 
 const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	get bottomAxis(this: Axes<any>) {
-		return shadowConfiguration.get(this).bottom;
+		const { bottom } = shadowConfiguration.get(this);
+		if (bottom) {
+			return bottom;
+		}
 	},
 
 	set bottomAxis(axis: AxisConfiguration<any>) {
@@ -352,7 +355,10 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	},
 
 	get leftAxis(this: Axes<any>) {
-		return shadowConfiguration.get(this).left;
+		const { left } = shadowConfiguration.get(this);
+		if (left) {
+			return left;
+		}
 	},
 
 	set leftAxis(axis: AxisConfiguration<any>) {
@@ -361,7 +367,10 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	},
 
 	get rightAxis(this: Axes<any>) {
-		return shadowConfiguration.get(this).right;
+		const { right } = shadowConfiguration.get(this);
+		if (right) {
+			return right;
+		}
 	},
 
 	set rightAxis(axis: AxisConfiguration<any>) {
@@ -370,7 +379,10 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	},
 
 	get topAxis(this: Axes<any>) {
-		return shadowConfiguration.get(this).top;
+		const { top } = shadowConfiguration.get(this);
+		if (top) {
+			return top;
+		}
 	},
 
 	set topAxis(axis: AxisConfiguration<any>) {
