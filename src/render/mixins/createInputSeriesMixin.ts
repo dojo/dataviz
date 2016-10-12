@@ -100,7 +100,7 @@ const createInputSeries: InputSeriesFactory<any> = createStateful
 			}
 
 			let managingObservable = false;
-			let managedSubscriber: Subscriber<T[]> = null;
+			let managedSubscriber: Subscriber<T[]>;
 			let latestValue: T[] = null;
 
 			// Observe the instance state. It overrides any data option.

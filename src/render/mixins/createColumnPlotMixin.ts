@@ -418,7 +418,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		// Initialize with an empty series since InputSeries only provides a series once it's available.
 		columnSeries.set(instance, []);
 
-		let handle: Handle = null;
+		let handle: Handle;
 		const subscribe = (inputSeries: Observable<T[]>) => {
 			if (handle) {
 				handle.destroy();
