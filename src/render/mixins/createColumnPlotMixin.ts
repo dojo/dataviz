@@ -391,9 +391,10 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		shadowColumnWidths.set(instance, columnWidth);
 		shadowDomains.set(instance, normalizeDomain(domain));
 
+		let operator: DivisorOperator<T>;
 		if (!divisorOperator) {
 			// Allow a divisorOperator implementation to be mixed in.
-			divisorOperator = (observable: InputObservable<T>, valueSelector: ValueSelector<T>) => {
+			operator = (observable: InputObservable<T>, valueSelector: ValueSelector<T>) => {
 				if (instance.divisorOperator) {
 					return instance.divisorOperator(observable, valueSelector);
 				}
@@ -402,10 +403,14 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				return Observable.of(1);
 			};
 		}
+		else {
+			operator = divisorOperator;
+		}
 
+		let selector: ValueSelector<T>;
 		if (!valueSelector) {
 			// Allow a valueSelector implementation to be mixed in.
-			valueSelector = (input: T) => {
+			selector = (input: T) => {
 				if (instance.valueSelector) {
 					return instance.valueSelector(input);
 				}
@@ -413,6 +418,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				// Default to 0, don't throw at runtime.
 				return 0;
 			};
+		}
+		else {
+			selector = valueSelector;
 		}
 
 		// Initialize with an empty series since InputSeries only provides a series once it's available.
@@ -424,7 +432,7 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				handle.destroy();
 			}
 
-			const subscription = columnar(inputSeries, valueSelector, divisorOperator)
+			const subscription = columnar(inputSeries, selector, operator)
 				.subscribe((series) => {
 					columnSeries.set(instance, series);
 					// invalidate() is typed as being optional, but that's just a workaround until
