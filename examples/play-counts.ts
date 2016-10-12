@@ -1,7 +1,7 @@
 import { Observable, Subscriber } from 'rxjs/Rx';
 
-import accumulate from 'src/data/accumulate';
-import sort from 'src/data/sort';
+import accumulate from '../src/data/accumulate';
+import sort from '../src/data/sort';
 
 export interface PlayCount {
 	artist: string;
