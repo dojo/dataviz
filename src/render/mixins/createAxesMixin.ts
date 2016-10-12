@@ -296,30 +296,30 @@ export interface AxesMixin<D extends Datum<any>> {
 
 	createHardcodedAxis(
 		cfg: HardcodedAxis,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		plot: Plot<Point<D>>
+		plot: Plot<Point<D>>,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	): VNode[];
 
 	createInputBasedAxis(
 		cfg: InputBasedAxis<D>,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		plot: Plot<Point<D>>
+		plot: Plot<Point<D>>,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	): VNode[];
 
 	createRangeBasedAxis(
 		cfg: RangeBasedAxis,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
 		plot: Plot<Point<D>>,
-		domain: Domain
+		domain: Domain,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	): [VNode[], number];
 }
 
@@ -472,14 +472,14 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		}
 
 		if (isHardcoded(cfg)) {
-			nodes.push(...this.createHardcodedAxis(cfg, labels, ticks, gridLineLength, side, plot));
+			nodes.push(...this.createHardcodedAxis(cfg, gridLineLength, side, plot, labels, ticks));
 		}
 		else if (isInputBased(cfg)) {
-			nodes.push(...this.createInputBasedAxis(cfg, labels, ticks, gridLineLength, side, plot));
+			nodes.push(...this.createInputBasedAxis(cfg, gridLineLength, side, plot, labels, ticks));
 		}
 		else if (isRangeBased(cfg)) {
 			let stepNodes: VNode[];
-			[stepNodes, extraSpace] = this.createRangeBasedAxis(cfg, labels, ticks, gridLineLength, side, plot, domain);
+			[stepNodes, extraSpace] = this.createRangeBasedAxis(cfg, gridLineLength, side, plot, domain, labels, ticks);
 			nodes.push(...stepNodes);
 		}
 
@@ -656,11 +656,11 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	createHardcodedAxis(
 		this: Axes<any>,
 		{ hardcoded }: HardcodedAxis,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		{ height, width }: Plot<any>
+		{ height, width }: Plot<any>,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	) {
 		const isHorizontal = side === 'bottom' || side === 'top';
 		const nodes: VNode[] = [];
@@ -709,11 +709,11 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	createInputBasedAxis<D extends Datum<any>>(
 		this: Axes<D>,
 		{ inputs }: InputBasedAxis<D>,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		{ points, zero }: Plot<Point<D>>
+		{ points, zero }: Plot<Point<D>>,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	) {
 		const labelSelector = typeof inputs === 'boolean' ? null : inputs.labelSelector;
 
@@ -755,8 +755,6 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	createRangeBasedAxis<D extends Datum<any>>(
 		this: Axes<D>,
 		{ range }: RangeBasedAxis,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
 		{
@@ -767,7 +765,9 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			width,
 			zero
 		}: Plot<Point<D>>,
-		[domainMin, domainMax]: Domain
+		[domainMin, domainMax]: Domain,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	) {
 		const {
 			fixed = false,
