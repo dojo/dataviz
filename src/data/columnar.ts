@@ -9,7 +9,7 @@ import {
 import relativeValues from './relative-values';
 
 export interface Column<T> extends Datum<T> {
-	relativeValue: number;
+	readonly relativeValue: number;
 }
 
 export default function columnar<T>(

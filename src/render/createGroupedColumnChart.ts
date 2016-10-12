@@ -17,18 +17,18 @@ import createColumnChart, {
 import { Plot, Point } from './interfaces';
 
 export interface GroupedColumn<G, T> extends Datum<G> {
-	columns: Column<T>[];
-	totalValue: number;
+	readonly columns: Column<T>[];
+	readonly totalValue: number;
 
 	/**
 	 * Assuming all columns in the group are positive, the largest value in the group. If all columns are negative
 	 * this is the smallest value. If the group contains both positive and negative columns the value is undetermined.
 	 */
-	value: number;
+	readonly value: number;
 }
 
 export interface GroupedColumnPoint<G, T> extends Point<GroupedColumn<G, T>> {
-	columnPoints: ColumnPoint<T>[];
+	readonly columnPoints: ColumnPoint<T>[];
 }
 
 export interface GroupedColumnPointPlot<G, T> extends Plot<GroupedColumnPoint<G, T>> {}
@@ -69,7 +69,7 @@ export interface GroupedColumnChartMixin<G, T> {
 	 *
 	 * May be omitted if a `groupSelector()` option has been provided.
 	 */
-	groupSelector?: GroupSelector<G, T>;
+	readonly groupSelector?: GroupSelector<G, T>;
 
 	/**
 	 * Controls the space between each group.
@@ -127,7 +127,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 				plot<G, T>(this: GroupedColumnChart<G, T, GroupedColumn<G, T>, any>, {
 					height,
 					horizontalValues,
-					points: columnPoints,
+					points: originalPoints,
 					verticalValues,
 					width,
 					zero
@@ -136,7 +136,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 
 					const groupSelector = groupSelectors.get(this);
 					interface Record {
-						columnPoints: ColumnPoint<T>[];
+						originalPoints: ColumnPoint<T>[];
 						columns: Column<T>[];
 						totalValue: number;
 						value: number;
@@ -144,10 +144,10 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 					}
 					const groups = new Map<G, Record>();
 					const createRecord = (): Record => {
-						return { columnPoints: [], columns: [], totalValue: 0, value: 0, y1: columnHeight };
+						return { originalPoints: [], columns: [], totalValue: 0, value: 0, y1: columnHeight };
 					};
 
-					for (const point of columnPoints) {
+					for (const point of originalPoints) {
 						const { input, relativeValue, value } = point.datum;
 
 						// Note that the ordering of the groups is determined by the original sort order, as is the
@@ -158,9 +158,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 							groups.set(group, record);
 						}
 
-						// The point will be modified below. Be friendly and copy it first.
-						const shallowCopy = assign({}, point);
-						record.columnPoints.push(shallowCopy);
+						record.originalPoints.push(point);
 						record.columns.push(point.datum);
 						record.totalValue += value;
 						if (relativeValue < 0) {
@@ -175,18 +173,20 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 
 					let chartWidth = 0;
 					const points = from<[ G, Record ], GroupedColumnPoint<G, T>>(groups.entries(), (entry, index) => {
-						const [ group, { columnPoints, columns, totalValue, value, y1 } ] = entry;
+						const [ group, { originalPoints, columns, totalValue, value, y1 } ] = entry;
 
 						const x1 = chartWidth;
 
 						let prev = { x2: x1 + groupSpacing / 2 - columnSpacing / 2 };
-						for (const point of columnPoints) {
-							const dx = point.x2 - point.x1;
-							point.x1 = prev.x2;
-							point.x2 = point.x1 + dx;
+						const columnPoints = originalPoints.map((original) => {
+							const dx = original.x2 - original.x1;
+							const x1 = prev.x2;
+							const x2 = x1 + dx;
 
+							const point = assign({}, original, { x1, x2 }) as ColumnPoint<T>;
 							prev = point;
-						}
+							return point;
+						});
 
 						const x2 = prev.x2 + groupSpacing / 2;
 						chartWidth = x2;

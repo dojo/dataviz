@@ -17,11 +17,11 @@ import createColumnChart, {
 import { Plot, Point } from './interfaces';
 
 export interface StackedColumn<G, T> extends Datum<G> {
-	columns: Column<T>[];
+	readonly columns: Column<T>[];
 }
 
 export interface StackedColumnPoint<G, T> extends Point<StackedColumn<G, T>> {
-	columnPoints: ColumnPoint<T>[];
+	readonly columnPoints: ColumnPoint<T>[];
 }
 
 export interface StackedColumnPointPlot<G, T> extends Plot<StackedColumnPoint<G, T>> {}
@@ -62,7 +62,7 @@ export interface StackedColumnChartMixin<G, T> {
 	 *
 	 * May be omitted if a `stackSelector()` option has been provided.
 	 */
-	stackSelector?: StackSelector<G, T>;
+	readonly stackSelector?: StackSelector<G, T>;
 
 	/**
 	 * Controls the vertical space between each column in the stack.
@@ -120,7 +120,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 				plot<G, T>(this: StackedColumnChart<G, T, StackedColumn<G, T>, any>, {
 					height,
 					horizontalValues,
-					points: columnPoints,
+					points: originalPoints,
 					verticalValues,
 					width,
 					zero
@@ -140,7 +140,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 
 					const stackSelector = stackSelectors.get(this);
 					interface Record {
-						columnPoints: ColumnPoint<T>[];
+						originalPoints: ColumnPoint<T>[];
 						columns: Column<T>[];
 						isNegative: boolean;
 						relativeValue: number;
@@ -150,12 +150,12 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 					const createSigned = (): [ Record, Record ] => {
 						return [
 							// Record negative and positive columns separately.
-							{ columnPoints: [], columns: [], isNegative: true, relativeValue: 0, value: 0 },
-							{ columnPoints: [], columns: [], isNegative: false, relativeValue: 0, value: 0 }
+							{ originalPoints: [], columns: [], isNegative: true, relativeValue: 0, value: 0 },
+							{ originalPoints: [], columns: [], isNegative: false, relativeValue: 0, value: 0 }
 						];
 					};
 
-					for (const point of columnPoints) {
+					for (const point of originalPoints) {
 						const { datum } = point;
 						const { input, relativeValue, value } = datum;
 
@@ -168,9 +168,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 							stacks.set(stack, signed);
 						}
 
-						// The point will be modified below. Be friendly and copy it first.
-						const shallowCopy = assign({}, point);
-						record.columnPoints.push(shallowCopy);
+						record.originalPoints.push(point);
 						record.columns.push(datum);
 						record.relativeValue += relativeValue;
 						record.value += value;
@@ -267,7 +265,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 
 						const value = signed[0].value + signed[1].value;
 						const columns = signed[0].columns.concat(signed[1].columns);
-						const columnPoints = signed[0].columnPoints.concat(signed[1].columnPoints);
+						const columnPoints: ColumnPoint<T>[] = [];
 
 						// Spend half the spacing ahead of each stack, and half after.
 						const x1 = chartWidth;
@@ -278,8 +276,8 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 						let maxY2 = 0;
 						let minY1 = Infinity;
 
-						for (const { columnPoints, isNegative, relativeValue } of signed) {
-							if (columnPoints.length === 0) {
+						for (const { originalPoints, isNegative, relativeValue } of signed) {
+							if (originalPoints.length === 0) {
 								continue;
 							}
 
@@ -288,11 +286,11 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 							const stackHeight = availableHeight * relativeValue * correction;
 
 							let prev = { displayHeight: 0, y1: positiveHeight, y2: negativeOffset };
-							const [ firstPoint ] = columnPoints;
-							for (const point of columnPoints) {
+							const [ firstPoint ] = originalPoints;
+							for (const original of originalPoints) {
 								// Ensure each column within the stack has the correct size relative to the other
 								// columns.
-								let displayHeight = stackHeight * point.datum.relativeValue / relativeValue;
+								let displayHeight = stackHeight * original.datum.relativeValue / relativeValue;
 								// Place above/below the previous column.
 								let y2 = isNegative ? prev.y2 + displayHeight : prev.y1;
 								let y1 = isNegative ? prev.y2 : y2 - displayHeight;
@@ -300,7 +298,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 								// Column spacing eats into the height of the column farthest from the zero line.
 								// TODO: Support spacing around the zero line? Would need to track whether there was
 								// a negative stack, and the first point in that stack (issue #8).
-								if (point !== firstPoint) {
+								if (original !== firstPoint) {
 									displayHeight -= stackSpacing;
 									if (isNegative) {
 										y1 += stackSpacing;
@@ -317,13 +315,14 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 									maxY2 = y2;
 								}
 
-								assign(point, {
+								const point = assign({}, original, {
 									displayHeight,
 									x1,
 									x2,
 									y1,
 									y2
-								});
+								}) as ColumnPoint<T>;
+								columnPoints.push(point);
 
 								prev = point;
 							}

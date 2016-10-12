@@ -36,12 +36,12 @@ export enum Values { None = 0b00, Positive = 0b01, Negative = 0b10, Both = 0b11 
  * Describes multiple plotted points and properties of the resulting chart.
  */
 export interface Plot<P extends Point<any>> {
-	height: number;
-	horizontalValues: Values;
-	points: P[];
-	verticalValues: Values;
-	width: number;
-	zero: { x: number, y: number };
+	readonly height: number;
+	readonly horizontalValues: Values;
+	readonly points: P[];
+	readonly verticalValues: Values;
+	readonly width: number;
+	readonly zero: { x: number, y: number };
 }
 
 /**
@@ -56,25 +56,25 @@ export interface Point<D extends Datum<any>> {
 	/**
 	 * Datum represented by the point.
 	 */
-	datum: D;
+	readonly datum: D;
 
 	/**
 	 * Horizontal start position.
 	 */
-	x1: number;
+	readonly x1: number;
 
 	/**
 	 * Horizontal end position.
 	 */
-	x2: number;
+	readonly x2: number;
 
 	/**
 	 * Vertical start position.
 	 */
-	y1: number;
+	readonly y1: number;
 
 	/**
 	 * Vertical end position.
 	 */
-	y2: number;
+	readonly y2: number;
 }

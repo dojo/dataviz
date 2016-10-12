@@ -38,7 +38,7 @@ export interface SvgRootMixin {
 	/**
 	 * The tagName is *always* 'svg'.
 	 */
-	tagName: string;
+	readonly tagName: string;
 
 	/**
 	 * Controls the width of the <svg> element.
@@ -86,6 +86,7 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 				return 'svg';
 			},
 
+			// Other mixins may not realize they shouldn't be setting tagName.
 			set tagName(noop) {},
 
 			get width(this: SvgRoot<SvgRootState>) {
