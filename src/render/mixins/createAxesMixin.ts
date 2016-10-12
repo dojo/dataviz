@@ -431,7 +431,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		const { gridLines, ticks } = cfg;
 		const { height, width, zero } = plot;
 
-		let labels: LabelConfiguration;
+		let labels: LabelConfiguration | undefined;
 		if (cfg.labels !== false) {
 			labels = cfg.labels || {};
 		}
