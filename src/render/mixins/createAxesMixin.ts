@@ -442,7 +442,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 		let gridLineLength = 0;
 		if (gridLines) {
-			if (typeof gridLines === 'object' && 'length' in gridLines) {
+			if (typeof gridLines === 'object' && gridLines.length !== undefined) {
 				gridLineLength = gridLines.length;
 			}
 			else if (isHorizontal) {
