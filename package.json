@@ -2,13 +2,18 @@
   "name": "dojo-dataviz",
   "version": "2.0.0-pre",
   "description": "Data visualization framework for Dojo 2",
+  "private": true,
   "homepage": "http://dojotoolkit.org",
   "bugs": {
     "url": "https://github.com/dojo/dataviz/issues"
   },
   "license": "BSD-3-Clause",
-  "main": "main.ts",
-  "private": true,
+  "main": "main.js",
+  "files": [
+    "dist",
+    "src",
+    "typings.json"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/dojo/dataviz.git"
@@ -31,13 +36,15 @@
   "devDependencies": {
     "codecov.io": "0.1.6",
     "dojo-loader": ">=2.0.0-beta.7",
+    "dts-generator": "~1.7.0",
     "glob": "^7.0.3",
     "grunt": "~1.0.1",
-    "grunt-dojo2": ">=2.0.0-beta.17",
+    "grunt-dojo2": ">=2.0.0-beta.16",
+    "grunt-text-replace": "^0.4.0",
     "intern": "^3.2.3",
     "istanbul": "^0.4.3",
     "remap-istanbul": "^0.6.4",
-    "tslint": "next",
-    "typescript": "2.0.3"
+    "tslint": "^3.11.0",
+    "typescript": "~2.0.3"
   }
 }

@@ -3,19 +3,23 @@
 	"compilerOptions": {
 		"declaration": false,
 		"module": "umd",
+		"moduleResolution": "node",
 		"noImplicitAny": true,
 		"noImplicitThis": true,
 		"outDir": "_build/",
-		"baseUrl": "node_modules",
 		"removeComments": false,
 		"sourceMap": true,
-		"target": "es5",
-		"moduleResolution": "classic"
+		"target": "es5"
 	},
 	"include": [
 		"./examples/**/*.ts",
 		"./src/**/*.ts",
 		"./tests/**/*.ts",
 		"./typings/index.d.ts"
+	],
+	"exclude": [
+		"_build",
+		"dist",
+		"node_modules"
 	]
 }
