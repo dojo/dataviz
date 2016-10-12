@@ -261,7 +261,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 						[ G, [ Record, Record ] ],
 						StackedColumnPoint<G, T>
 					>(stacks.entries(), (entry, index) => {
-						const [ stack, signed ] = <[ G, [ Record, Record ] ]> entry;
+						const [ stack, signed ] = entry;
 
 						const value = signed[0].value + signed[1].value;
 						const columns = signed[0].columns.concat(signed[1].columns);

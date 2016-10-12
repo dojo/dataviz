@@ -529,7 +529,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 	createAxisLabel(
 		{
-			anchor = <Anchor> 'middle',
+			anchor = 'middle',
 			dominantBaseline,
 			offset = 0,
 			rotation = 0,
@@ -601,7 +601,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 	createAxisTick(
 		{
-			anchor = <Anchor> 'middle',
+			anchor = 'middle',
 			length,
 			offset = 0
 		}: TickConfiguration,
