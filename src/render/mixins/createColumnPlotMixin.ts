@@ -21,9 +21,9 @@ function normalizeDomain(domain: DomainOption): Domain {
 }
 
 export interface ColumnPoint<T> extends Point<Column<T>> {
-	displayHeight: number;
-	displayWidth: number;
-	offsetLeft: number;
+	readonly displayHeight: number;
+	readonly displayWidth: number;
+	readonly offsetLeft: number;
 }
 
 export interface ColumnPointPlot<T> extends Plot<ColumnPoint<T>> {}
@@ -124,7 +124,7 @@ export interface ColumnPlotMixin<T> {
 	 * Can be overriden by specifying a `divisorOperator()` option. If neither is available a static divisor of `1`
 	 * will be used.
 	 */
-	divisorOperator?: DivisorOperator<T>;
+	readonly divisorOperator?: DivisorOperator<T>;
 
 	/**
 	 * Controls the range for which values are plotted with the full columnHeight. The height is distributed across the
@@ -139,7 +139,7 @@ export interface ColumnPlotMixin<T> {
 	 * Can be overriden by specifying a `valueSelector()` option. If neither is available all values will be hardcoded
 	 * to `0`.
 	 */
-	valueSelector?: ValueSelector<T>;
+	readonly valueSelector?: ValueSelector<T>;
 
 	/**
 	 * Plot "points" for each column.

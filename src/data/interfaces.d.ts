@@ -2,8 +2,8 @@ import { Iterable } from 'dojo-shim/iterator';
 import { Observable } from 'rxjs/Rx';
 
 export interface Datum<T> {
-	input: T;
-	value: number;
+	readonly input: T;
+	readonly value: number;
 }
 
 export type Divisor = Observable<number>;

@@ -32,7 +32,7 @@ export interface InputSeriesMixin<T> {
 	/**
 	 * Provides the current observable, if any.
 	 */
-	inputSeries?: Observable<T[]>;
+	readonly inputSeries?: Observable<T[]>;
 }
 
 /**
@@ -42,7 +42,7 @@ export interface InputSeriesChangeEvent<T> extends TargettedEventObject {
 	/**
 	 * The new observable.
 	 */
-	observable: Observable<T[]>;
+	readonly observable: Observable<T[]>;
 }
 
 export interface InputSeriesOverrides<T> {
