@@ -233,7 +233,8 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 			}: GroupedColumnChartOptions<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T>> = {}
 		) {
 			if (!groupSelector) {
-				groupSelector = (input: T) => instance.groupSelector(input);
+				// Ignore instance.groupSelector being undefined, let the runtime throw an exception instead.
+				groupSelector = (input: T) => instance.groupSelector!(input);
 			}
 
 			groupSelectors.set(instance, groupSelector);

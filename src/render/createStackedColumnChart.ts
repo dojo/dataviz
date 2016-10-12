@@ -374,7 +374,8 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 			}: StackedColumnChartOptions<G, T, StackedColumn<G, T>, StackedColumnChartState<T>> = {}
 		) {
 			if (!stackSelector) {
-				stackSelector = (input: T) => instance.stackSelector(input);
+				// Ignore instance.stackSelector being undefined, let the runtime throw an exception instead.
+				stackSelector = (input: T) => instance.stackSelector!(input);
 			}
 
 			stackSelectors.set(instance, stackSelector);
