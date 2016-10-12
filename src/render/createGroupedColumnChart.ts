@@ -140,6 +140,9 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 						y1: number;
 					}
 					const groups = new Map<G, Record>();
+					const createRecord = (): Record => {
+						return { columnPoints: [], columns: [], totalValue: 0, value: 0, y1: columnHeight };
+					};
 
 					for (const point of columnPoints) {
 						const { input, relativeValue, value } = point.datum;
@@ -147,14 +150,13 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 						// Note that the ordering of the groups is determined by the original sort order, as is the
 						// ordering of nodes within the group.
 						const group = groupSelector(input);
+						const record = groups.get(group) || createRecord();
 						if (!groups.has(group)) {
-							groups.set(group, { columnPoints: [], columns: [], totalValue: 0, value: 0, y1: columnHeight });
+							groups.set(group, record);
 						}
 
 						// The point will be modified below. Be friendly and copy it first.
 						const shallowCopy = assign({}, point);
-
-						const record = groups.get(group);
 						record.columnPoints.push(shallowCopy);
 						record.columns.push(point.datum);
 						record.totalValue += value;
