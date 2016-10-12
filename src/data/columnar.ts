@@ -12,7 +12,7 @@ export interface Column<T> extends Datum<T> {
 	relativeValue: number;
 }
 
-export default function columnar<T> (
+export default function columnar<T>(
 	observable: InputObservable<T>,
 	valueSelector: ValueSelector<T>,
 	divisorOperator: DivisorOperator<T>
@@ -21,7 +21,7 @@ export default function columnar<T> (
 	const divisors = divisorOperator(shared, valueSelector);
 	return relativeValues(shared, valueSelector, divisors)
 		.map((inputsAndRelativeValues) => {
-			return inputsAndRelativeValues.map(([input, relativeValue]) => {
+			return inputsAndRelativeValues.map(([ input, relativeValue ]) => {
 				const value = valueSelector(input);
 				// Ensure the relative value retains the same sign as the input's value, irrespective of the divisors.
 				if (value < 0 && relativeValue > 0 || value > 0 && relativeValue < 0) {

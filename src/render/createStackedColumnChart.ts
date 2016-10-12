@@ -88,7 +88,10 @@ export interface StackedColumnChartFactory<G, T> extends ComposeFactory<
 	): StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>;
 }
 
-const stackSelectors = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any>>, StackSelector<any, any>>();
+const stackSelectors = new WeakMap<
+	StackedColumnChart<any, any, any, StackedColumnChartState<any>>,
+	StackSelector<any, any>
+>();
 const shadowStackSpacings = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any>>, number>();
 
 // Cast to a generic factory so subclasses can modify the datum type.
@@ -126,7 +129,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 						columnHeight,
 						columnSpacing,
 						columnWidth,
-						domain: [domainMin, domainMax],
+						domain: [ domainMin, domainMax ],
 						stackSpacing
 					} = this;
 
@@ -143,8 +146,8 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 						relativeValue: number;
 						value: number;
 					}
-					const stacks = new Map<G, [Record, Record]>();
-					const createSigned = (): [Record, Record] => {
+					const stacks = new Map<G, [ Record, Record ]>();
+					const createSigned = (): [ Record, Record ] => {
 						return [
 							// Record negative and positive columns separately.
 							{ columnPoints: [], columns: [], isNegative: true, relativeValue: 0, value: 0 },
@@ -257,10 +260,10 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 
 					let chartWidth = 0;
 					const points = from<
-						[G, [Record, Record]],
+						[ G, [ Record, Record ] ],
 						StackedColumnPoint<G, T>
 					>(stacks.entries(), (entry, index) => {
-						const [stack, signed] = <[G, [Record, Record]]> entry;
+						const [ stack, signed ] = <[ G, [ Record, Record ] ]> entry;
 
 						const value = signed[0].value + signed[1].value;
 						const columns = signed[0].columns.concat(signed[1].columns);
@@ -285,7 +288,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 							const stackHeight = availableHeight * relativeValue * correction;
 
 							let prev = { displayHeight: 0, y1: positiveHeight, y2: negativeOffset };
-							const [firstPoint] = columnPoints;
+							const [ firstPoint ] = columnPoints;
 							for (const point of columnPoints) {
 								// Ensure each column within the stack has the correct size relative to the other
 								// columns.

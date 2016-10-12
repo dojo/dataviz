@@ -2,7 +2,7 @@ import { forOf } from 'dojo-shim/iterator';
 
 import { DivisorOperator, InputObservable, ValueSelector } from './interfaces';
 
-function sum<T> (observable: InputObservable<T>, valueSelector: ValueSelector<T>) {
+function sum<T>(observable: InputObservable<T>, valueSelector: ValueSelector<T>) {
 	return observable.map((inputs) => {
 		let sum = 0;
 		forOf(inputs, (input) => {

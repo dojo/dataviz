@@ -66,7 +66,7 @@ const createChart: ChartFactory = createWidget
 		aspectAdvice: {
 			before: {
 				getNodeAttributes(this: Chart<ChartState>, overrides?: VNodeProperties): VNodeProperties[] {
-					return [assign(this.getRootAttributes(), overrides)];
+					return [ assign(this.getRootAttributes(), overrides) ];
 				}
 			}
 		},

@@ -4,17 +4,17 @@ import { Observable } from 'rxjs/Rx';
 
 import { InputObservable } from './interfaces';
 
-function defaultCompare (a: any, b: any): number {
+function defaultCompare(a: any, b: any): number {
 	const strA = String(a);
 	const strB = String(b);
 	return strA < strB && -1 || strA > strB && 1 || 0;
 }
 
-function identity<T> (value: T): T {
+function identity<T>(value: T): T {
 	return value;
 }
 
-export default function sort<T> (
+export default function sort<T>(
 	observable: InputObservable<T>,
 	comparableSelector: (input: T) => any = identity,
 	compareFunction: (a: any, b: any) => number = defaultCompare

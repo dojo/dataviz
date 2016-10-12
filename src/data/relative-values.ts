@@ -3,18 +3,18 @@ import { Observable } from 'rxjs/Rx';
 
 import { Divisor, InputObservable, ValueSelector } from './interfaces';
 
-export default function relativeValues<T> (
+export default function relativeValues<T>(
 	observable: InputObservable<T>,
 	valueSelector: ValueSelector<T>,
 	divisors: Divisor
-): Observable<[T, number][]> {
+): Observable<[ T, number ][]> {
 	return observable
 		.withLatestFrom(divisors)
-		.map(([inputs, divisor]) => {
-			const result: [T, number][] = [];
+		.map(([ inputs, divisor ]) => {
+			const result: [ T, number ][] = [];
 			forOf(inputs, (input) => {
 				// FIXME: Handle Infinity and -Infinity? (issue #5)
-				result.push([input, (valueSelector(input) || 0) / divisor]);
+				result.push([ input, (valueSelector(input) || 0) / divisor ]);
 			});
 			return result;
 		});
