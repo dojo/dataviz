@@ -10,20 +10,22 @@ const basic = createColumnChart<number>({
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	columnHeight: 150,
-	columnSpacing: 3,
-	columnWidth: 10,
 	divisorOperator: max,
-	height: 200,
 	inputSeries: [-5, 5, 10],
 	leftAxis: {
 		labels: { anchor: 'end' },
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
 	},
-	valueSelector(input) { return input; },
-	width: 100,
-	xInset: 30
+	state: {
+		columnHeight: 150,
+		columnSpacing: 3,
+		columnWidth: 10,
+		height: 200,
+		width: 100,
+		xInset: 30
+	},
+	valueSelector(input) { return input; }
 });
 
 const domain = createColumnChart<number>({
@@ -31,21 +33,23 @@ const domain = createColumnChart<number>({
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	columnHeight: 200,
-	columnSpacing: 3,
-	columnWidth: 10,
 	divisorOperator: max,
-	domain: [-10, 10],
-	height: 200,
 	inputSeries: [-5, 5, 10],
 	leftAxis: {
 		range: { stepSize: 5 },
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	valueSelector(input) { return input; },
-	width: 100,
-	xInset: 30
+	state: {
+		columnHeight: 200,
+		columnSpacing: 3,
+		columnWidth: 10,
+		domain: [-10, 10],
+		height: 200,
+		width: 100,
+		xInset: 30
+	},
+	valueSelector(input) { return input; }
 });
 
 const allNegative = createColumnChart<number>({
@@ -53,11 +57,7 @@ const allNegative = createColumnChart<number>({
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	columnHeight: 150,
-	columnSpacing: 3,
-	columnWidth: 10,
 	divisorOperator: max,
-	height: 200,
 	inputSeries: [-5, -10],
 	leftAxis: {
 		inputs: {
@@ -66,9 +66,15 @@ const allNegative = createColumnChart<number>({
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	valueSelector(input) { return input; },
-	width: 100,
-	xInset: 30
+	state: {
+		columnHeight: 150,
+		columnSpacing: 3,
+		columnWidth: 10,
+		height: 200,
+		width: 100,
+		xInset: 30
+	},
+	valueSelector(input) { return input; }
 });
 
 const allNegativeDomain = createColumnChart<number>({
@@ -76,21 +82,23 @@ const allNegativeDomain = createColumnChart<number>({
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	columnHeight: 200,
-	columnSpacing: 3,
-	columnWidth: 10,
 	divisorOperator: max,
-	domain: -15,
-	height: 200,
 	inputSeries: [-5, -10],
 	leftAxis: {
 		range: { stepSize: 5 },
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	valueSelector(input) { return input; },
-	width: 100,
-	xInset: 30
+	state: {
+		columnHeight: 200,
+		columnSpacing: 3,
+		columnWidth: 10,
+		domain: -15,
+		height: 200,
+		width: 100,
+		xInset: 30
+	},
+	valueSelector(input) { return input; }
 });
 
 const group = createGroupedColumnChart<string, [string, number]>({
@@ -101,11 +109,7 @@ const group = createGroupedColumnChart<string, [string, number]>({
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: -45, offset: -5 },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	columnHeight: 150,
-	columnSpacing: 3,
-	columnWidth: 10,
 	divisorOperator: max,
-	height: 200,
 	groupSelector(input) { return input[0]; },
 	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10]],
 	leftAxis: {
@@ -113,9 +117,15 @@ const group = createGroupedColumnChart<string, [string, number]>({
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
 	},
-	valueSelector(input) { return input[1]; },
-	width: 100,
-	xInset: 30
+	state: {
+		columnHeight: 150,
+		columnSpacing: 3,
+		columnWidth: 10,
+		height: 200,
+		width: 100,
+		xInset: 30
+	},
+	valueSelector(input) { return input[1]; }
 });
 
 const stack = createStackedColumnChart<string, [string, number]>({
@@ -126,11 +136,7 @@ const stack = createStackedColumnChart<string, [string, number]>({
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: -45, offset: -5 },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	columnHeight: 150,
-	columnSpacing: 3,
-	columnWidth: 10,
 	divisorOperator: max,
-	height: 200,
 	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10], ['baz', -5], ['baz', 5]],
 	leftAxis: {
 		labels: { anchor: 'end' },
@@ -138,10 +144,16 @@ const stack = createStackedColumnChart<string, [string, number]>({
 		ticks: { length: 5, zeroth: true }
 	},
 	stackSelector(input) { return input[0]; },
-	stackSpacing: 1,
-	valueSelector(input) { return input[1]; },
-	width: 100,
-	xInset: 30
+	state: {
+		columnHeight: 150,
+		columnSpacing: 3,
+		columnWidth: 10,
+		height: 200,
+		stackSpacing: 1,
+		width: 100,
+		xInset: 30
+	},
+	valueSelector(input) { return input[1]; }
 });
 
 const stackDomain = createStackedColumnChart<string, [string, number]>({
@@ -152,12 +164,7 @@ const stackDomain = createStackedColumnChart<string, [string, number]>({
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: -45, offset: -5 },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	columnHeight: 150,
-	columnSpacing: 3,
-	columnWidth: 10,
 	divisorOperator: max,
-	domain: [-15, 15],
-	height: 200,
 	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10], ['baz', -5], ['baz', 5]],
 	leftAxis: {
 		labels: { anchor: 'end' },
@@ -165,10 +172,17 @@ const stackDomain = createStackedColumnChart<string, [string, number]>({
 		ticks: { length: 5, zeroth: true }
 	},
 	stackSelector(input) { return input[0]; },
-	stackSpacing: 1,
-	valueSelector(input) { return input[1]; },
-	width: 100,
-	xInset: 30
+	state: {
+		columnHeight: 150,
+		columnSpacing: 3,
+		columnWidth: 10,
+		domain: [-15, 15],
+		height: 200,
+		stackSpacing: 1,
+		width: 100,
+		xInset: 30
+	},
+	valueSelector(input) { return input[1]; }
 });
 
 (<any> window).basic = basic;

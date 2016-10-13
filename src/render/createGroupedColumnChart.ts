@@ -56,14 +56,16 @@ export type GroupedColumnChartOptions<
 	 * May be omitted if a `groupSelector()` implementation has been mixed in.
 	 */
 	groupSelector?: GroupSelector<G, T>;
-
-	/**
-	 * Controls the space between each group.
-	 */
-	groupSpacing?: number;
 }
 
 export interface GroupedColumnChartMixin<G, T> {
+	/**
+	 * Default return value for `getGroupSpacing()`, in case `groupSpacing` is not present in the state.
+	 *
+	 * If not provided, the default value that ends up being used is 0.
+	 */
+	readonly groupSpacing?: number;
+
 	/**
 	 * Select the group identifier from the input.
 	 *
@@ -74,7 +76,7 @@ export interface GroupedColumnChartMixin<G, T> {
 	/**
 	 * Controls the space between each group.
 	 */
-	groupSpacing?: number;
+	getGroupSpacing(): number;
 }
 
 export type GroupedColumnChart<
@@ -97,7 +99,6 @@ export interface GroupedColumnChartFactory<G, T> extends ComposeFactory<
 
 interface PrivateState {
 	groupSelector: GroupSelector<any, any>;
-	groupSpacing: number;
 }
 
 const privateStateMap = new WeakMap<GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>, PrivateState>();
@@ -106,19 +107,9 @@ const privateStateMap = new WeakMap<GroupedColumnChart<any, any, any, GroupedCol
 // The factory should be casted to GroupedColumnChartFactory when creating a grouped column chart.
 const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColumnChart
 	.extend({
-		get groupSpacing(this: GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>) {
-			const { groupSpacing = privateStateMap.get(this).groupSpacing } = this.state || {};
+		getGroupSpacing(this: GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>) {
+			const { groupSpacing = this.groupSpacing || 0 } = this.state;
 			return groupSpacing;
-		},
-
-		set groupSpacing(groupSpacing) {
-			if (this.state) {
-				this.setState({ groupSpacing });
-			}
-			else {
-				privateStateMap.get(this).groupSpacing = groupSpacing;
-			}
-			this.invalidate();
 		}
 	})
 	.mixin({
@@ -132,7 +123,9 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 					width,
 					zero
 				}: ColumnPointPlot<T>): GroupedColumnPointPlot<G, T> {
-					const { columnHeight, columnSpacing, groupSpacing } = this;
+					const columnHeight = this.getColumnHeight();
+					const columnSpacing = this.getColumnSpacing();
+					const groupSpacing = this.getGroupSpacing();
 
 					const { groupSelector } = privateStateMap.get(this);
 					interface Record {
@@ -227,8 +220,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 		initialize<G, T>(
 			instance: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T>>,
 			{
-				groupSelector,
-				groupSpacing = 0
+				groupSelector
 			}: GroupedColumnChartOptions<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T>> = {}
 		) {
 			if (!groupSelector) {
@@ -236,7 +228,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 				groupSelector = (input: T) => instance.groupSelector!(input);
 			}
 
-			privateStateMap.set(instance, { groupSelector, groupSpacing });
+			privateStateMap.set(instance, { groupSelector });
 		}
 	});
 

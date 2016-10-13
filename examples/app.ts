@@ -4,7 +4,7 @@ import projector from 'dojo-widgets/projector';
 import max from '../src/data/max';
 import sum from '../src/data/sum';
 import sort from '../src/data/sort';
-import createColumnChart from '../src/render/createColumnChart';
+import createColumnChart, { ColumnChartFactory } from '../src/render/createColumnChart';
 import createGroupedColumnChart from '../src/render/createGroupedColumnChart';
 import createStackedColumnChart from '../src/render/createStackedColumnChart';
 
@@ -21,9 +21,6 @@ const store = createMemoryStore({
 			columnHeight: 100,
 			xInset: 50,
 			yInset: 15
-		},
-		{
-			id: 'groupedByProvinceChart'
 		}
 	]
 });
@@ -52,22 +49,29 @@ const percentageChart = createColumnChart<PlayCount>({
 		labels: { anchor: 'end' },
 		ticks: { length: 10, zeroth: true }
 	},
-	columnSpacing: 1,
 	divisorOperator: sum,
 	state: {
-		// Example of passing height via the state
-		height: 250
+		height: 250,
+		columnSpacing: 1,
+		columnWidth: 20,
+		width: 300
 	},
 	stateFrom: store,
-	valueSelector(input) { return input.count; },
-	// Example of passing width
-	width: 300
+	valueSelector(input) { return input.count; }
 });
 
-// Example of setting columnWidth
-percentageChart.columnWidth = 20;
+const createAbsoluteChart: ColumnChartFactory<PlayCount> = createColumnChart.extend({
+	columnHeight: 100,
+	columnSpacing: 3,
+	columnWidth: 20,
+	domain: 35000,
+	height: 260,
+	width: 300,
+	xInset: 50,
+	yInset: 30
+});
 
-const absoluteChart = createColumnChart<PlayCount>({
+const absoluteChart = createAbsoluteChart({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input.artist; }
@@ -80,18 +84,10 @@ const absoluteChart = createColumnChart<PlayCount>({
 		range: { stepSize: 5000 },
 		ticks: { length: 10 }
 	},
-	columnHeight: 100,
-	columnSpacing: 3,
-	columnWidth: 20,
-	domain: 35000,
 	// Example of passing an observable to the chart.
 	inputSeries: playCounts,
 	divisorOperator: max,
-	height: 260,
-	valueSelector(input) { return input.count; },
-	width: 300,
-	xInset: 50,
-	yInset: 30
+	valueSelector(input) { return input.count; }
 });
 
 const groupedByProvinceChart = createGroupedColumnChart<string, PlayCount>({
@@ -116,24 +112,23 @@ const groupedByProvinceChart = createGroupedColumnChart<string, PlayCount>({
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: 45, offset: -5 },
 		ticks: { anchor: 'end', length: 10, zeroth: true }
 	},
-	columnHeight: 100,
-	columnSpacing: 1,
-	columnWidth: 10,
 	state: {
-		styles: { marginTop: '20px' }
+		columnHeight: 100,
+		columnSpacing: 1,
+		columnWidth: 10,
+		groupSpacing: 10,
+		height: 230,
+		styles: { marginTop: '20px' },
+		width: 300,
+		xInset: 75,
+		yInset: 25
 	},
 	// Example of passing an observable to the chart.
 	inputSeries: byProvince,
 	divisorOperator: max,
 	groupSelector(input) { return input.province; },
-	groupSpacing: 10,
-	height: 230,
-	valueSelector(input) { return input.count; },
-	width: 300
+	valueSelector(input) { return input.count; }
 });
-
-groupedByProvinceChart.xInset = 75;
-groupedByProvinceChart.yInset = 25;
 
 const stackedByProvinceChart = createStackedColumnChart<string, PlayCount>({
 	bottomAxis: {
@@ -157,25 +152,24 @@ const stackedByProvinceChart = createStackedColumnChart<string, PlayCount>({
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: 45, offset: -5 },
 		ticks: { anchor: 'end', length: 10, zeroth: true }
 	},
-	columnHeight: 200,
-	columnSpacing: 10,
-	columnWidth: 20,
-	domain: 50000,
 	state: {
-		styles: { marginTop: '20px' }
+		columnHeight: 200,
+		columnSpacing: 10,
+		columnWidth: 20,
+		domain: 50000,
+		height: 330,
+		stackSpacing: 1,
+		styles: { marginTop: '20px' },
+		width: 300,
+		xInset: 75,
+		yInset: 25
 	},
 	// Example of passing an observable to the chart.
 	inputSeries: byProvince,
 	divisorOperator: max,
 	stackSelector(input) { return input.province; },
-	stackSpacing: 1,
-	height: 330,
-	valueSelector(input) { return input.count; },
-	width: 300
+	valueSelector(input) { return input.count; }
 });
-
-stackedByProvinceChart.xInset = 75;
-stackedByProvinceChart.yInset = 25;
 
 // Make the charts available to the console.
 (<any> window).absoluteChart = absoluteChart;
