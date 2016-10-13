@@ -49,14 +49,16 @@ export type StackedColumnChartOptions<
 	 * May be omitted if a `stackSelector()` implementation has been mixed in.
 	 */
 	stackSelector?: StackSelector<G, T>;
-
-	/**
-	 * Controls the space between each stack.
-	 */
-	stackSpacing?: number;
 }
 
 export interface StackedColumnChartMixin<G, T> {
+	/**
+	 * Default return value for `getStackSpacing()`, in case `stackSpacing` is not present in the state.
+	 *
+	 * If not provided, the default value that ends up being used is 0.
+	 */
+	readonly stackSpacing?: number;
+
 	/**
 	 * Select the stack identifier from the input.
 	 *
@@ -67,7 +69,7 @@ export interface StackedColumnChartMixin<G, T> {
 	/**
 	 * Controls the vertical space between each column in the stack.
 	 */
-	stackSpacing: number;
+	getStackSpacing(): number;
 }
 
 export type StackedColumnChart<
@@ -90,7 +92,6 @@ export interface StackedColumnChartFactory<G, T> extends ComposeFactory<
 
 interface PrivateState {
 	stackSelector: StackSelector<any, any>;
-	stackSpacing: number;
 }
 
 const privateStateMap = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any>>, PrivateState>();
@@ -99,19 +100,9 @@ const privateStateMap = new WeakMap<StackedColumnChart<any, any, any, StackedCol
 // The factory should be casted to StackedColumnChartFactory when creating a stacked column chart.
 const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColumnChart
 	.extend({
-		get stackSpacing(this: StackedColumnChart<any, any, any, StackedColumnChartState<any>>) {
-			const { stackSpacing = privateStateMap.get(this).stackSpacing } = this.state || {};
+		getStackSpacing(this: StackedColumnChart<any, any, any, StackedColumnChartState<any>>) {
+			const { stackSpacing = this.stackSpacing || 0 } = this.state;
 			return stackSpacing;
-		},
-
-		set stackSpacing(stackSpacing) {
-			if (this.state) {
-				this.setState({ stackSpacing });
-			}
-			else {
-				privateStateMap.get(this).stackSpacing = stackSpacing;
-			}
-			this.invalidate();
 		}
 	})
 	.mixin({
@@ -125,13 +116,11 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 					width,
 					zero
 				}: ColumnPointPlot<T>): StackedColumnPointPlot<G, T> {
-					const {
-						columnHeight,
-						columnSpacing,
-						columnWidth,
-						domain: [ domainMin, domainMax ],
-						stackSpacing
-					} = this;
+					const columnHeight = this.getColumnHeight();
+					const columnSpacing = this.getColumnSpacing();
+					const columnWidth = this.getColumnWidth();
+					const [ domainMin, domainMax ] = this.getDomain();
+					const stackSpacing = this.getStackSpacing();
 
 					let mostNegativeRelValue = 0;
 					let mostNegativeValue = 0;
@@ -370,8 +359,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 		initialize<G, T>(
 			instance: StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>,
 			{
-				stackSelector,
-				stackSpacing = 0
+				stackSelector
 			}: StackedColumnChartOptions<G, T, StackedColumn<G, T>, StackedColumnChartState<T>> = {}
 		) {
 			if (!stackSelector) {
@@ -379,7 +367,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 				stackSelector = (input: T) => instance.stackSelector!(input);
 			}
 
-			privateStateMap.set(instance, { stackSelector, stackSpacing });
+			privateStateMap.set(instance, { stackSelector });
 		}
 	});
 

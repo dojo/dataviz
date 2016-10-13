@@ -14,17 +14,19 @@ const inputSeries = [5, 15, 25, MAX_INPUT];
 
 const chartOptions: ColumnChartOptions<number, Datum<number>, any> = {
 	inputSeries,
-	width: 150,
-	height: 150,
-	columnHeight: 100,
-	columnWidth: 20,
-	columnSpacing: 1,
 	divisorOperator: max,
+	state: {
+		width: 150,
+		height: 150,
+		columnHeight: 100,
+		columnWidth: 20,
+		columnSpacing: 1,
+		xInset: 25,
+		yInset: 25
+	},
 	valueSelector(input) {
 		return input;
-	},
-	xInset: 25,
-	yInset: 25
+	}
 };
 
 function createAxesConfiguration(shared: AxisConfiguration<Datum<number>>, chartOptions: any): any {
@@ -58,6 +60,8 @@ const inputs = createColumnChart<number>(createAxesConfiguration({
 		zeroth: true
 	}
 }, chartOptions));
+
+(<any> window).inputs = inputs;
 
 const inputsGridLines = createColumnChart<number>(createAxesConfiguration({
 	inputs: {

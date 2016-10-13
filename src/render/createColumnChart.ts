@@ -55,7 +55,9 @@ const createColumnChart: ColumnChartFactory<any> = createChart
 				return [];
 			}
 
-			const { domain, xInset, yInset } = this;
+			const domain = this.getDomain();
+			const xInset = this.getXInset();
+			const yInset = this.getYInset();
 			const nodes: VNode[] = [];
 
 			const axes = this.createAxes(plot, domain);

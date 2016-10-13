@@ -1,6 +1,5 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
-import WeakMap from 'dojo-shim/WeakMap';
 import { VNodeProperties } from 'maquette';
 
 import { Invalidatable } from '../interfaces';
@@ -17,23 +16,21 @@ export interface SvgRootState extends State {
 	width?: number;
 }
 
-export interface SvgRootOptions<S extends SvgRootState> extends StatefulOptions<S> {
-	/**
-	 * Controls the height of the <svg> element. Defaults to 150.
-	 */
-	height?: number;
-
-	/**
-	 * Controls the width of the <svg> element. Defaults to 300.
-	 */
-	width?: number;
-}
+export type SvgRootOptions<S extends SvgRootState> = StatefulOptions<S>;
 
 export interface SvgRootMixin {
 	/**
-	 * Controls the height of the <svg> element.
+	 * Default value for `getHeight(), in case `height` is not present in the state.
+	 *
+	 * If not provided, the default value that ends up being used is 150.
 	 */
-	height?: number;
+	readonly height?: number;
+	/**
+	 * Default value for `getWidth(), in case `width` is not present in the state.
+	 *
+	 * If not provided, the default value that ends up being used is 300.
+	 */
+	readonly width?: number;
 
 	/**
 	 * The tagName is *always* 'svg'.
@@ -41,9 +38,14 @@ export interface SvgRootMixin {
 	readonly tagName: string;
 
 	/**
+	 * Controls the height of the <svg> element.
+	 */
+	getHeight(): number;
+
+	/**
 	 * Controls the width of the <svg> element.
 	 */
-	width?: number;
+	getWidth(): number;
 }
 
 /**
@@ -53,31 +55,11 @@ export type SvgRoot<S extends SvgRootState> = Stateful<S> & Invalidatable & SvgR
 
 export type SvgRootFactory = ComposeFactory<SvgRoot<SvgRootState>, SvgRootOptions<SvgRootState>>;
 
-interface PrivateState {
-	height: number;
-	width: number;
-}
-
-const privateStateMap = new WeakMap<SvgRoot<SvgRootState>, PrivateState>();
-
 const createSvgRootMixin: SvgRootFactory = createStateful
 	.extend({
-		get height(this: SvgRoot<SvgRootState>) {
-			const { height = privateStateMap.get(this).height } = this.state || {};
+		getHeight(this: SvgRoot<SvgRootState>) {
+			const { height = this.height || 150 } = this.state;
 			return height;
-		},
-
-		set height(height) {
-			if (this.state) {
-				this.setState({ height });
-			}
-			else {
-				privateStateMap.get(this).height = height;
-				// invalidate() is typed as being optional, but that's just a workaround until
-				// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-				// for now.
-				this.invalidate!();
-			}
 		},
 
 		get tagName() {
@@ -87,38 +69,20 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 		// Other mixins may not realize they shouldn't be setting tagName.
 		set tagName(noop) {},
 
-		get width(this: SvgRoot<SvgRootState>) {
-			const { width = privateStateMap.get(this).width } = this.state || {};
+		getWidth(this: SvgRoot<SvgRootState>) {
+			const { width = this.width || 300 } = this.state;
 			return width;
-		},
-
-		set width(width) {
-			if (this.state) {
-				this.setState({ width });
-			}
-			else {
-				privateStateMap.get(this).width = width;
-				// invalidate() is typed as being optional, but that's just a workaround until
-				// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-				// for now.
-				this.invalidate!();
-			}
 		},
 
 		nodeAttributes: [
 			function(this: SvgRoot<SvgRootState>): VNodeProperties {
-				const { height, width } = this;
 				return {
-					height: String(height),
-					width: String(width),
+					height: String(this.getHeight()),
+					width: String(this.getWidth()),
 					'shape-rendering': 'crispEdges'
 				};
 			}
 		]
-	}).mixin({
-		initialize(instance: SvgRoot<SvgRootState>, { height = 150, width = 300 }: SvgRootOptions<SvgRootState> = {}) {
-			privateStateMap.set(instance, { height, width });
-		}
 	});
 
 export default createSvgRootMixin;

@@ -58,21 +58,6 @@ export interface ColumnPlotState<T> extends InputSeriesState<T> {
 
 export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends InputSeriesOptions<T, S> {
 	/**
-	 * Controls the maximum height of each column.
-	 */
-	columnHeight?: number;
-
-	/**
-	 * Controls the space between each column.
-	 */
-	columnSpacing?: number;
-
-	/**
-	 * Controls the width of each column.
-	 */
-	columnWidth?: number;
-
-	/**
 	 * Operates on the input series observable to compute the divisor, which is used to determine the height of the
 	 * columns.
 	 *
@@ -80,17 +65,6 @@ export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends Inpu
 	 * Otherwise the divisor will be set to `1`.
 	 */
 	divisorOperator?: DivisorOperator<T>;
-
-	/**
-	 * Controls the range for which values are plotted with the full columnHeight. The height is distributed across the
-	 * negative and positive values commensurate with the range. Any input values that exceed the minimum or maximum
-	 * will still be plotted proportionally (but exceeding the height limits).
-	 *
-	 * If a single number is provided, if that number is greater than zero it implies a domain of [ 0, number ]. If it's
-	 * less than zero it implies a domain of [ number, 0 ]. If zero it implies there are no minimum or maximum values,
-	 * same for a domain of [ 0, 0 ].
-	 */
-	domain?: DomainOption;
 
 	/**
 	 * Select the value from the input. Columns height is determined by this value.
@@ -103,19 +77,36 @@ export interface ColumnPlotOptions<T, S extends ColumnPlotState<T>> extends Inpu
 
 export interface ColumnPlotMixin<T> {
 	/**
-	 * Controls the maximum height of each column.
+	 * Default return value for `getColumnHeight()`, in case `columnHeight` is not present in the state.
+	 *
+	 * If not provided, the default value that ends up being used is 0.
 	 */
-	columnHeight: number;
+	readonly columnHeight?: number;
 
 	/**
-	 * Controls the space between each column.
+	 * Default return value for `getColumnSpacing()`, in case `columnSpacing` is not present in the state.
+	 *
+	 * If not provided, the default value that ends up being used is 0.
 	 */
-	columnSpacing: number;
+	readonly columnSpacing?: number;
 
 	/**
-	 * Controls the width of each column.
+	 * Default return value for `getColumnWidth()`, in case `columnWidth` is not present in the state.
+	 *
+	 * If not provided, the default value that ends up being used is 0.
 	 */
-	columnWidth: number;
+	readonly columnWidth?: number;
+
+	/**
+	 * Default return value for `getDomain()`, in case `domain` is not present in the state.
+	 *
+	 * If a single number is provided, if that number is greater than zero it implies a domain of [ 0, number ]. If it's
+	 * less than zero it implies a domain of [ number, 0 ]. If zero it implies there are no minimum or maximum values,
+	 * same for a domain of [ 0, 0 ].
+	 *
+	 * If not provided, the default value that ends up being used is [ 0, 0 ].
+	 */
+	readonly domain?: Domain;
 
 	/**
 	 * Operates on the input series observable to compute the divisor, which is used to determine the height of the
@@ -127,19 +118,34 @@ export interface ColumnPlotMixin<T> {
 	readonly divisorOperator?: DivisorOperator<T>;
 
 	/**
-	 * Controls the range for which values are plotted with the full columnHeight. The height is distributed across the
-	 * negative and positive values commensurate with the range. Any input values that exceed the minimum or maximum
-	 * will still be plotted proportionally (but exceeding the height limits).
-	 */
-	domain: Domain;
-
-	/**
 	 * Select the value from the input. Columns height is determined by this value.
 	 *
 	 * Can be overriden by specifying a `valueSelector()` option. If neither is available all values will be hardcoded
 	 * to `0`.
 	 */
 	readonly valueSelector?: ValueSelector<T>;
+
+	/**
+	 * Controls the maximum height of each column.
+	 */
+	getColumnHeight(): number;
+
+	/**
+	 * Controls the space between each column.
+	 */
+	getColumnSpacing(): number;
+
+	/**
+	 * Controls the width of each column.
+	 */
+	getColumnWidth(): number;
+
+	/**
+	 * Controls the range for which values are plotted with the full columnHeight. The height is distributed across the
+	 * negative and positive values commensurate with the range. Any input values that exceed the minimum or maximum
+	 * will still be plotted proportionally (but exceeding the height limits).
+	 */
+	getDomain(): Domain;
 
 	/**
 	 * Plot "points" for each column.
@@ -166,10 +172,6 @@ export interface ColumnPlotFactory<T> extends ComposeFactory<
 }
 
 interface PrivateState {
-	columnHeight: number;
-	columnSpacing: number;
-	columnWidth: number;
-	domain: Domain;
 	series: Column<any>[];
 }
 
@@ -177,81 +179,32 @@ const privateStateMap = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Priva
 
 const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 	.extend({
-		get columnHeight(this: ColumnPlot<any, ColumnPlotState<any>>) {
-			const { columnHeight = privateStateMap.get(this).columnHeight } = this.state || {};
+		getColumnHeight(this: ColumnPlot<any, ColumnPlotState<any>>) {
+			const { columnHeight = this.columnHeight || 0 } = this.state;
 			return columnHeight;
 		},
 
-		set columnHeight(columnHeight) {
-			if (this.state) {
-				this.setState({ columnHeight });
-			}
-			else {
-				privateStateMap.get(this).columnHeight = columnHeight;
-			}
-			// invalidate() is typed as being optional, but that's just a workaround until
-			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-			// for now.
-			this.invalidate!();
-		},
-
-		get columnSpacing(this: ColumnPlot<any, ColumnPlotState<any>>) {
-			const { columnSpacing = privateStateMap.get(this).columnSpacing } = this.state || {};
+		getColumnSpacing(this: ColumnPlot<any, ColumnPlotState<any>>) {
+			const { columnSpacing = this.columnSpacing || 0 } = this.state;
 			return columnSpacing;
 		},
 
-		set columnSpacing(columnSpacing) {
-			if (this.state) {
-				this.setState({ columnSpacing });
-			}
-			else {
-				privateStateMap.get(this).columnSpacing = columnSpacing;
-			}
-			// invalidate() is typed as being optional, but that's just a workaround until
-			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-			// for now.
-			this.invalidate!();
-		},
-
-		get columnWidth(this: ColumnPlot<any, ColumnPlotState<any>>) {
-			const { columnWidth = privateStateMap.get(this).columnWidth } = this.state || {};
+		getColumnWidth(this: ColumnPlot<any, ColumnPlotState<any>>) {
+			const { columnWidth = this.columnWidth || 0 } = this.state;
 			return columnWidth;
 		},
 
-		set columnWidth(columnWidth) {
-			if (this.state) {
-				this.setState({ columnWidth });
-			}
-			else {
-				privateStateMap.get(this).columnWidth = columnWidth;
-			}
-			// invalidate() is typed as being optional, but that's just a workaround until
-			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-			// for now.
-			this.invalidate!();
-		},
-
-		get domain(this: ColumnPlot<any, ColumnPlotState<any>>) {
-			const { domain = privateStateMap.get(this).domain } = this.state || {};
+		getDomain(this: ColumnPlot<any, ColumnPlotState<any>>) {
+			const { domain = this.domain || [ 0, 0 ] } = this.state;
 			return normalizeDomain(domain);
-		},
-
-		set domain(domain) {
-			if (this.state) {
-				this.setState({ domain });
-			}
-			else {
-				privateStateMap.get(this).domain = domain;
-			}
-			// invalidate() is typed as being optional, but that's just a workaround until
-			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-			// for now.
-			this.invalidate!();
 		},
 
 		plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
 			const { series } = privateStateMap.get(this);
-			const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [ domainMin, domainMax ] } = this;
+			const columnHeight = this.getColumnHeight();
+			const columnSpacing = this.getColumnSpacing();
+			const displayWidth = this.getColumnWidth();
+			const [ domainMin, domainMax ] = this.getDomain();
 
 			let mostNegativeRelValue = 0;
 			let mostNegativeValue = 0;
@@ -387,10 +340,6 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 		initialize<T>(
 			instance: ColumnPlot<T, ColumnPlotState<T>>,
 			{
-				columnHeight = 0,
-				columnSpacing = 0,
-				columnWidth = 0,
-				domain = [ 0, 0 ],
 				divisorOperator,
 				valueSelector
 			}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
@@ -428,10 +377,6 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 			}
 
 			privateStateMap.set(instance, {
-				columnHeight,
-				columnSpacing,
-				columnWidth,
-				domain: normalizeDomain(domain),
 				// Initialize with an empty series since InputSeries only provides a series once it's available.
 				series: []
 			});
