@@ -1,4 +1,4 @@
-import compose, { ComposeFactory } from 'dojo-compose/compose';
+import { ComposeFactory } from 'dojo-compose/compose';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette';
@@ -171,291 +171,296 @@ const shadowColumnSpacings = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, 
 const shadowColumnWidths = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
 const shadowDomains = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Domain>();
 
-const createColumnPlot: ColumnPlotFactory<any> = compose({
-	get columnHeight(this: ColumnPlot<any, ColumnPlotState<any>>) {
-		const { columnHeight = shadowColumnHeights.get(this) } = this.state || {};
-		return columnHeight;
-	},
+const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
+	.extend({
+		get columnHeight(this: ColumnPlot<any, ColumnPlotState<any>>) {
+			const { columnHeight = shadowColumnHeights.get(this) } = this.state || {};
+			return columnHeight;
+		},
 
-	set columnHeight(columnHeight) {
-		if (this.state) {
-			this.setState({ columnHeight });
-		}
-		else {
-			shadowColumnHeights.set(this, columnHeight);
-		}
-		// invalidate() is typed as being optional, but that's just a workaround until
-		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
-		this.invalidate!();
-	},
-
-	get columnSpacing(this: ColumnPlot<any, ColumnPlotState<any>>) {
-		const { columnSpacing = shadowColumnSpacings.get(this) } = this.state || {};
-		return columnSpacing;
-	},
-
-	set columnSpacing(columnSpacing) {
-		if (this.state) {
-			this.setState({ columnSpacing });
-		}
-		else {
-			shadowColumnSpacings.set(this, columnSpacing);
-		}
-		// invalidate() is typed as being optional, but that's just a workaround until
-		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
-		this.invalidate!();
-	},
-
-	get columnWidth(this: ColumnPlot<any, ColumnPlotState<any>>) {
-		const { columnWidth = shadowColumnWidths.get(this) } = this.state || {};
-		return columnWidth;
-	},
-
-	set columnWidth(columnWidth) {
-		if (this.state) {
-			this.setState({ columnWidth });
-		}
-		else {
-			shadowColumnWidths.set(this, columnWidth);
-		}
-		// invalidate() is typed as being optional, but that's just a workaround until
-		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
-		this.invalidate!();
-	},
-
-	get domain(this: ColumnPlot<any, ColumnPlotState<any>>) {
-		const { domain = shadowDomains.get(this) } = this.state || {};
-		return normalizeDomain(domain);
-	},
-
-	set domain(domain) {
-		if (this.state) {
-			this.setState({ domain });
-		}
-		else {
-			shadowDomains.set(this, domain);
-		}
-		// invalidate() is typed as being optional, but that's just a workaround until
-		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
-		this.invalidate!();
-	},
-
-	plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
-		const series = columnSeries.get(this);
-		const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [ domainMin, domainMax ] } = this;
-
-		let mostNegativeRelValue = 0;
-		let mostNegativeValue = 0;
-		let mostPositiveRelValue = 0;
-		let mostPositiveValue = 0;
-		for (const { relativeValue, value } of series) {
-			if (relativeValue < mostNegativeRelValue) {
-				mostNegativeRelValue = relativeValue;
-			}
-			else if (relativeValue > mostPositiveRelValue) {
-				mostPositiveRelValue = relativeValue;
-			}
-
-			if (value < mostNegativeValue) {
-				mostNegativeValue = value;
-			}
-			else if (value > mostPositiveValue) {
-				mostPositiveValue = value;
-			}
-		}
-
-		// Maximum height of positive columns. Initially assume there are no negative columns, this will be refined
-		// later. The height of negative columns is determined by taking columnHeight and subtracting positiveHeight.
-		let positiveHeight = columnHeight;
-
-		// The height of each column ("display height") is determined by the column's relative value and the available
-		// positive or negative height. The relative value needs to be corrected for the available height if there are
-		// both negative and positive columns.
-		let negativeDisplayHeightCorrection = 1;
-		let positiveDisplayHeightCorrection = 1;
-		if (mostNegativeRelValue < 0 && mostPositiveRelValue > 0) {
-			negativeDisplayHeightCorrection /= -mostNegativeRelValue;
-			positiveDisplayHeightCorrection /= mostPositiveRelValue;
-		}
-
-		// Relative column values need to be further adjusted if a domain minimum and/or maximum is specified. Only
-		// negative columns who's value equals the domain minimum, or positive columns who's value equals the domain
-		// maximum, must be rendered with the full available height.
-		//
-		// This is also where enough information is available to compute the correct positiveHeight.
-		if (domainMin !== 0 || domainMax !== 0) {
-			if (domainMin < 0) {
-				if (domainMax === 0) {
-					// There shouldn't be any positive columns.
-					negativeDisplayHeightCorrection *= mostNegativeValue / domainMin;
-					positiveHeight = 0;
-				}
-				else if (domainMax > 0) {
-					// There may be both positive and negative columns.
-					negativeDisplayHeightCorrection *= mostNegativeValue / domainMin;
-					positiveDisplayHeightCorrection *= mostPositiveValue / domainMax;
-					positiveHeight *= domainMax / (domainMax - domainMin);
-				}
-			}
-			else if (domainMin === 0 && domainMax > 0) {
-				// There should only be positive columns.
-				positiveDisplayHeightCorrection *= mostPositiveValue / domainMax;
-			}
-			// FIXME: Should this raise an error if domainMin > 0 or domainMax < 0? These are not valid domains for
-			// column charts (issue #6).
-		}
-		// Without a domain, adjust the positiveHeight only if there are negative columns.
-		else if (mostNegativeRelValue < 0) {
-			if (mostPositiveRelValue === 0) {
-				// There are definitely no positive columns.
-				positiveHeight = 0;
+		set columnHeight(columnHeight) {
+			if (this.state) {
+				this.setState({ columnHeight });
 			}
 			else {
-				// There are both positive and negative columns.
-				positiveHeight *= mostPositiveRelValue / (mostPositiveRelValue - mostNegativeRelValue);
+				shadowColumnHeights.set(this, columnHeight);
 			}
-		}
+			// invalidate() is typed as being optional, but that's just a workaround until
+			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+			// for now.
+			this.invalidate!();
+		},
 
-		// There should be space for a line dividing negative and positive columns, so start 1px lower.
-		const negativeOffset = positiveHeight + 1;
+		get columnSpacing(this: ColumnPlot<any, ColumnPlotState<any>>) {
+			const { columnSpacing = shadowColumnSpacings.get(this) } = this.state || {};
+			return columnSpacing;
+		},
 
-		let verticalValues = Values.None;
-		let x2 = 0;
+		set columnSpacing(columnSpacing) {
+			if (this.state) {
+				this.setState({ columnSpacing });
+			}
+			else {
+				shadowColumnSpacings.set(this, columnSpacing);
+			}
+			// invalidate() is typed as being optional, but that's just a workaround until
+			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+			// for now.
+			this.invalidate!();
+		},
 
-		const points = series.map((column, index) => {
-			const isNegative = column.relativeValue < 0;
-			verticalValues |= isNegative ? Values.Negative : Values.Positive;
+		get columnWidth(this: ColumnPlot<any, ColumnPlotState<any>>) {
+			const { columnWidth = shadowColumnWidths.get(this) } = this.state || {};
+			return columnWidth;
+		},
 
-			const availableHeight = isNegative ? positiveHeight - columnHeight : positiveHeight;
-			const correction = isNegative ? negativeDisplayHeightCorrection : positiveDisplayHeightCorrection;
-			const displayHeight = availableHeight * column.relativeValue * correction;
+		set columnWidth(columnWidth) {
+			if (this.state) {
+				this.setState({ columnWidth });
+			}
+			else {
+				shadowColumnWidths.set(this, columnWidth);
+			}
+			// invalidate() is typed as being optional, but that's just a workaround until
+			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+			// for now.
+			this.invalidate!();
+		},
 
-			const x1 = (displayWidth + columnSpacing) * index;
-			x2 = x1 + displayWidth + columnSpacing;
+		get domain(this: ColumnPlot<any, ColumnPlotState<any>>) {
+			const { domain = shadowDomains.get(this) } = this.state || {};
+			return normalizeDomain(domain);
+		},
+
+		set domain(domain) {
+			if (this.state) {
+				this.setState({ domain });
+			}
+			else {
+				shadowDomains.set(this, domain);
+			}
+			// invalidate() is typed as being optional, but that's just a workaround until
+			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+			// for now.
+			this.invalidate!();
+		},
+
+		plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
+			const series = columnSeries.get(this);
+			const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [ domainMin, domainMax ] } = this;
+
+			let mostNegativeRelValue = 0;
+			let mostNegativeValue = 0;
+			let mostPositiveRelValue = 0;
+			let mostPositiveValue = 0;
+			for (const { relativeValue, value } of series) {
+				if (relativeValue < mostNegativeRelValue) {
+					mostNegativeRelValue = relativeValue;
+				}
+				else if (relativeValue > mostPositiveRelValue) {
+					mostPositiveRelValue = relativeValue;
+				}
+
+				if (value < mostNegativeValue) {
+					mostNegativeValue = value;
+				}
+				else if (value > mostPositiveValue) {
+					mostPositiveValue = value;
+				}
+			}
+
+			// Maximum height of positive columns. Initially assume there are no negative columns, this will be
+			// refined later. The height of negative columns is determined by taking columnHeight and subtracting
+			// positiveHeight.
+			let positiveHeight = columnHeight;
+
+			// The height of each column ("display height") is determined by the column's relative value and the
+			// available positive or negative height. The relative value needs to be corrected for the available
+			// height if there are both negative and positive columns.
+			let negativeDisplayHeightCorrection = 1;
+			let positiveDisplayHeightCorrection = 1;
+			if (mostNegativeRelValue < 0 && mostPositiveRelValue > 0) {
+				negativeDisplayHeightCorrection /= -mostNegativeRelValue;
+				positiveDisplayHeightCorrection /= mostPositiveRelValue;
+			}
+
+			// Relative column values need to be further adjusted if a domain minimum and/or maximum is specified.
+			// Only negative columns who's value equals the domain minimum, or positive columns who's value equals
+			// the domain maximum, must be rendered with the full available height.
+			//
+			// This is also where enough information is available to compute the correct positiveHeight.
+			if (domainMin !== 0 || domainMax !== 0) {
+				if (domainMin < 0) {
+					if (domainMax === 0) {
+						// There shouldn't be any positive columns.
+						negativeDisplayHeightCorrection *= mostNegativeValue / domainMin;
+						positiveHeight = 0;
+					}
+					else if (domainMax > 0) {
+						// There may be both positive and negative columns.
+						negativeDisplayHeightCorrection *= mostNegativeValue / domainMin;
+						positiveDisplayHeightCorrection *= mostPositiveValue / domainMax;
+						positiveHeight *= domainMax / (domainMax - domainMin);
+					}
+				}
+				else if (domainMin === 0 && domainMax > 0) {
+					// There should only be positive columns.
+					positiveDisplayHeightCorrection *= mostPositiveValue / domainMax;
+				}
+				// FIXME: Should this raise an error if domainMin > 0 or domainMax < 0? These are not valid domains
+				// for column charts (issue #6).
+			}
+			// Without a domain, adjust the positiveHeight only if there are negative columns.
+			else if (mostNegativeRelValue < 0) {
+				if (mostPositiveRelValue === 0) {
+					// There are definitely no positive columns.
+					positiveHeight = 0;
+				}
+				else {
+					// There are both positive and negative columns.
+					positiveHeight *= mostPositiveRelValue / (mostPositiveRelValue - mostNegativeRelValue);
+				}
+			}
+
+			// There should be space for a line dividing negative and positive columns, so start 1px lower.
+			const negativeOffset = positiveHeight + 1;
+
+			let verticalValues = Values.None;
+			let x2 = 0;
+
+			const points = series.map((column, index) => {
+				const isNegative = column.relativeValue < 0;
+				verticalValues |= isNegative ? Values.Negative : Values.Positive;
+
+				const availableHeight = isNegative ? positiveHeight - columnHeight : positiveHeight;
+				const correction = isNegative ? negativeDisplayHeightCorrection : positiveDisplayHeightCorrection;
+				const displayHeight = availableHeight * column.relativeValue * correction;
+
+				const x1 = (displayWidth + columnSpacing) * index;
+				x2 = x1 + displayWidth + columnSpacing;
+
+				return {
+					datum: column,
+					displayHeight,
+					displayWidth,
+					offsetLeft: columnSpacing / 2,
+					x1,
+					x2,
+					y1: isNegative ? negativeOffset : positiveHeight - displayHeight,
+					y2: isNegative ? negativeOffset + displayHeight + 1 : positiveHeight
+				};
+			});
+
+			let height = columnHeight;
+			if (verticalValues & Values.Negative) {
+				// Chart height includes the line between negative and positive columns.
+				height += 1;
+			}
 
 			return {
-				datum: column,
-				displayHeight,
-				displayWidth,
-				offsetLeft: columnSpacing / 2,
-				x1,
-				x2,
-				y1: isNegative ? negativeOffset : positiveHeight - displayHeight,
-				y2: isNegative ? negativeOffset + displayHeight + 1 : positiveHeight
+				height,
+				horizontalValues: Values.Positive,
+				points,
+				verticalValues,
+				width: x2,
+				zero: { x: 0, y: positiveHeight }
 			};
-		});
+		},
 
-		let height = columnHeight;
-		if (verticalValues & Values.Negative) {
-			// Chart height includes the line between negative and positive columns.
-			height += 1;
-		}
-
-		return {
-			height,
-			horizontalValues: Values.Positive,
-			points,
-			verticalValues,
-			width: x2,
-			zero: { x: 0, y: positiveHeight }
-		};
-	},
-
-	renderPlotPoints<T>(points: ColumnPoint<T>[]) {
-		return points.map(({ datum, displayHeight, displayWidth, offsetLeft, x1, y1 }) => {
-			return h('rect', {
-				key: datum.input,
-				height: String(displayHeight),
-				width: String(displayWidth),
-				x: String(x1 + offsetLeft),
-				y: String(y1)
+		renderPlotPoints<T>(points: ColumnPoint<T>[]) {
+			return points.map(({ datum, displayHeight, displayWidth, offsetLeft, x1, y1 }) => {
+				return h('rect', {
+					key: datum.input,
+					height: String(displayHeight),
+					width: String(displayWidth),
+					x: String(x1 + offsetLeft),
+					y: String(y1)
+				});
 			});
-		});
-	}
-}).mixin({
-	mixin: createInputSeries,
-
-	initialize<T>(
-		instance: ColumnPlot<T, ColumnPlotState<T>>,
-		{
-			columnHeight = 0,
-			columnSpacing = 0,
-			columnWidth = 0,
-			domain = [ 0, 0 ],
-			divisorOperator,
-			valueSelector
-		}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
-	) {
-		shadowColumnHeights.set(instance, columnHeight);
-		shadowColumnSpacings.set(instance, columnSpacing);
-		shadowColumnWidths.set(instance, columnWidth);
-		shadowDomains.set(instance, normalizeDomain(domain));
-
-		let operator: DivisorOperator<T>;
-		if (!divisorOperator) {
-			// Allow a divisorOperator implementation to be mixed in.
-			operator = (observable: InputObservable<T>, valueSelector: ValueSelector<T>) => {
-				if (instance.divisorOperator) {
-					return instance.divisorOperator(observable, valueSelector);
-				}
-
-				// Default to 1, don't throw at runtime.
-				return Observable.of(1);
-			};
 		}
-		else {
-			operator = divisorOperator;
-		}
+	})
+	.mixin({
+		initialize<T>(
+			instance: ColumnPlot<T, ColumnPlotState<T>>,
+			{
+				columnHeight = 0,
+				columnSpacing = 0,
+				columnWidth = 0,
+				domain = [ 0, 0 ],
+				divisorOperator,
+				valueSelector
+			}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
+		) {
+			shadowColumnHeights.set(instance, columnHeight);
+			shadowColumnSpacings.set(instance, columnSpacing);
+			shadowColumnWidths.set(instance, columnWidth);
+			shadowDomains.set(instance, normalizeDomain(domain));
 
-		let selector: ValueSelector<T>;
-		if (!valueSelector) {
-			// Allow a valueSelector implementation to be mixed in.
-			selector = (input: T) => {
-				if (instance.valueSelector) {
-					return instance.valueSelector(input);
-				}
+			let operator: DivisorOperator<T>;
+			if (!divisorOperator) {
+				// Allow a divisorOperator implementation to be mixed in.
+				operator = (observable: InputObservable<T>, valueSelector: ValueSelector<T>) => {
+					if (instance.divisorOperator) {
+						return instance.divisorOperator(observable, valueSelector);
+					}
 
-				// Default to 0, don't throw at runtime.
-				return 0;
-			};
-		}
-		else {
-			selector = valueSelector;
-		}
-
-		// Initialize with an empty series since InputSeries only provides a series once it's available.
-		columnSeries.set(instance, []);
-
-		let handle: Handle;
-		const subscribe = (inputSeries: Observable<T[]>) => {
-			if (handle) {
-				handle.destroy();
+					// Default to 1, don't throw at runtime.
+					return Observable.of(1);
+				};
+			}
+			else {
+				operator = divisorOperator;
 			}
 
-			const subscription = columnar(inputSeries, selector, operator)
-				.subscribe((series) => {
-					columnSeries.set(instance, series);
-					// invalidate() is typed as being optional, but that's just a workaround until
-					// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-					// for now.
-					instance.invalidate!();
-				});
+			let selector: ValueSelector<T>;
+			if (!valueSelector) {
+				// Allow a valueSelector implementation to be mixed in.
+				selector = (input: T) => {
+					if (instance.valueSelector) {
+						return instance.valueSelector(input);
+					}
 
-			handle = instance.own({
-				destroy() {
-					subscription.unsubscribe();
+					// Default to 0, don't throw at runtime.
+					return 0;
+				};
+			}
+			else {
+				selector = valueSelector;
+			}
+
+			// Initialize with an empty series since InputSeries only provides a series once it's available.
+			columnSeries.set(instance, []);
+
+			let handle: Handle;
+			const subscribe = (inputSeries: Observable<T[]>) => {
+				if (handle) {
+					handle.destroy();
 				}
-			});
-		};
 
-		// InputSeries may emit 'inputserieschange' before this initializer can listen for it.
-		// Access the series directly.
-		if (instance.inputSeries) {
-			subscribe(instance.inputSeries);
+				const subscription = columnar(inputSeries, selector, operator)
+					.subscribe((series) => {
+						columnSeries.set(instance, series);
+						// invalidate() is typed as being optional, but that's just a workaround until
+						// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check
+						// violation for now.
+						instance.invalidate!();
+					});
+
+				handle = instance.own({
+					destroy() {
+						subscription.unsubscribe();
+					}
+				});
+			};
+
+			// InputSeries may emit 'inputserieschange' before this initializer can listen for it.
+			// Access the series directly.
+			if (instance.inputSeries) {
+				subscribe(instance.inputSeries);
+			}
+			// Update the series if it changes.
+			instance.own(instance.on('inputserieschange', ({ observable }) => subscribe(observable)));
 		}
-		// Update the series if it changes.
-		instance.own(instance.on('inputserieschange', ({ observable }) => subscribe(observable)));
-	}
-});
+	});
 
 export default createColumnPlot;

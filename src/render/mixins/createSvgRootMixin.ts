@@ -57,63 +57,61 @@ const shadowHeights = new WeakMap<SvgRoot<SvgRootState>, number>();
 const shadowWidths = new WeakMap<SvgRoot<SvgRootState>, number>();
 
 const createSvgRootMixin: SvgRootFactory = createStateful
-	.mixin({
-		mixin: <SvgRootMixin> {
-			get height(this: SvgRoot<SvgRootState>) {
-				const { height = shadowHeights.get(this) } = this.state || {};
-				return height;
-			},
-
-			set height(height) {
-				if (this.state) {
-					this.setState({ height });
-				}
-				else {
-					shadowHeights.set(this, height);
-					// invalidate() is typed as being optional, but that's just a workaround until
-					// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-					// for now.
-					this.invalidate!();
-				}
-			},
-
-			get tagName() {
-				return 'svg';
-			},
-
-			// Other mixins may not realize they shouldn't be setting tagName.
-			set tagName(noop) {},
-
-			get width(this: SvgRoot<SvgRootState>) {
-				const { width = shadowWidths.get(this) } = this.state || {};
-				return width;
-			},
-
-			set width(width) {
-				if (this.state) {
-					this.setState({ width });
-				}
-				else {
-					shadowWidths.set(this, width);
-					// invalidate() is typed as being optional, but that's just a workaround until
-					// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
-					// for now.
-					this.invalidate!();
-				}
-			},
-
-			nodeAttributes: [
-				function(this: SvgRoot<SvgRootState>): VNodeProperties {
-					const { height, width } = this;
-					return {
-						height: String(height),
-						width: String(width),
-						'shape-rendering': 'crispEdges'
-					};
-				}
-			]
+	.extend({
+		get height(this: SvgRoot<SvgRootState>) {
+			const { height = shadowHeights.get(this) } = this.state || {};
+			return height;
 		},
 
+		set height(height) {
+			if (this.state) {
+				this.setState({ height });
+			}
+			else {
+				shadowHeights.set(this, height);
+				// invalidate() is typed as being optional, but that's just a workaround until
+				// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+				// for now.
+				this.invalidate!();
+			}
+		},
+
+		get tagName() {
+			return 'svg';
+		},
+
+		// Other mixins may not realize they shouldn't be setting tagName.
+		set tagName(noop) {},
+
+		get width(this: SvgRoot<SvgRootState>) {
+			const { width = shadowWidths.get(this) } = this.state || {};
+			return width;
+		},
+
+		set width(width) {
+			if (this.state) {
+				this.setState({ width });
+			}
+			else {
+				shadowWidths.set(this, width);
+				// invalidate() is typed as being optional, but that's just a workaround until
+				// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+				// for now.
+				this.invalidate!();
+			}
+		},
+
+		nodeAttributes: [
+			function(this: SvgRoot<SvgRootState>): VNodeProperties {
+				const { height, width } = this;
+				return {
+					height: String(height),
+					width: String(width),
+					'shape-rendering': 'crispEdges'
+				};
+			}
+		]
+	}).mixin({
 		initialize(instance: SvgRoot<SvgRootState>, { height = 150, width = 300 }: SvgRootOptions<SvgRootState> = {}) {
 			shadowHeights.set(instance, height);
 			shadowWidths.set(instance, width);
