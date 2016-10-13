@@ -14,7 +14,7 @@ function identity<T>(value: T): T {
 	return value;
 }
 
-export default function sort<T>(
+export default function sort<T extends Object>(
 	observable: InputObservable<T>,
 	comparableSelector: (input: T) => any = identity,
 	compareFunction: (a: any, b: any) => number = defaultCompare
