@@ -97,24 +97,23 @@ const shadowStackSpacings = new WeakMap<StackedColumnChart<any, any, any, Stacke
 // Cast to a generic factory so subclasses can modify the datum type.
 // The factory should be casted to StackedColumnChartFactory when creating a stacked column chart.
 const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColumnChart
-	.mixin({
-		mixin: {
-			get stackSpacing(this: StackedColumnChart<any, any, any, StackedColumnChartState<any>>) {
-				const { stackSpacing = shadowStackSpacings.get(this) } = this.state || {};
-				return stackSpacing;
-			},
-
-			set stackSpacing(stackSpacing) {
-				if (this.state) {
-					this.setState({ stackSpacing });
-				}
-				else {
-					shadowStackSpacings.set(this, stackSpacing);
-				}
-				this.invalidate();
-			}
+	.extend({
+		get stackSpacing(this: StackedColumnChart<any, any, any, StackedColumnChartState<any>>) {
+			const { stackSpacing = shadowStackSpacings.get(this) } = this.state || {};
+			return stackSpacing;
 		},
 
+		set stackSpacing(stackSpacing) {
+			if (this.state) {
+				this.setState({ stackSpacing });
+			}
+			else {
+				shadowStackSpacings.set(this, stackSpacing);
+			}
+			this.invalidate();
+		}
+	})
+	.mixin({
 		aspectAdvice: {
 			after: {
 				plot<G, T>(this: StackedColumnChart<G, T, StackedColumn<G, T>, any>, {
@@ -365,9 +364,8 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 					};
 				}
 			}
-		}
-	})
-	.mixin({
+		},
+
 		initialize<G, T>(
 			instance: StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>,
 			{

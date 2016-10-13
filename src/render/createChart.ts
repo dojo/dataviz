@@ -61,46 +61,42 @@ const shadowYInsets = new WeakMap<Chart<ChartState>, number>();
 
 const createChart: ChartFactory = createWidget
 	.mixin(createSvgRootMixin)
-	.mixin({
-		mixin: <ChartMixin> {
-			get xInset(this: Chart<ChartState>) {
-				const { xInset = shadowXInsets.get(this) } = this.state || {};
-				return xInset;
-			},
+	.extend({
+		get xInset(this: Chart<ChartState>) {
+			const { xInset = shadowXInsets.get(this) } = this.state || {};
+			return xInset;
+		},
 
-			set xInset(xInset) {
-				if (this.state) {
-					this.setState({ xInset });
-				}
-				else {
-					shadowXInsets.set(this, xInset);
-				}
-			},
-
-			get yInset(this: Chart<ChartState>) {
-				const { yInset = shadowYInsets.get(this) } = this.state || {};
-				return yInset;
-			},
-
-			set yInset(yInset) {
-				if (this.state) {
-					this.setState({ yInset });
-				}
-				else {
-					shadowYInsets.set(this, yInset);
-				}
-			},
-
-			getChildrenNodes(): VNode[] {
-				// Subclasses must override.
-				return [];
+		set xInset(xInset) {
+			if (this.state) {
+				this.setState({ xInset });
+			}
+			else {
+				shadowXInsets.set(this, xInset);
 			}
 		},
 
-		initialize(
-			instance: Chart<ChartState>,
-			{ xInset = 0, yInset = 0 }: ChartOptions<ChartState> = {}
-		) {
+		get yInset(this: Chart<ChartState>) {
+			const { yInset = shadowYInsets.get(this) } = this.state || {};
+			return yInset;
+		},
+
+		set yInset(yInset) {
+			if (this.state) {
+				this.setState({ yInset });
+			}
+			else {
+				shadowYInsets.set(this, yInset);
+			}
+		},
+
+		getChildrenNodes(): VNode[] {
+			// Subclasses must override.
+			return [];
+		}
+	})
+	.mixin({
+		initialize(instance: Chart<ChartState>, { xInset = 0, yInset = 0 }: ChartOptions<ChartState> = {}) {
 			shadowXInsets.set(instance, xInset);
 			shadowYInsets.set(instance, yInset);
 		}

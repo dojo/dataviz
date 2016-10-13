@@ -341,7 +341,7 @@ interface AxesConfiguration<D> {
 
 const shadowConfiguration = new WeakMap<Axes<any>, AxesConfiguration<any>>();
 
-const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
+const createAxes: AxesFactory<any> = compose({
 	get bottomAxis(this: Axes<any>) {
 		const { bottom } = shadowConfiguration.get(this);
 		if (bottom) {

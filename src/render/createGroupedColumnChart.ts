@@ -104,24 +104,23 @@ const shadowGroupSpacings = new WeakMap<GroupedColumnChart<any, any, any, Groupe
 // Cast to a generic factory so subclasses can modify the datum type.
 // The factory should be casted to GroupedColumnChartFactory when creating a grouped column chart.
 const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColumnChart
-	.mixin({
-		mixin: {
-			get groupSpacing(this: GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>) {
-				const { groupSpacing = shadowGroupSpacings.get(this) } = this.state || {};
-				return groupSpacing;
-			},
-
-			set groupSpacing(groupSpacing) {
-				if (this.state) {
-					this.setState({ groupSpacing });
-				}
-				else {
-					shadowGroupSpacings.set(this, groupSpacing);
-				}
-				this.invalidate();
-			}
+	.extend({
+		get groupSpacing(this: GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>) {
+			const { groupSpacing = shadowGroupSpacings.get(this) } = this.state || {};
+			return groupSpacing;
 		},
 
+		set groupSpacing(groupSpacing) {
+			if (this.state) {
+				this.setState({ groupSpacing });
+			}
+			else {
+				shadowGroupSpacings.set(this, groupSpacing);
+			}
+			this.invalidate();
+		}
+	})
+	.mixin({
 		aspectAdvice: {
 			after: {
 				plot<G, T>(this: GroupedColumnChart<G, T, GroupedColumn<G, T>, any>, {
@@ -222,9 +221,8 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 					};
 				}
 			}
-		}
-	})
-	.mixin({
+		},
+
 		initialize<G, T>(
 			instance: GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T>>,
 			{
