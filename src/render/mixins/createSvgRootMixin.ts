@@ -53,13 +53,17 @@ export type SvgRoot<S extends SvgRootState> = Stateful<S> & Invalidatable & SvgR
 
 export type SvgRootFactory = ComposeFactory<SvgRoot<SvgRootState>, SvgRootOptions<SvgRootState>>;
 
-const shadowHeights = new WeakMap<SvgRoot<SvgRootState>, number>();
-const shadowWidths = new WeakMap<SvgRoot<SvgRootState>, number>();
+interface PrivateState {
+	height: number;
+	width: number;
+}
+
+const privateStateMap = new WeakMap<SvgRoot<SvgRootState>, PrivateState>();
 
 const createSvgRootMixin: SvgRootFactory = createStateful
 	.extend({
 		get height(this: SvgRoot<SvgRootState>) {
-			const { height = shadowHeights.get(this) } = this.state || {};
+			const { height = privateStateMap.get(this).height } = this.state || {};
 			return height;
 		},
 
@@ -68,7 +72,7 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 				this.setState({ height });
 			}
 			else {
-				shadowHeights.set(this, height);
+				privateStateMap.get(this).height = height;
 				// invalidate() is typed as being optional, but that's just a workaround until
 				// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
 				// for now.
@@ -84,7 +88,7 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 		set tagName(noop) {},
 
 		get width(this: SvgRoot<SvgRootState>) {
-			const { width = shadowWidths.get(this) } = this.state || {};
+			const { width = privateStateMap.get(this).width } = this.state || {};
 			return width;
 		},
 
@@ -93,7 +97,7 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 				this.setState({ width });
 			}
 			else {
-				shadowWidths.set(this, width);
+				privateStateMap.get(this).width = width;
 				// invalidate() is typed as being optional, but that's just a workaround until
 				// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
 				// for now.
@@ -113,8 +117,7 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 		]
 	}).mixin({
 		initialize(instance: SvgRoot<SvgRootState>, { height = 150, width = 300 }: SvgRootOptions<SvgRootState> = {}) {
-			shadowHeights.set(instance, height);
-			shadowWidths.set(instance, width);
+			privateStateMap.set(instance, { height, width });
 		}
 	});
 

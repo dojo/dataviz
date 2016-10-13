@@ -332,74 +332,74 @@ export interface AxesFactory<D extends Datum<any>> extends ComposeFactory<
 	<D extends Datum<any>>(options?: AxesOptions<D>): Axes<D>;
 }
 
-interface AxesConfiguration<D> {
-	bottom?: AxisConfiguration<D>;
-	left?: AxisConfiguration<D>;
-	right?: AxisConfiguration<D>;
-	top?: AxisConfiguration<D>;
+interface PrivateState {
+	bottom?: AxisConfiguration<any>;
+	left?: AxisConfiguration<any>;
+	right?: AxisConfiguration<any>;
+	top?: AxisConfiguration<any>;
 }
 
-const shadowConfiguration = new WeakMap<Axes<any>, AxesConfiguration<any>>();
+const privateStateMap = new WeakMap<Axes<any>, PrivateState>();
 
 const createAxes: AxesFactory<any> = compose({
 	get bottomAxis(this: Axes<any>) {
-		const { bottom } = shadowConfiguration.get(this);
+		const { bottom } = privateStateMap.get(this);
 		if (bottom) {
 			return bottom;
 		}
 	},
 
 	set bottomAxis(axis: AxisConfiguration<any>) {
-		shadowConfiguration.get(this).bottom = axis;
+		privateStateMap.get(this).bottom = axis;
 		// invalidate() is typed as being optional, but that's just a workaround until
 		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
 		this.invalidate!();
 	},
 
 	get leftAxis(this: Axes<any>) {
-		const { left } = shadowConfiguration.get(this);
+		const { left } = privateStateMap.get(this);
 		if (left) {
 			return left;
 		}
 	},
 
 	set leftAxis(axis: AxisConfiguration<any>) {
-		shadowConfiguration.get(this).left = axis;
+		privateStateMap.get(this).left = axis;
 		// invalidate() is typed as being optional, but that's just a workaround until
 		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
 		this.invalidate!();
 	},
 
 	get rightAxis(this: Axes<any>) {
-		const { right } = shadowConfiguration.get(this);
+		const { right } = privateStateMap.get(this);
 		if (right) {
 			return right;
 		}
 	},
 
 	set rightAxis(axis: AxisConfiguration<any>) {
-		shadowConfiguration.get(this).right = axis;
+		privateStateMap.get(this).right = axis;
 		// invalidate() is typed as being optional, but that's just a workaround until
 		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
 		this.invalidate!();
 	},
 
 	get topAxis(this: Axes<any>) {
-		const { top } = shadowConfiguration.get(this);
+		const { top } = privateStateMap.get(this);
 		if (top) {
 			return top;
 		}
 	},
 
 	set topAxis(axis: AxisConfiguration<any>) {
-		shadowConfiguration.get(this).top = axis;
+		privateStateMap.get(this).top = axis;
 		// invalidate() is typed as being optional, but that's just a workaround until
 		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
 		this.invalidate!();
 	},
 
 	createAxes<D extends Datum<any>>(this: Axes<D>, plot: Plot<Point<D>>, domain: Domain): CreatedAxes {
-		const configuration = shadowConfiguration.get(this);
+		const configuration = privateStateMap.get(this);
 
 		const result: CreatedAxes = {
 			extraHeight: 0,
@@ -870,21 +870,21 @@ const createAxes: AxesFactory<any> = compose({
 			topAxis
 		}: AxesOptions<D> = {}
 	) {
-		const configuration: AxesConfiguration<D> = {};
+		const state: PrivateState = {};
 		if (bottomAxis) {
-			configuration.bottom = bottomAxis;
+			state.bottom = bottomAxis;
 		}
 		if (leftAxis) {
-			configuration.left = leftAxis;
+			state.left = leftAxis;
 		}
 		if (rightAxis) {
-			configuration.right = rightAxis;
+			state.right = rightAxis;
 		}
 		if (topAxis) {
-			configuration.top = topAxis;
+			state.top = topAxis;
 		}
 
-		shadowConfiguration.set(instance, configuration);
+		privateStateMap.set(instance, state);
 	}
 });
 

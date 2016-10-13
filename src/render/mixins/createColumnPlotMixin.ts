@@ -165,16 +165,20 @@ export interface ColumnPlotFactory<T> extends ComposeFactory<
 	<T, S extends ColumnPlotState<T>>(options?: ColumnPlotOptions<T, S>): ColumnPlot<T, S>;
 }
 
-const columnSeries = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Column<any>[]>();
-const shadowColumnHeights = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
-const shadowColumnSpacings = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
-const shadowColumnWidths = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, number>();
-const shadowDomains = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, Domain>();
+interface PrivateState {
+	columnHeight: number;
+	columnSpacing: number;
+	columnWidth: number;
+	domain: Domain;
+	series: Column<any>[];
+}
+
+const privateStateMap = new WeakMap<ColumnPlot<any, ColumnPlotState<any>>, PrivateState>();
 
 const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 	.extend({
 		get columnHeight(this: ColumnPlot<any, ColumnPlotState<any>>) {
-			const { columnHeight = shadowColumnHeights.get(this) } = this.state || {};
+			const { columnHeight = privateStateMap.get(this).columnHeight } = this.state || {};
 			return columnHeight;
 		},
 
@@ -183,7 +187,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 				this.setState({ columnHeight });
 			}
 			else {
-				shadowColumnHeights.set(this, columnHeight);
+				privateStateMap.get(this).columnHeight = columnHeight;
 			}
 			// invalidate() is typed as being optional, but that's just a workaround until
 			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
@@ -192,7 +196,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 		},
 
 		get columnSpacing(this: ColumnPlot<any, ColumnPlotState<any>>) {
-			const { columnSpacing = shadowColumnSpacings.get(this) } = this.state || {};
+			const { columnSpacing = privateStateMap.get(this).columnSpacing } = this.state || {};
 			return columnSpacing;
 		},
 
@@ -201,7 +205,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 				this.setState({ columnSpacing });
 			}
 			else {
-				shadowColumnSpacings.set(this, columnSpacing);
+				privateStateMap.get(this).columnSpacing = columnSpacing;
 			}
 			// invalidate() is typed as being optional, but that's just a workaround until
 			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
@@ -210,7 +214,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 		},
 
 		get columnWidth(this: ColumnPlot<any, ColumnPlotState<any>>) {
-			const { columnWidth = shadowColumnWidths.get(this) } = this.state || {};
+			const { columnWidth = privateStateMap.get(this).columnWidth } = this.state || {};
 			return columnWidth;
 		},
 
@@ -219,7 +223,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 				this.setState({ columnWidth });
 			}
 			else {
-				shadowColumnWidths.set(this, columnWidth);
+				privateStateMap.get(this).columnWidth = columnWidth;
 			}
 			// invalidate() is typed as being optional, but that's just a workaround until
 			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
@@ -228,7 +232,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 		},
 
 		get domain(this: ColumnPlot<any, ColumnPlotState<any>>) {
-			const { domain = shadowDomains.get(this) } = this.state || {};
+			const { domain = privateStateMap.get(this).domain } = this.state || {};
 			return normalizeDomain(domain);
 		},
 
@@ -237,7 +241,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 				this.setState({ domain });
 			}
 			else {
-				shadowDomains.set(this, domain);
+				privateStateMap.get(this).domain = domain;
 			}
 			// invalidate() is typed as being optional, but that's just a workaround until
 			// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
@@ -246,7 +250,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 		},
 
 		plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
-			const series = columnSeries.get(this);
+			const { series } = privateStateMap.get(this);
 			const { columnHeight, columnSpacing, columnWidth: displayWidth, domain: [ domainMin, domainMax ] } = this;
 
 			let mostNegativeRelValue = 0;
@@ -391,11 +395,6 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 				valueSelector
 			}: ColumnPlotOptions<T, ColumnPlotState<T>> = {}
 		) {
-			shadowColumnHeights.set(instance, columnHeight);
-			shadowColumnSpacings.set(instance, columnSpacing);
-			shadowColumnWidths.set(instance, columnWidth);
-			shadowDomains.set(instance, normalizeDomain(domain));
-
 			let operator: DivisorOperator<T>;
 			if (!divisorOperator) {
 				// Allow a divisorOperator implementation to be mixed in.
@@ -428,8 +427,14 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 				selector = valueSelector;
 			}
 
-			// Initialize with an empty series since InputSeries only provides a series once it's available.
-			columnSeries.set(instance, []);
+			privateStateMap.set(instance, {
+				columnHeight,
+				columnSpacing,
+				columnWidth,
+				domain: normalizeDomain(domain),
+				// Initialize with an empty series since InputSeries only provides a series once it's available.
+				series: []
+			});
 
 			let handle: Handle;
 			const subscribe = (inputSeries: Observable<T[]>) => {
@@ -439,7 +444,7 @@ const createColumnPlot: ColumnPlotFactory<any> = createInputSeries
 
 				const subscription = columnar(inputSeries, selector, operator)
 					.subscribe((series) => {
-						columnSeries.set(instance, series);
+						privateStateMap.get(instance).series = series;
 						// invalidate() is typed as being optional, but that's just a workaround until
 						// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check
 						// violation for now.
