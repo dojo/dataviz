@@ -1,5 +1,5 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createEvented, { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
 import { from } from 'dojo-shim/array';
@@ -75,8 +75,6 @@ const createInputSeries: InputSeriesFactory<any> = createStateful
 		}
 	})
 	.mixin({
-		mixin: createEvented,
-
 		initialize<T>(
 			instance: InputSeries<T, InputSeriesState<T>>,
 			{ inputSeries }: InputSeriesOptions<T, InputSeriesState<T>> = {}
