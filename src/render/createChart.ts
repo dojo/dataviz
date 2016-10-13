@@ -1,8 +1,7 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import { assign } from 'dojo-core/lang';
 import createWidget, { Widget, WidgetOptions, WidgetState } from 'dojo-widgets/createWidget';
 import WeakMap from 'dojo-shim/WeakMap';
-import { VNode, VNodeProperties } from 'maquette';
+import { VNode } from 'maquette';
 
 import createSvgRootMixin, { SvgRoot, SvgRootOptions, SvgRootState } from './mixins/createSvgRootMixin';
 
@@ -63,14 +62,6 @@ const shadowYInsets = new WeakMap<Chart<ChartState>, number>();
 const createChart: ChartFactory = createWidget
 	.mixin(createSvgRootMixin)
 	.mixin({
-		aspectAdvice: {
-			before: {
-				getNodeAttributes(this: Chart<ChartState>, overrides?: VNodeProperties): VNodeProperties[] {
-					return [ assign(this.getRootAttributes(), overrides) ];
-				}
-			}
-		},
-
 		mixin: <ChartMixin> {
 			get xInset(this: Chart<ChartState>) {
 				const { xInset = shadowXInsets.get(this) } = this.state || {};
