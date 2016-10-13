@@ -44,11 +44,6 @@ export interface SvgRootMixin {
 	 * Controls the width of the <svg> element.
 	 */
 	width?: number;
-
-	/**
-	 * Get attributes that should be used to create the root VNode.
-	 */
-	getRootAttributes(): VNodeProperties;
 }
 
 /**
@@ -107,14 +102,16 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 				}
 			},
 
-			getRootAttributes(this: SvgRoot<SvgRootState>): VNodeProperties {
-				const { height, width } = this;
-				return {
-					height: String(height),
-					width: String(width),
-					'shape-rendering': 'crispEdges'
-				};
-			}
+			nodeAttributes: [
+				function(this: SvgRoot<SvgRootState>): VNodeProperties {
+					const { height, width } = this;
+					return {
+						height: String(height),
+						width: String(width),
+						'shape-rendering': 'crispEdges'
+					};
+				}
+			]
 		},
 
 		initialize(instance: SvgRoot<SvgRootState>, { height = 150, width = 300 }: SvgRootOptions<SvgRootState> = {}) {
