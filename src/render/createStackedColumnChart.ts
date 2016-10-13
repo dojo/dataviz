@@ -88,18 +88,19 @@ export interface StackedColumnChartFactory<G, T> extends ComposeFactory<
 	): StackedColumnChart<G, T, StackedColumn<G, T>, StackedColumnChartState<T>>;
 }
 
-const stackSelectors = new WeakMap<
-	StackedColumnChart<any, any, any, StackedColumnChartState<any>>,
-	StackSelector<any, any>
->();
-const shadowStackSpacings = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any>>, number>();
+interface PrivateState {
+	stackSelector: StackSelector<any, any>;
+	stackSpacing: number;
+}
+
+const privateStateMap = new WeakMap<StackedColumnChart<any, any, any, StackedColumnChartState<any>>, PrivateState>();
 
 // Cast to a generic factory so subclasses can modify the datum type.
 // The factory should be casted to StackedColumnChartFactory when creating a stacked column chart.
 const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColumnChart
 	.extend({
 		get stackSpacing(this: StackedColumnChart<any, any, any, StackedColumnChartState<any>>) {
-			const { stackSpacing = shadowStackSpacings.get(this) } = this.state || {};
+			const { stackSpacing = privateStateMap.get(this).stackSpacing } = this.state || {};
 			return stackSpacing;
 		},
 
@@ -108,7 +109,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 				this.setState({ stackSpacing });
 			}
 			else {
-				shadowStackSpacings.set(this, stackSpacing);
+				privateStateMap.get(this).stackSpacing = stackSpacing;
 			}
 			this.invalidate();
 		}
@@ -137,7 +138,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 					let mostPositiveRelValue = 0;
 					let mostPositiveValue = 0;
 
-					const stackSelector = stackSelectors.get(this);
+					const { stackSelector } = privateStateMap.get(this);
 					interface Record {
 						originalPoints: ColumnPoint<T>[];
 						columns: Column<T>[];
@@ -378,8 +379,7 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 				stackSelector = (input: T) => instance.stackSelector!(input);
 			}
 
-			stackSelectors.set(instance, stackSelector);
-			shadowStackSpacings.set(instance, stackSpacing);
+			privateStateMap.set(instance, { stackSelector, stackSpacing });
 		}
 	});
 

@@ -56,14 +56,18 @@ export interface ChartFactory extends ComposeFactory<
 	<S extends ChartState>(options?: ChartOptions<S>): Chart<S>;
 }
 
-const shadowXInsets = new WeakMap<Chart<ChartState>, number>();
-const shadowYInsets = new WeakMap<Chart<ChartState>, number>();
+interface PrivateState {
+	xInset: number;
+	yInset: number;
+}
+
+const privateStateMap = new WeakMap<Chart<ChartState>, PrivateState>();
 
 const createChart: ChartFactory = createWidget
 	.mixin(createSvgRootMixin)
 	.extend({
 		get xInset(this: Chart<ChartState>) {
-			const { xInset = shadowXInsets.get(this) } = this.state || {};
+			const { xInset = privateStateMap.get(this).xInset } = this.state || {};
 			return xInset;
 		},
 
@@ -72,12 +76,12 @@ const createChart: ChartFactory = createWidget
 				this.setState({ xInset });
 			}
 			else {
-				shadowXInsets.set(this, xInset);
+				privateStateMap.get(this).xInset = xInset;
 			}
 		},
 
 		get yInset(this: Chart<ChartState>) {
-			const { yInset = shadowYInsets.get(this) } = this.state || {};
+			const { yInset = privateStateMap.get(this).yInset } = this.state || {};
 			return yInset;
 		},
 
@@ -86,7 +90,7 @@ const createChart: ChartFactory = createWidget
 				this.setState({ yInset });
 			}
 			else {
-				shadowYInsets.set(this, yInset);
+				privateStateMap.get(this).yInset = yInset;
 			}
 		},
 
@@ -97,8 +101,7 @@ const createChart: ChartFactory = createWidget
 	})
 	.mixin({
 		initialize(instance: Chart<ChartState>, { xInset = 0, yInset = 0 }: ChartOptions<ChartState> = {}) {
-			shadowXInsets.set(instance, xInset);
-			shadowYInsets.set(instance, yInset);
+			privateStateMap.set(instance, { xInset, yInset });
 		}
 	});
 

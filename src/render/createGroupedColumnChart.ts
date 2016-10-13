@@ -95,18 +95,19 @@ export interface GroupedColumnChartFactory<G, T> extends ComposeFactory<
 	): GroupedColumnChart<G, T, GroupedColumn<G, T>, GroupedColumnChartState<T>>;
 }
 
-const groupSelectors = new WeakMap<
-	GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>,
-	GroupSelector<any, any>
->();
-const shadowGroupSpacings = new WeakMap<GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>, number>();
+interface PrivateState {
+	groupSelector: GroupSelector<any, any>;
+	groupSpacing: number;
+}
+
+const privateStateMap = new WeakMap<GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>, PrivateState>();
 
 // Cast to a generic factory so subclasses can modify the datum type.
 // The factory should be casted to GroupedColumnChartFactory when creating a grouped column chart.
 const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColumnChart
 	.extend({
 		get groupSpacing(this: GroupedColumnChart<any, any, any, GroupedColumnChartState<any>>) {
-			const { groupSpacing = shadowGroupSpacings.get(this) } = this.state || {};
+			const { groupSpacing = privateStateMap.get(this).groupSpacing } = this.state || {};
 			return groupSpacing;
 		},
 
@@ -115,7 +116,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 				this.setState({ groupSpacing });
 			}
 			else {
-				shadowGroupSpacings.set(this, groupSpacing);
+				privateStateMap.get(this).groupSpacing = groupSpacing;
 			}
 			this.invalidate();
 		}
@@ -133,7 +134,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 				}: ColumnPointPlot<T>): GroupedColumnPointPlot<G, T> {
 					const { columnHeight, columnSpacing, groupSpacing } = this;
 
-					const groupSelector = groupSelectors.get(this);
+					const { groupSelector } = privateStateMap.get(this);
 					interface Record {
 						originalPoints: ColumnPoint<T>[];
 						columns: Column<T>[];
@@ -235,8 +236,7 @@ const createGroupedColumnChart: GroupedColumnChartFactory<any, any> = createColu
 				groupSelector = (input: T) => instance.groupSelector!(input);
 			}
 
-			groupSelectors.set(instance, groupSelector);
-			shadowGroupSpacings.set(instance, groupSpacing);
+			privateStateMap.set(instance, { groupSelector, groupSpacing });
 		}
 	});
 
