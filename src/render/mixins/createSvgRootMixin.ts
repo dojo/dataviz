@@ -75,7 +75,10 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 				}
 				else {
 					shadowHeights.set(this, height);
-					this.invalidate();
+					// invalidate() is typed as being optional, but that's just a workaround until
+					// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+					// for now.
+					this.invalidate!();
 				}
 			},
 
@@ -96,7 +99,10 @@ const createSvgRootMixin: SvgRootFactory = createStateful
 				}
 				else {
 					shadowWidths.set(this, width);
-					this.invalidate();
+					// invalidate() is typed as being optional, but that's just a workaround until
+					// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+					// for now.
+					this.invalidate!();
 				}
 			},
 

@@ -296,30 +296,30 @@ export interface AxesMixin<D extends Datum<any>> {
 
 	createHardcodedAxis(
 		cfg: HardcodedAxis,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		plot: Plot<Point<D>>
+		plot: Plot<Point<D>>,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	): VNode[];
 
 	createInputBasedAxis(
 		cfg: InputBasedAxis<D>,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		plot: Plot<Point<D>>
+		plot: Plot<Point<D>>,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	): VNode[];
 
 	createRangeBasedAxis(
 		cfg: RangeBasedAxis,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
 		plot: Plot<Point<D>>,
-		domain: Domain
+		domain: Domain,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	): [VNode[], number];
 }
 
@@ -343,39 +343,59 @@ const shadowConfiguration = new WeakMap<Axes<any>, AxesConfiguration<any>>();
 
 const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	get bottomAxis(this: Axes<any>) {
-		return shadowConfiguration.get(this).bottom;
+		const { bottom } = shadowConfiguration.get(this);
+		if (bottom) {
+			return bottom;
+		}
 	},
 
 	set bottomAxis(axis: AxisConfiguration<any>) {
 		shadowConfiguration.get(this).bottom = axis;
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get leftAxis(this: Axes<any>) {
-		return shadowConfiguration.get(this).left;
+		const { left } = shadowConfiguration.get(this);
+		if (left) {
+			return left;
+		}
 	},
 
 	set leftAxis(axis: AxisConfiguration<any>) {
 		shadowConfiguration.get(this).left = axis;
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get rightAxis(this: Axes<any>) {
-		return shadowConfiguration.get(this).right;
+		const { right } = shadowConfiguration.get(this);
+		if (right) {
+			return right;
+		}
 	},
 
 	set rightAxis(axis: AxisConfiguration<any>) {
 		shadowConfiguration.get(this).right = axis;
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get topAxis(this: Axes<any>) {
-		return shadowConfiguration.get(this).top;
+		const { top } = shadowConfiguration.get(this);
+		if (top) {
+			return top;
+		}
 	},
 
 	set topAxis(axis: AxisConfiguration<any>) {
 		shadowConfiguration.get(this).top = axis;
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	createAxes<D extends Datum<any>>(this: Axes<D>, plot: Plot<Point<D>>, domain: Domain): CreatedAxes {
@@ -419,7 +439,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		const { gridLines, ticks } = cfg;
 		const { height, width, zero } = plot;
 
-		let labels: LabelConfiguration;
+		let labels: LabelConfiguration | undefined;
 		if (cfg.labels !== false) {
 			labels = cfg.labels || {};
 		}
@@ -430,7 +450,7 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 
 		let gridLineLength = 0;
 		if (gridLines) {
-			if (typeof gridLines === 'object' && 'length' in gridLines) {
+			if (typeof gridLines === 'object' && gridLines.length !== undefined) {
 				gridLineLength = gridLines.length;
 			}
 			else if (isHorizontal) {
@@ -460,14 +480,14 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 		}
 
 		if (isHardcoded(cfg)) {
-			nodes.push(...this.createHardcodedAxis(cfg, labels, ticks, gridLineLength, side, plot));
+			nodes.push(...this.createHardcodedAxis(cfg, gridLineLength, side, plot, labels, ticks));
 		}
 		else if (isInputBased(cfg)) {
-			nodes.push(...this.createInputBasedAxis(cfg, labels, ticks, gridLineLength, side, plot));
+			nodes.push(...this.createInputBasedAxis(cfg, gridLineLength, side, plot, labels, ticks));
 		}
 		else if (isRangeBased(cfg)) {
 			let stepNodes: VNode[];
-			[stepNodes, extraSpace] = this.createRangeBasedAxis(cfg, labels, ticks, gridLineLength, side, plot, domain);
+			[stepNodes, extraSpace] = this.createRangeBasedAxis(cfg, gridLineLength, side, plot, domain, labels, ticks);
 			nodes.push(...stepNodes);
 		}
 
@@ -644,11 +664,11 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	createHardcodedAxis(
 		this: Axes<any>,
 		{ hardcoded }: HardcodedAxis,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		{ height, width }: Plot<any>
+		{ height, width }: Plot<any>,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	) {
 		const isHorizontal = side === 'bottom' || side === 'top';
 		const nodes: VNode[] = [];
@@ -697,11 +717,11 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	createInputBasedAxis<D extends Datum<any>>(
 		this: Axes<D>,
 		{ inputs }: InputBasedAxis<D>,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
-		{ points, zero }: Plot<Point<D>>
+		{ points, zero }: Plot<Point<D>>,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	) {
 		const labelSelector = typeof inputs === 'boolean' ? null : inputs.labelSelector;
 
@@ -743,8 +763,6 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 	createRangeBasedAxis<D extends Datum<any>>(
 		this: Axes<D>,
 		{ range }: RangeBasedAxis,
-		labels: LabelConfiguration,
-		ticks: TickConfiguration,
 		gridLineLength: number,
 		side: Side,
 		{
@@ -755,7 +773,9 @@ const createAxes: AxesFactory<any> = compose(<AxesMixin<any>> {
 			width,
 			zero
 		}: Plot<Point<D>>,
-		[domainMin, domainMax]: Domain
+		[domainMin, domainMax]: Domain,
+		labels?: LabelConfiguration,
+		ticks?: TickConfiguration
 	) {
 		const {
 			fixed = false,

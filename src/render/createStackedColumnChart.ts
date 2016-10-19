@@ -144,6 +144,13 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 						value: number;
 					}
 					const stacks = new Map<G, [Record, Record]>();
+					const createSigned = (): [Record, Record] => {
+						return [
+							// Record negative and positive columns separately.
+							{ columnPoints: [], columns: [], isNegative: true, relativeValue: 0, value: 0 },
+							{ columnPoints: [], columns: [], isNegative: false, relativeValue: 0, value: 0 }
+						];
+					};
 
 					for (const point of columnPoints) {
 						const { datum } = point;
@@ -152,19 +159,14 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 						// Note that the ordering of the stacks is determined by the original sort order, as is the
 						// ordering of nodes within the stack.
 						const stack = stackSelector(input);
+						const signed = stacks.get(stack) || createSigned();
+						const record = relativeValue < 0 ? signed[0] : signed[1];
 						if (!stacks.has(stack)) {
-							stacks.set(stack, [
-								// Record negative and positive columns separately.
-								{ columnPoints: [], columns: [], isNegative: true, relativeValue: 0, value: 0 },
-								{ columnPoints: [], columns: [], isNegative: false, relativeValue: 0, value: 0 }
-							]);
+							stacks.set(stack, signed);
 						}
 
 						// The point will be modified below. Be friendly and copy it first.
 						const shallowCopy = assign({}, point);
-
-						const signed = stacks.get(stack);
-						const record = relativeValue < 0 ? signed[0] : signed[1];
 						record.columnPoints.push(shallowCopy);
 						record.columns.push(datum);
 						record.relativeValue += relativeValue;
@@ -372,7 +374,8 @@ const createStackedColumnChart: StackedColumnChartFactory<any, any> = createColu
 			}: StackedColumnChartOptions<G, T, StackedColumn<G, T>, StackedColumnChartState<T>> = {}
 		) {
 			if (!stackSelector) {
-				stackSelector = (input: T) => instance.stackSelector(input);
+				// Ignore instance.stackSelector being undefined, let the runtime throw an exception instead.
+				stackSelector = (input: T) => instance.stackSelector!(input);
 			}
 
 			stackSelectors.set(instance, stackSelector);

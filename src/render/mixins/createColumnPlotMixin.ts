@@ -184,7 +184,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		else {
 			shadowColumnHeights.set(this, columnHeight);
 		}
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get columnSpacing(this: ColumnPlot<any, ColumnPlotState<any>>) {
@@ -199,7 +201,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		else {
 			shadowColumnSpacings.set(this, columnSpacing);
 		}
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get columnWidth(this: ColumnPlot<any, ColumnPlotState<any>>) {
@@ -214,7 +218,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		else {
 			shadowColumnWidths.set(this, columnWidth);
 		}
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	get domain(this: ColumnPlot<any, ColumnPlotState<any>>) {
@@ -229,7 +235,9 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		else {
 			shadowDomains.set(this, domain);
 		}
-		this.invalidate();
+		// invalidate() is typed as being optional, but that's just a workaround until
+		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
+		this.invalidate!();
 	},
 
 	plot<T>(this: ColumnPlot<T, ColumnPlotState<T>>): ColumnPointPlot<T> {
@@ -383,9 +391,10 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 		shadowColumnWidths.set(instance, columnWidth);
 		shadowDomains.set(instance, normalizeDomain(domain));
 
+		let operator: DivisorOperator<T>;
 		if (!divisorOperator) {
 			// Allow a divisorOperator implementation to be mixed in.
-			divisorOperator = (observable: InputObservable<T>, valueSelector: ValueSelector<T>) => {
+			operator = (observable: InputObservable<T>, valueSelector: ValueSelector<T>) => {
 				if (instance.divisorOperator) {
 					return instance.divisorOperator(observable, valueSelector);
 				}
@@ -394,10 +403,14 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				return Observable.of(1);
 			};
 		}
+		else {
+			operator = divisorOperator;
+		}
 
+		let selector: ValueSelector<T>;
 		if (!valueSelector) {
 			// Allow a valueSelector implementation to be mixed in.
-			valueSelector = (input: T) => {
+			selector = (input: T) => {
 				if (instance.valueSelector) {
 					return instance.valueSelector(input);
 				}
@@ -406,20 +419,26 @@ const createColumnPlot: ColumnPlotFactory<any> = compose({
 				return 0;
 			};
 		}
+		else {
+			selector = valueSelector;
+		}
 
 		// Initialize with an empty series since InputSeries only provides a series once it's available.
 		columnSeries.set(instance, []);
 
-		let handle: Handle = null;
+		let handle: Handle;
 		const subscribe = (inputSeries: Observable<T[]>) => {
 			if (handle) {
 				handle.destroy();
 			}
 
-			const subscription = columnar(inputSeries, valueSelector, divisorOperator)
+			const subscription = columnar(inputSeries, selector, operator)
 				.subscribe((series) => {
 					columnSeries.set(instance, series);
-					instance.invalidate();
+					// invalidate() is typed as being optional, but that's just a workaround until
+					// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation
+					// for now.
+					instance.invalidate!();
 				});
 
 			handle = instance.own({
