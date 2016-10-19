@@ -4,10 +4,10 @@
 import { assign, deepAssign } from 'dojo-core/lang';
 import projector from 'dojo-widgets/projector';
 
-import max from 'src/data/max';
-import { Datum } from 'src/data/interfaces';
-import createColumnChart, { ColumnChartOptions } from 'src/render/createColumnChart';
-import { AxisConfiguration } from 'src/render/mixins/createAxesMixin';
+import max from '../src/data/max';
+import { Datum } from '../src/data/interfaces';
+import createColumnChart, { ColumnChartOptions } from '../src/render/createColumnChart';
+import { AxisConfiguration } from '../src/render/mixins/createAxesMixin';
 
 const MAX_INPUT = 30;
 const inputSeries = [5, 15, 25, MAX_INPUT];

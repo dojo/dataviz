@@ -1,12 +1,12 @@
 import createMemoryStore from 'dojo-stores/createMemoryStore';
 import projector from 'dojo-widgets/projector';
 
-import max from 'src/data/max';
-import sum from 'src/data/sum';
-import sort from 'src/data/sort';
-import createColumnChart from 'src/render/createColumnChart';
-import createGroupedColumnChart from 'src/render/createGroupedColumnChart';
-import createStackedColumnChart from 'src/render/createStackedColumnChart';
+import max from '../src/data/max';
+import sum from '../src/data/sum';
+import sort from '../src/data/sort';
+import createColumnChart from '../src/render/createColumnChart';
+import createGroupedColumnChart from '../src/render/createGroupedColumnChart';
+import createStackedColumnChart from '../src/render/createStackedColumnChart';
 
 import getPlayCounts, { PlayCount } from './play-counts';
 
