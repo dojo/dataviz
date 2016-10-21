@@ -1,3 +1,4 @@
+import global from 'dojo-core/global';
 import createMemoryStore from 'dojo-stores/createMemoryStore';
 import projector from 'dojo-widgets/projector';
 
@@ -172,10 +173,10 @@ const stackedByProvinceChart = createStackedColumnChart<string, PlayCount>({
 });
 
 // Make the charts available to the console.
-(<any> window).absoluteChart = absoluteChart;
-(<any> window).groupedByProvinceChart = groupedByProvinceChart;
-(<any> window).percentageChart = percentageChart;
-(<any> window).stackedByProvinceChart = stackedByProvinceChart;
+global.absoluteChart = absoluteChart;
+global.groupedByProvinceChart = groupedByProvinceChart;
+global.percentageChart = percentageChart;
+global.stackedByProvinceChart = stackedByProvinceChart;
 
 projector.append([percentageChart, absoluteChart, groupedByProvinceChart, stackedByProvinceChart]);
 projector.attach();

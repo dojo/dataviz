@@ -1,3 +1,4 @@
+import global from 'dojo-core/global';
 import projector from 'dojo-widgets/projector';
 
 import max from '../src/data/max';
@@ -185,13 +186,13 @@ const stackDomain = createStackedColumnChart<string, [string, number]>({
 	valueSelector(input) { return input[1]; }
 });
 
-(<any> window).basic = basic;
-(<any> window).domain = domain;
-(<any> window).allNegative = allNegative;
-(<any> window).allNegativeDomain = allNegativeDomain;
-(<any> window).group = group;
-(<any> window).stack = stack;
-(<any> window).stackDomain = stackDomain;
+global.basic = basic;
+global.domain = domain;
+global.allNegative = allNegative;
+global.allNegativeDomain = allNegativeDomain;
+global.group = group;
+global.stack = stack;
+global.stackDomain = stackDomain;
 
 projector.append([
 	basic, domain,
