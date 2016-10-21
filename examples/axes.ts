@@ -1,6 +1,8 @@
 // Hey! So this file renders a variety of axis options. It's by no means exhaustive, or pretty, or even sensible given
 // for a column chart. It's just a way to visually verify some of the render logic, if you know what you're looking for.
 
+// ALSO, IT'S BROKEN NOW THAT AXES CONFIGURATION HAS BEEN MOVED OUT OF OPTIONS.
+
 import global from 'dojo-core/global';
 import { assign, deepAssign } from 'dojo-core/lang';
 import projector from 'dojo-widgets/projector';

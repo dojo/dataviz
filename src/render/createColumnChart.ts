@@ -4,7 +4,7 @@ import { h, VNode } from 'maquette';
 import { Datum } from '../data/interfaces';
 
 import createChart, { Chart, ChartOptions, ChartState } from './createChart';
-import createAxes, { Axes, AxesOptions } from './mixins/createAxesMixin';
+import createAxes, { Axes } from './mixins/createAxesMixin';
 import createColumnPlot, {
 	Column,
 	ColumnPoint,
@@ -24,7 +24,7 @@ export type ColumnChartOptions<
 	D extends Datum<any>,
 	// Extend ColumnChartState<T> since subclasses must still support the state properties of ColumnChart.
 	S extends ColumnChartState<T>
-> = ChartOptions<S> & ColumnPlotOptions<T, S> & AxesOptions<D>;
+> = ChartOptions<S> & ColumnPlotOptions<T, S>;
 
 export type ColumnChart<
 	T,
