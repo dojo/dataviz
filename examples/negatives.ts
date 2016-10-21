@@ -2,22 +2,25 @@ import global from 'dojo-core/global';
 import projector from 'dojo-widgets/projector';
 
 import max from '../src/data/max';
-import createColumnChart from '../src/render/createColumnChart';
-import createGroupedColumnChart from '../src/render/createGroupedColumnChart';
-import createStackedColumnChart from '../src/render/createStackedColumnChart';
+import createColumnChart, { ColumnChartFactory } from '../src/render/createColumnChart';
+import createGroupedColumnChart, { GroupedColumnChartFactory } from '../src/render/createGroupedColumnChart';
+import createStackedColumnChart, { StackedColumnChartFactory } from '../src/render/createStackedColumnChart';
 
-const basic = createColumnChart<number>({
+const createBasic: ColumnChartFactory<number> = createColumnChart.extend({
 	bottomAxis: {
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	divisorOperator: max,
-	inputSeries: [-5, 5, 10],
 	leftAxis: {
 		labels: { anchor: 'end' },
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
-	},
+	}
+});
+
+const basic = createBasic({
+	divisorOperator: max,
+	inputSeries: [-5, 5, 10],
 	state: {
 		columnHeight: 150,
 		columnSpacing: 3,
@@ -29,18 +32,21 @@ const basic = createColumnChart<number>({
 	valueSelector(input) { return input; }
 });
 
-const domain = createColumnChart<number>({
+const createDomain: ColumnChartFactory<number> = createColumnChart.extend({
 	bottomAxis: {
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	divisorOperator: max,
-	inputSeries: [-5, 5, 10],
 	leftAxis: {
 		range: { stepSize: 5 },
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
-	},
+	}
+});
+
+const domain = createDomain({
+	divisorOperator: max,
+	inputSeries: [-5, 5, 10],
 	state: {
 		columnHeight: 200,
 		columnSpacing: 3,
@@ -53,20 +59,23 @@ const domain = createColumnChart<number>({
 	valueSelector(input) { return input; }
 });
 
-const allNegative = createColumnChart<number>({
+const createAllNegative: ColumnChartFactory<number> = createColumnChart.extend({
 	bottomAxis: {
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	divisorOperator: max,
-	inputSeries: [-5, -10],
 	leftAxis: {
 		inputs: {
 			labelSelector({ input }) { return String(input); }
 		},
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
-	},
+	}
+});
+
+const allNegative = createAllNegative({
+	divisorOperator: max,
+	inputSeries: [-5, -10],
 	state: {
 		columnHeight: 150,
 		columnSpacing: 3,
@@ -78,18 +87,21 @@ const allNegative = createColumnChart<number>({
 	valueSelector(input) { return input; }
 });
 
-const allNegativeDomain = createColumnChart<number>({
+const createAllNegativeDomain: ColumnChartFactory<number> = createColumnChart.extend({
 	bottomAxis: {
 		inputs: true,
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	divisorOperator: max,
-	inputSeries: [-5, -10],
 	leftAxis: {
 		range: { stepSize: 5 },
 		labels: { anchor: 'end' },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
-	},
+	}
+});
+
+const allNegativeDomain = createAllNegativeDomain({
+	divisorOperator: max,
+	inputSeries: [-5, -10],
 	state: {
 		columnHeight: 200,
 		columnSpacing: 3,
@@ -102,7 +114,7 @@ const allNegativeDomain = createColumnChart<number>({
 	valueSelector(input) { return input; }
 });
 
-const group = createGroupedColumnChart<string, [string, number]>({
+const createGroup: GroupedColumnChartFactory<string, [string, number]> = createGroupedColumnChart.extend({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input; }
@@ -110,14 +122,17 @@ const group = createGroupedColumnChart<string, [string, number]>({
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: -45, offset: -5 },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	divisorOperator: max,
-	groupSelector(input) { return input[0]; },
-	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10]],
 	leftAxis: {
 		labels: { anchor: 'end' },
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
-	},
+	}
+});
+
+const group = createGroup({
+	divisorOperator: max,
+	groupSelector(input) { return input[0]; },
+	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10]],
 	state: {
 		columnHeight: 150,
 		columnSpacing: 3,
@@ -129,7 +144,7 @@ const group = createGroupedColumnChart<string, [string, number]>({
 	valueSelector(input) { return input[1]; }
 });
 
-const stack = createStackedColumnChart<string, [string, number]>({
+const createStack: StackedColumnChartFactory<string, [string, number]> = createStackedColumnChart.extend({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input; }
@@ -137,13 +152,16 @@ const stack = createStackedColumnChart<string, [string, number]>({
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: -45, offset: -5 },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	divisorOperator: max,
-	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10], ['baz', -5], ['baz', 5]],
 	leftAxis: {
 		labels: { anchor: 'end' },
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
-	},
+	}
+});
+
+const stack = createStack({
+	divisorOperator: max,
+	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10], ['baz', -5], ['baz', 5]],
 	stackSelector(input) { return input[0]; },
 	state: {
 		columnHeight: 150,
@@ -157,7 +175,7 @@ const stack = createStackedColumnChart<string, [string, number]>({
 	valueSelector(input) { return input[1]; }
 });
 
-const stackDomain = createStackedColumnChart<string, [string, number]>({
+const createStackDomain: StackedColumnChartFactory<string, [string, number]> = createStackedColumnChart.extend({
 	bottomAxis: {
 		inputs: {
 			labelSelector({ input }) { return input; }
@@ -165,13 +183,16 @@ const stackDomain = createStackedColumnChart<string, [string, number]>({
 		labels: { anchor: 'middle', textAnchor: 'end', rotation: -45, offset: -5 },
 		ticks: { anchor: 'end', length: 5, zeroth: true }
 	},
-	divisorOperator: max,
-	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10], ['baz', -5], ['baz', 5]],
 	leftAxis: {
 		labels: { anchor: 'end' },
 		range: { stepSize: 5 },
 		ticks: { length: 5, zeroth: true }
-	},
+	}
+});
+
+const stackDomain = createStackDomain({
+	divisorOperator: max,
+	inputSeries: [['foo', -5], ['foo', -5], ['bar', 5], ['bar', 10], ['baz', -5], ['baz', 5]],
 	stackSelector(input) { return input[0]; },
 	state: {
 		columnHeight: 150,

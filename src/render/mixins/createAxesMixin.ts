@@ -1,5 +1,4 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import WeakMap from 'dojo-shim/WeakMap';
 import { h, VNode } from 'maquette';
 
 import { Datum } from '../../data/interfaces';
@@ -12,9 +11,9 @@ Hello! This mixin is not yet feature complete:
 	* It assumes datum values are >= 0 for horizontal axes (no negative values), but <= is supported for vertical axes
 	* Axes configuration cannot be provided through the widget state. This would also require label selectors to be
 	  defined on the prototype since they can't be serialized into the state. Perhaps as topInputLabelSelector, etc
-	* Axes configuration cannot be provided through the prototype. This is necessary to create widgets with a
+	* Axes configuration can only be provided through the prototype. This is necessary to create widgets with a
 	  default configuration
-	* It's unclear how a default configuration would be extended through options and/or state
+	* It's unclear how a default configuration would be merged with options in state
 	* Certain configuration may be default for all enabled axes (e.g. ticks). Would be cool not to have to repeat that
 	* Chart dimensions are not adjusted if exceeded by grid lines
 	* No support for "mini ticks". These should probably be restricted to range based axes, where the step size
@@ -219,48 +218,26 @@ export interface CreatedAxes {
 
 export type Side = 'bottom' | 'left' | 'right' | 'top';
 
-export interface AxesOptions<D extends Datum<any>> {
-	/**
-	 * An axis that will be displayed below the plotted chart.
-	 */
-	bottomAxis?: AxisConfiguration<D>;
-
-	/**
-	 * An axis that will be displayed left of plotted chart.
-	 */
-	leftAxis?: AxisConfiguration<D>;
-
-	/**
-	 * An axis that will be displayed right of the plotted chart.
-	 */
-	rightAxis?: AxisConfiguration<D>;
-
-	/**
-	 * An axis that will be displayed above the plotted chart.
-	 */
-	topAxis?: AxisConfiguration<D>;
-}
-
 export interface AxesMixin<D extends Datum<any>> {
 	/**
 	 * An axis that will be displayed below the plotted chart.
 	 */
-	bottomAxis?: AxisConfiguration<D>;
+	readonly bottomAxis?: AxisConfiguration<D>;
 
 	/**
 	 * An axis that will be displayed left of plotted chart.
 	 */
-	leftAxis?: AxisConfiguration<D>;
+	readonly leftAxis?: AxisConfiguration<D>;
 
 	/**
 	 * An axis that will be displayed right of the plotted chart.
 	 */
-	rightAxis?: AxisConfiguration<D>;
+	readonly rightAxis?: AxisConfiguration<D>;
 
 	/**
 	 * An axis that will be displayed above the plotted chart.
 	 */
-	topAxis?: AxisConfiguration<D>;
+	readonly topAxis?: AxisConfiguration<D>;
 
 	createAxes(plot: Plot<Point<D>>, domain: Domain): CreatedAxes;
 
@@ -325,104 +302,34 @@ export interface AxesMixin<D extends Datum<any>> {
 
 export type Axes<D extends Datum<any>> = Invalidatable & AxesMixin<D>;
 
-export interface AxesFactory<D extends Datum<any>> extends ComposeFactory<
-	Axes<D>,
-	AxesOptions<D>
-> {
-	<D extends Datum<any>>(options?: AxesOptions<D>): Axes<D>;
+export interface AxesFactory<D extends Datum<any>> extends ComposeFactory<Axes<D>, any> {
+	<D extends Datum<any>>(): Axes<D>;
 }
-
-interface PrivateState {
-	bottom?: AxisConfiguration<any>;
-	left?: AxisConfiguration<any>;
-	right?: AxisConfiguration<any>;
-	top?: AxisConfiguration<any>;
-}
-
-const privateStateMap = new WeakMap<Axes<any>, PrivateState>();
 
 const createAxes: AxesFactory<any> = compose({
-	get bottomAxis(this: Axes<any>) {
-		const { bottom } = privateStateMap.get(this);
-		if (bottom) {
-			return bottom;
-		}
-	},
-
-	set bottomAxis(axis: AxisConfiguration<any>) {
-		privateStateMap.get(this).bottom = axis;
-		// invalidate() is typed as being optional, but that's just a workaround until
-		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
-		this.invalidate!();
-	},
-
-	get leftAxis(this: Axes<any>) {
-		const { left } = privateStateMap.get(this);
-		if (left) {
-			return left;
-		}
-	},
-
-	set leftAxis(axis: AxisConfiguration<any>) {
-		privateStateMap.get(this).left = axis;
-		// invalidate() is typed as being optional, but that's just a workaround until
-		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
-		this.invalidate!();
-	},
-
-	get rightAxis(this: Axes<any>) {
-		const { right } = privateStateMap.get(this);
-		if (right) {
-			return right;
-		}
-	},
-
-	set rightAxis(axis: AxisConfiguration<any>) {
-		privateStateMap.get(this).right = axis;
-		// invalidate() is typed as being optional, but that's just a workaround until
-		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
-		this.invalidate!();
-	},
-
-	get topAxis(this: Axes<any>) {
-		const { top } = privateStateMap.get(this);
-		if (top) {
-			return top;
-		}
-	},
-
-	set topAxis(axis: AxisConfiguration<any>) {
-		privateStateMap.get(this).top = axis;
-		// invalidate() is typed as being optional, but that's just a workaround until
-		// <https://github.com/dojo/compose/issues/74> is in place. Silence the strict null check violation for now.
-		this.invalidate!();
-	},
-
 	createAxes<D extends Datum<any>>(this: Axes<D>, plot: Plot<Point<D>>, domain: Domain): CreatedAxes {
-		const configuration = privateStateMap.get(this);
-
 		const result: CreatedAxes = {
 			extraHeight: 0,
 			extraWidth: 0
 		};
 
-		if (configuration.bottom) {
-			const [ nodes, extra ] = this.createAxis(configuration.bottom, 'bottom', plot, domain);
+		if (this.bottomAxis) {
+			const [ nodes, extra ] = this.createAxis(this.bottomAxis, 'bottom', plot, domain);
 			result.bottom = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
-		if (configuration.left) {
-			const [ nodes, extra ] = this.createAxis(configuration.left, 'left', plot, domain);
+		if (this.leftAxis) {
+			const [ nodes, extra ] = this.createAxis(this.leftAxis, 'left', plot, domain);
 			result.left = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
-		if (configuration.right) {
-			const [ nodes, extra ] = this.createAxis(configuration.right, 'right', plot, domain);
+		if (this.rightAxis) {
+			const [ nodes, extra ] = this.createAxis(this.rightAxis, 'right', plot, domain);
 			result.right = nodes;
 			result.extraHeight = Math.max(result.extraHeight, extra);
 		}
-		if (configuration.top) {
-			const [ nodes, extra ] = this.createAxis(configuration.top, 'top', plot, domain);
+		if (this.topAxis) {
+			const [ nodes, extra ] = this.createAxis(this.topAxis, 'top', plot, domain);
 			result.top = nodes;
 			result.extraWidth = Math.max(result.extraWidth, extra);
 		}
@@ -778,7 +685,7 @@ const createAxes: AxesFactory<any> = compose({
 		[ domainMin, domainMax ]: Domain,
 		labels?: LabelConfiguration,
 		ticks?: TickConfiguration
-	) {
+	): [ VNode[], number ] {
 		const {
 			fixed = false,
 			labelSelector
@@ -859,32 +766,6 @@ const createAxes: AxesFactory<any> = compose({
 		}
 
 		return [ nodes, extraSpace ];
-	}
-}).mixin({
-	initialize<D extends Datum<any>>(
-		instance: Axes<D>,
-		{
-			bottomAxis,
-			leftAxis,
-			rightAxis,
-			topAxis
-		}: AxesOptions<D> = {}
-	) {
-		const state: PrivateState = {};
-		if (bottomAxis) {
-			state.bottom = bottomAxis;
-		}
-		if (leftAxis) {
-			state.left = leftAxis;
-		}
-		if (rightAxis) {
-			state.right = rightAxis;
-		}
-		if (topAxis) {
-			state.top = topAxis;
-		}
-
-		privateStateMap.set(instance, state);
 	}
 });
 
